@@ -38,6 +38,9 @@ clean:
 
 re: clean up
 
+web: up
+	firefox http://localhost:8080/
+
 push:
 	git add .
 	git commit -m "update"

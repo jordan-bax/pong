@@ -38,7 +38,14 @@ clean:
 
 re: clean up
 
+push:
+	git add .
+	git commit -m "update"
+	git push git@github.com:jordan-bax/pong.git
+pull:
+	git pull git@github.com:jordan-bax/pong.git
+
 prune: clean
 	@docker system prune -a --volumes -f || true
 
-.PHONY: all up down start build clean re prune
+.PHONY: all up down start build clean re prune push pull

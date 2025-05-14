@@ -6,11 +6,11 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json (if available)
 COPY package*.json ./
-COPY pong.html ./
+# COPY pong.html ./
 
 # Install dependencies inside the container
 RUN npm install
-RUN npm install -g typescript http-server
+# RUN npm install -g typescript http-server
 
 # Create the TypeScript file
 # RUN echo 'document.body.innerHTML = "<h1>Hello, World!</h1>";' > pong.ts
@@ -18,7 +18,9 @@ RUN npm install -g typescript http-server
 COPY . .
 
 # Compile TypeScript to JavaScript
-RUN tsc pong.ts
+# RUN tsc pong.ts
+
+RUN npm run build
 
 # Create the HTML file
 # RUN open pong.html 
@@ -28,4 +30,6 @@ RUN tsc pong.ts
 EXPOSE 8080
 
 # Serve the HTML file using http-server
-CMD ["http-server", "-p", "8080"]
+# CMD ["http-server", "-p", "8080"]
+
+CMD [ "npm", "run", "start" ]

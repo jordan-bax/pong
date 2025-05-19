@@ -1,13 +1,7 @@
 {
-    "compilerOptions": {
-        "target": "ES2024",
-        "module": "CommonJS",
-        "moduleResolution": "node",
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "esModuleInterop": true,
-        "strict": true,
-        "skipLibCheck": true
-    },
-    "include": ["src/**/*", "types"]
+    "files": [],
+    "references": [
+        {"path": "./src/backend"},
+        {"path": "./src/frontend"}
+    ]
 }

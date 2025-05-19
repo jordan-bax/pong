@@ -10,7 +10,7 @@ export const db: Promise<Database> = open({
     driver: sqlite3.Database
 }).then(async (database) => {
     await database.run(`
-        CREATE TABLE IF NOT EXISTS item (
+        CREATE TABLE IF NOT EXISTS items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL
         )
@@ -18,8 +18,8 @@ export const db: Promise<Database> = open({
 
     await database.run(`
         CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCRENENT,
-        username TEXT NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL
         )
     `);

@@ -3,7 +3,7 @@ import path from 'path';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { db } from './db';
 
 const fastify = Fastify({ logger: true });
@@ -17,22 +17,20 @@ fastify.register(fastifySession, {
 });
 
 fastify.register(fastifyStatic, {
-    root: path.join(__dirname, '../public'),
+    root: path.join(__dirname, '../../dist/frontend'),
     prefix: '/',
 });
 
-fastify.register(fastifyStatic, {
-    root: path.join(__dirname, './'),
-    prefix: '/src/',
-    decorateReply: false,
-});
+fastify.get('/css/main.css', (req, reply) => {
+    return reply.sendFile('css/main.css');
+})
 
 fastify.setNotFoundHandler((req, reply) => {
     const url = req.raw.url || '';
     const isAPI = url.startsWith('/api');
     const isFile = path.extname(url);
     if (!isAPI && !isFile) {
-        return reply.sendFile('pong.html');
+        return reply.sendFile('index.html');
     }
     return reply.code(404).send({ error: 'Not Found' });
 })
@@ -46,7 +44,12 @@ fastify.post('/api/register', async (req: FastifyRequest<{ Body: { username: str
 
     try {
         const database = await db;
-        await database.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password]);
+        await database.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hased]);
+        const user = await database.get('SELECT * FROM users WHERE username = ?', [username]);
+        req.session.user = {
+            id: user.id,
+            username: user.username
+        };
         reply.send({ success: true });
     } catch (err) {
         reply.code(400).send({ error: 'User already exists' })
@@ -72,17 +75,17 @@ fastify.post('/api/login', async (req: FastifyRequest<{ Body: { username: string
 
 // logout
 fastify.post('/api/logout', (req, reply) => {
-    req.destroySession(err => {
-        if (err) {
-            return reply.code(500).send({ error: 'logout failed '});
-        }
-        reply.send({ success: true });
-    });
+    delete req.session.user;
+    reply.send({ success: true });
 });
 
 // get current user
 fastify.get('/api/me', (req, reply) => {
-   reply.send(req.session.user || null);
+  if (req.session.user) {
+    return reply.send({ loggedIn: true, user: req.session.user });
+  } else {
+    return reply.send({ loggedIn: false });
+  }
 });
 
 //protected route

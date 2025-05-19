@@ -1,0 +1,27 @@
+.btn {
+    text-decoration: none;
+    color: #000;
+    text-align: center;
+    border: 1em;
+    margin-left: 10px;
+}
+
+.btn-primary {
+    background-color: blue;
+    color: white;
+    border-color: rgb(155, 154, 154);
+}
+
+.btn-danger {
+    background-color: red;
+    color: white;
+    border-color: #ff3279;
+}
+
+div {
+    justify-content: center;
+    margin: 1em 0em;
+}
+a {
+    margin-left:  10px;
+}

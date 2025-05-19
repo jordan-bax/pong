@@ -41,4 +41,6 @@ re: clean up
 prune: clean
 	@docker system prune -a --volumes -f || true
 
-.PHONY: all up down start build clean re prune
+fresh: prune up
+
+.PHONY: all up down start build clean re prune fresh

@@ -25,3 +25,7 @@ div {
 a {
     margin-left:  10px;
 }
+
+.error-text {
+    color: red;
+}

@@ -1,5 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { open, Database} from 'sqlite';
+import { promises } from 'dns';
 
 sqlite3.verbose();
 
@@ -26,3 +27,17 @@ export const db: Promise<Database> = open({
 
     return database;
 });
+
+export async function findUserByUsername(username: string): Promise<any>
+{
+    const user = (await db).get('SELECT * FROM users WHERE username = ? ', [username]);
+    if (!user) {
+        return null;
+    }
+    return user;
+}
+
+export async function insertUserIntoDatabase(username:string, password:string): Promise<void>
+{
+    (await db).run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password]);
+}

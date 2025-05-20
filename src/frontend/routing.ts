@@ -1,6 +1,25 @@
 import { renderContent } from "./contentRenderer.js";
 import { renderNavbar } from "./navbar.js";
 
+
+const statusHandlers: { [key: number]: string } = {
+    401: 'Invalid login credentials',
+    404: 'User not found',
+    409: 'Username already in use',
+    500: 'Internal server error'
+};
+
+export const routeFromPath: { [key: string]: string } = {
+    '/': 'home',
+    '/profile': 'profile',
+    '/login': 'login',
+    '/register': 'register',
+};
+
+const fastifyErrorHandling:{ [key: string ]: string } = {
+    FST_ERR_VALIDATION: 'Invalid input: use only letters and numbers',
+};
+
 let isLoggedIn = false;
 let currentUser: string | null = null;
 
@@ -18,7 +37,7 @@ export async function checkSession() {
     isLoggedIn = data.loggedIn ? true : false;
     currentUser = data.user?.username ?? null;
     renderNavbar();
-    renderContent(routeFromPath(window.location.pathname));
+    renderContent(routeFromPath[window.location.pathname] || 'not found');
 }
 
 export async function login(username: string, password: string): Promise<void> {
@@ -27,16 +46,25 @@ export async function login(username: string, password: string): Promise<void> {
         headers: {'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
     });
-
-    if (response.ok) {
+    const content = document.getElementById('error');
+    if (!response.ok)
+    {
+        const errorData = await response.json();
+        const message = fastifyErrorHandling[errorData.code] ??
+                        statusHandlers[response.status] ??
+                        errorData.message ??
+                        'Unknown error occured.';
+        if (content) {
+            content.innerHTML = `
+            <p class="error-text">${message}</p>
+            `
+        }
+    } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
         renderNavbar();
         renderContent('profile');
-    } else {
-        const content = document.getElementById('content');
-        if (content) content.textContent = 'Login failed. please try again';
     }
 }
 
@@ -47,15 +75,24 @@ export async function register(username: string, password: string): Promise<void
         body: JSON.stringify({ username, password }),
     });
 
-    if (response.ok) {
+    const content = document.getElementById('error');
+    if (!response.ok) {
+        const errorData = await response.json();
+        const message = fastifyErrorHandling[errorData.code] ??
+                        statusHandlers[response.status] ??
+                        errorData.message ??
+                        'Unknown error occured.';
+        if (content) {
+            content.innerHTML = `
+            <p class="error-text">${message}</p>
+            `
+        }
+    } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
         renderNavbar();
         renderContent('profile');
-    } else {
-        const content = document.getElementById('content');
-        if (content) content.textContent = 'Registration failed, please try again';
     }
 }
 
@@ -69,17 +106,17 @@ export async function logout(): Promise<void> {
     renderContent('home');
 }
 
-export function routeFromPath(pathname: string): string {
-    switch (pathname) {
-        case '/':
-            return 'home';
-        case '/profile':
-            return 'profile';
-        case '/login':
-            return 'login';
-        case '/register':
-            return 'register';
-        default:
-            return 'not found';
-    }
-}
+// export function routeFromPath(pathname: string): string {
+//     switch (pathname) {
+//         case '/':
+//             return 'home';
+//         case '/profile':
+//             return 'profile';
+//         case '/login':
+//             return 'login';
+//         case '/register':
+//             return 'register';
+//         default:
+//             return 'not found';
+//     }
+// }

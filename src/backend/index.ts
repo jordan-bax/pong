@@ -1,10 +1,12 @@
-import Fastify, { FastifyRequest } from 'fastify';
+import Fastify from 'fastify';
 import path from 'path';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import bcrypt from 'bcryptjs';
-import { db } from './db';
+import { db, findUserByUsername, insertUserIntoDatabase } from './db';
+import { registerSchema, loginSchema } from './schemas/userSchemas'
+import { verifyPassword } from './validation';
 
 const fastify = Fastify({ logger: true });
 
@@ -12,7 +14,10 @@ const fastify = Fastify({ logger: true });
 fastify.register(fastifyCookie);
 fastify.register(fastifySession, {
     secret: 'a_super_secret_key_with_minimum_32_characters', // replace with env var later
-    cookie: { secure: false }, // Set true when uing HTTPS
+    cookie: {
+        secure: false, // Set true when uing HTTPS
+        maxAge: 1000 * 60 * 60 * 24 // 1 day 
+    },
     saveUninitialized: false
 });
 
@@ -20,10 +25,6 @@ fastify.register(fastifyStatic, {
     root: path.join(__dirname, '../../dist/frontend'),
     prefix: '/',
 });
-
-fastify.get('/css/main.css', (req, reply) => {
-    return reply.sendFile('css/main.css');
-})
 
 fastify.setNotFoundHandler((req, reply) => {
     const url = req.raw.url || '';
@@ -38,39 +39,54 @@ fastify.setNotFoundHandler((req, reply) => {
 // Auth Routes
 
 // Register user
-fastify.post('/api/register', async (req: FastifyRequest<{ Body: { username: string; password: string; } }>, reply) => {
-    const { username, password } = req.body;
+fastify.post('/api/register',{
+    schema:registerSchema
+}, async (req, reply) => {
+    const { username, password } = req.body as { username: string; password: string };
     const hased = await bcrypt.hash(password, 10);
 
     try {
-        const database = await db;
-        await database.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hased]);
-        const user = await database.get('SELECT * FROM users WHERE username = ?', [username]);
+        await insertUserIntoDatabase(username, hased)
+        const user = await findUserByUsername(username);
+        if (!user) {
+            reply.code(500).send({ error: 'User was not added' });
+        } else {
+            req.session.user = {
+                id: user.id,
+                username: user.username
+            };
+            reply.send({ success: true });
+        }
+    } catch (err) {
+        reply.code(500).send({ error: 'Internal server error' })
+    }
+});
+
+// login
+fastify.post('/api/login', {
+    schema:loginSchema
+}, async (req, reply) => {
+    try {
+        const { username, password } = req.body as { username: string; password:string };
+
+        const user = await findUserByUsername(username);
+        if (!user) {
+                return reply.code(401).send({ error: 'Incorrect username or password' });
+        }
+
+        const isPasswordCorrect = await verifyPassword( password, user.password);
+        if (!isPasswordCorrect) {
+            return reply.code(401).send({ error: 'incorrect username or password' });
+        }
+
         req.session.user = {
             id: user.id,
             username: user.username
         };
         reply.send({ success: true });
-    } catch (err) {
-        reply.code(400).send({ error: 'User already exists' })
+    } catch(err) {
+        return reply.code(500).send({ error: 'Internal server error' });
     }
-});
-
-// login
-fastify.post('/api/login', async (req: FastifyRequest<{ Body: { username: string; password: string; } }>, reply) => {
-    const { username, password } = req.body;
-    const database = await db;
-    const user = await database.get('SELECT * FROM users WHERE username = ?', [username]);
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return reply.code(401).send({ error: 'Invalid credenttials' });
-    }
-    type SessionType = typeof req.session;
-    req.session.user = {
-        id: user.id,
-        username: user.username
-    };
-    reply.send({ success: true });
 });
 
 // logout

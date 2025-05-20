@@ -22,6 +22,7 @@ export function renderContent (route: string): void {
             <label>Username: <input type="text" id="username"></label><br/>
             <label>Password: <input type="password" id="password"></label><br/>
             <button class="btn" type="submit">Login</button>
+            <div id="error"></div>
             `;
             loginForm.onsubmit = (e) => {
                 e.preventDefault();
@@ -37,6 +38,7 @@ export function renderContent (route: string): void {
             <label>Username: <input type="text" id="username"></label><br/>
             <label>Password: <input type="password" id="password"></label><br/>
             <button class="btn" type="submit">register</button>
+            <div id="error"></div>
             `;
             registerForm.onsubmit = (e) => {
                 e.preventDefault();

@@ -32,7 +32,7 @@ export function getCurrentUser(): string | null{
 }
 
 export async function checkSession() {
-    const response = await fetch('/api/me');
+    const response = await fetch('/api/user/me');
     const data = await response.json();
     isLoggedIn = data.loggedIn ? true : false;
     currentUser = data.user?.username ?? null;
@@ -41,7 +41,7 @@ export async function checkSession() {
 }
 
 export async function login(username: string, password: string): Promise<void> {
-    const response = await fetch('/api/login', {
+    const response = await fetch('/api/user/login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -69,7 +69,7 @@ export async function login(username: string, password: string): Promise<void> {
 }
 
 export async function register(username: string, password: string): Promise<void> {
-    const response = await fetch('/api/register', {
+    const response = await fetch('/api/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -97,7 +97,7 @@ export async function register(username: string, password: string): Promise<void
 }
 
 export async function logout(): Promise<void> {
-    await fetch('/api/logout', { method: 'POST'});
+    await fetch('/api/user/logout', { method: 'POST'});
     isLoggedIn = false;
     currentUser = null;
     history.pushState({}, '', '/');

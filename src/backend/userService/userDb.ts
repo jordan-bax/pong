@@ -1,10 +1,13 @@
 import sqlite3 from 'sqlite3';
 import { open, Database} from 'sqlite';
-import { promises } from 'dns';
 
 sqlite3.verbose();
 
-const dbFile = 'mydb.sqlite';
+const dbFile = process.env.DATABASE_PATH || '';
+if (dbFile == '')
+    console.log('empty');
+else
+    console.log(dbFile);
 
 export const db: Promise<Database> = open({
     filename: dbFile,

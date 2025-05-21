@@ -4,7 +4,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import bcrypt from 'bcryptjs';
-import { db, findUserByUsername, insertUserIntoDatabase } from './db';
+import { db, findUserByUsername, insertUserIntoDatabase } from './userDb';
 import { registerSchema, loginSchema } from './schemas/userSchemas'
 import { verifyPassword } from './validation';
 
@@ -22,24 +22,14 @@ fastify.register(fastifySession, {
 });
 
 fastify.register(fastifyStatic, {
-    root: path.join(__dirname, '../../dist/frontend'),
+    root: path.join(__dirname, './dist'),
     prefix: '/',
 });
-
-fastify.setNotFoundHandler((req, reply) => {
-    const url = req.raw.url || '';
-    const isAPI = url.startsWith('/api');
-    const isFile = path.extname(url);
-    if (!isAPI && !isFile) {
-        return reply.sendFile('index.html');
-    }
-    return reply.code(404).send({ error: 'Not Found' });
-})
 
 // Auth Routes
 
 // Register user
-fastify.post('/api/register',{
+fastify.post('/register',{
     schema:registerSchema
 }, async (req, reply) => {
     const { username, password } = req.body as { username: string; password: string };
@@ -63,7 +53,7 @@ fastify.post('/api/register',{
 });
 
 // login
-fastify.post('/api/login', {
+fastify.post('/login', {
     schema:loginSchema
 }, async (req, reply) => {
     try {
@@ -90,13 +80,13 @@ fastify.post('/api/login', {
 });
 
 // logout
-fastify.post('/api/logout', (req, reply) => {
+fastify.post('/logout', (req, reply) => {
     delete req.session.user;
     reply.send({ success: true });
 });
 
 // get current user
-fastify.get('/api/me', (req, reply) => {
+fastify.get('/me', (req, reply) => {
   if (req.session.user) {
     return reply.send({ loggedIn: true, user: req.session.user });
   } else {
@@ -105,7 +95,7 @@ fastify.get('/api/me', (req, reply) => {
 });
 
 //protected route
-fastify.get('/api/items', async (req, reply) => {
+fastify.get('/items', async (req, reply) => {
     if (!req.session.user) {
         return reply.code(401).send({ error: 'Unathorized' });
     }
@@ -115,7 +105,11 @@ fastify.get('/api/items', async (req, reply) => {
     return row;
 })
 
-fastify.listen({host: "0.0.0.0", port: 8080 }, err => {
+fastify.setNotFoundHandler((req, reply) => {
+    return reply.code(404).send({ error: 'Not Found' });
+})
+
+fastify.listen({host: "0.0.0.0", port: 3001 }, err => {
     if (err) {
         fastify.log.error((err));
         process.exit(1);

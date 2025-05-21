@@ -2,13 +2,12 @@
     "compilerOptions": {
         "target": "ESNext",
         "module": "ES6",
-        "outDir": "../../dist/frontend",
+        "outDir": "./dist",
         "rootDir": "./",
         "strict": true,
         "moduleResolution": "bundler",
         "lib": ["DOM", "ES6"],
         "types": []
     },
-    "include": ["*.ts"],
-    "extends": "../../tsconfig.json"
+    "include": ["*.ts"]
 }

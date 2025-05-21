@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ES2024",
         "module": "CommonJS",
-        "outDir": "../../dist/backend",
+        "outDir": "./dist",
         "rootDir": "./",
         "moduleResolution": "node",
         "esModuleInterop": true,
@@ -10,6 +10,5 @@
         "skipLibCheck": true,
         "typeRoots": ["node_modules/@types"]
     },
-    "include": ["types", "*.ts", "schemas"],
-    "extends": "../../tsconfig.json"
+    "include": ["./*.ts"]
 }

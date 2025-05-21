@@ -1,0 +1,16 @@
+{
+    "name": "type",
+    "version": "1.0.0",
+    "description": "A simple TypeScript project",
+    "scripts": {
+      "copy-html": "cpx \"./**/*.{html,js,css}\" ./dist",
+      "build": "tsc --build && npm run copy-html"
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+      "cpx": "^1.2.1",
+      "typescript": "^5.0.0"
+    }
+  }
+  

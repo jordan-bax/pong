@@ -1,0 +1,66 @@
+services:
+  nginx:
+    build: 
+      context: ./
+      dockerfile: backend/nginx/Dockerfile
+    container_name: nginx
+    ports:
+      - "8000:8000"
+    depends_on:
+      - user
+      # - game
+      # - tournament
+    networks:
+      - transcendanse
+    restart: unless-stopped
+
+  user:
+    build: 
+      context: ./backend/userService
+    container_name: user
+    ports:
+      - "30001:3001"
+    volumes:
+      - user-db:/app/db
+    environment:
+      - DATABASE_PATH=/app/db/user.sqlite
+    networks:
+      - transcendanse
+    restart: unless-stopped
+    
+  # game:
+  #   build: 
+  #     context: ./backend/gameService
+  #   container_name: game
+  #   ports:
+  #     - "3002:3002"
+  #   volumes:
+  #     - game-db:/app/db
+  #   environment:
+  #     - DATABASE_PATH=/app/game.sqlite
+  #   networks:
+  #     - transcendanse
+  #   restart: unless-stopped
+  
+  # tournament:
+  #   build: 
+  #     context: ./backend/tournamentService
+  #   container_name: tournament
+  #   ports:
+  #     - "3003:3003"
+  #   volumes:
+  #     - tournament-db:/app/tournament.sqlite
+  #   environment:
+  #     - DATABASE_PATH=/app/tournament.sqlite
+  #   networks:
+  #     - transcendanse
+  #   restart: unless-stopped
+
+volumes:
+  user-db:
+  # game-db:
+  # tournament-db:
+
+networks:
+  transcendanse:
+    driver: bridge

@@ -1,0 +1,23 @@
+# Use an official Node.js image as the base image
+FROM node:18
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json (if available)
+COPY package*.json ./
+# COPY pong.html ./
+
+# Install dependencies inside the container
+RUN npm install
+
+COPY . .
+
+# Compile TypeScript to JavaScript
+
+RUN npm run build
+
+# Expose port 3002
+EXPOSE 3002
+
+CMD [ "npm", "run", "start" ]

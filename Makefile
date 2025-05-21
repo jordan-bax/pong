@@ -15,19 +15,19 @@
 all: up
 
 up: build
-	docker-compose -f docker-compose.yml up -d
+	docker-compose -f src/docker-compose.yml up -d
 
 build:
-	docker-compose -f docker-compose.yml build
+	docker-compose -f src/docker-compose.yml build
 
 down:
-	docker-compose -f docker-compose.yml down
+	docker-compose -f src/docker-compose.yml down
 
 stop:
-	docker-compose -f docker-compose.yml stop
+	docker-compose -f src/docker-compose.yml stop
 
 start:
-	docker-compose -f docker-compose.ym start
+	docker-compose -f src/docker-compose.ym start
 
 clean:
 	@docker stop $$(docker ps -qa) || true

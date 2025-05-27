@@ -4,19 +4,29 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import bcrypt from 'bcryptjs';
-import { db, findUserByUsername, insertUserIntoDatabase } from './userDb';
+import { db, findUserByEmail, insertUserIntoDatabase } from './userDb';
 import { registerSchema, loginSchema } from './schemas/userSchemas'
 import { verifyPassword } from './validation';
 
 const fastify = Fastify({ logger: true });
+const sessionSecret = process.env.SESSION_SECRET;
+const cookieSecret = process.env.COOKIE_SECRET;
+
+if (!sessionSecret || !cookieSecret) {
+    throw new Error('MISSING ENV VARIABLES');
+}
 
 // cookie + session support
-fastify.register(fastifyCookie);
+fastify.register(fastifyCookie, {
+    secret: cookieSecret, // Optional, needed only for signed cookies 
+    parseOptions: {}
+});
 fastify.register(fastifySession, {
-    secret: 'a_super_secret_key_with_minimum_32_characters', // replace with env var later
+    secret: sessionSecret,
     cookie: {
         secure: false, // Set true when uing HTTPS
-        maxAge: 1000 * 60 * 60 * 24 // 1 day 
+        maxAge: 1000 * 60 * 60 * 24, // 1 day 
+        sameSite: 'strict'
     },
     saveUninitialized: false
 });
@@ -32,23 +42,31 @@ fastify.register(fastifyStatic, {
 fastify.post('/register',{
     schema:registerSchema
 }, async (req, reply) => {
-    const { username, password } = req.body as { username: string; password: string };
-    const hased = await bcrypt.hash(password, 10);
-
     try {
-        await insertUserIntoDatabase(username, hased)
-        const user = await findUserByUsername(username);
-        if (!user) {
-            reply.code(500).send({ error: 'User was not added' });
-        } else {
-            req.session.user = {
-                id: user.id,
-                username: user.username
-            };
-            reply.send({ success: true });
+        console.log('get to start');
+        const { username, password, email } = req.body as { username: string; password: string; email: string };
+        if (await findUserByEmail(email) != null) {
+            console.log('email found');
+            return reply.code(401).send({ error: 'email already in use' })
         }
+        console.log('email not found');
+        const hased = await bcrypt.hash(password, 10); // password, saltRounds
+        console.log('hashed password');
+        await insertUserIntoDatabase(username, hased, email);
+        console.log('inserted into database');
+        const user = await findUserByEmail(email);
+        if (!user) {
+            console.log('user not added');
+            return reply.code(500).send({ error: 'User was not added' });
+        }
+        req.session.user = {
+            username: user.username
+        };
+        console.log('server session set complete');
+        return reply.send({ success: true });
     } catch (err) {
-        reply.code(500).send({ error: 'Internal server error' })
+        console.log('got error');
+        return reply.code(500).send({ error: 'Internal server error' })
     }
 });
 
@@ -57,20 +75,19 @@ fastify.post('/login', {
     schema:loginSchema
 }, async (req, reply) => {
     try {
-        const { username, password } = req.body as { username: string; password:string };
+        const {password, email} = req.body as { password:string; email: string };
 
-        const user = await findUserByUsername(username);
+        const user = await findUserByEmail(email);
         if (!user) {
-                return reply.code(401).send({ error: 'Incorrect username or password' });
+                return reply.code(401).send({ error: 'Incorrect email or password' });
         }
 
         const isPasswordCorrect = await verifyPassword( password, user.password);
         if (!isPasswordCorrect) {
-            return reply.code(401).send({ error: 'incorrect username or password' });
+            return reply.code(401).send({ error: 'incorrect email or password' });
         }
 
         req.session.user = {
-            id: user.id,
             username: user.username
         };
         reply.send({ success: true });

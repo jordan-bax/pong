@@ -1,184 +1,119 @@
- /* Extra small devices (phones, 600px and down) */
- @media only screen and (max-width: 600px) {
-    .btn {
-        text-decoration: none;
-        color: #000;
-        text-align: center;
-        border: 1em;
-        margin-left: 10px;
-    }
-    
-    .btn-primary {
-        background-color: blue;
-        color: white;
-        border-color: rgb(155, 154, 154);
-    }
-    
-    .btn-danger {
-        background-color: red;
-        color: white;
-        border-color: #ff3279;
-    }
-    
-    #content {
-        display: flex;
-        justify-content: center;
-        margin: 1em 0em;
-    }
-    
-    a {
-        margin-left:  10px;
-    }
-    
-    .error-text {
-        color: red;
-    }
- }
+/* global part */
+/* ids */
+#navbar {
+   display: flex;
+}
 
- /* Small devices (portrait tablets and large phones, 600px and up) */
- @media only screen and (min-width: 600px) {
-    .btn {
-        text-decoration: none;
-        color: #000;
-        text-align: center;
-        border: 1em;
-        margin-left: 10px;
-    }
-    
-    .btn-primary {
-        background-color: blue;
-        color: white;
-        border-color: rgb(155, 154, 154);
-    }
-    
-    .btn-danger {
-        background-color: red;
-        color: white;
-        border-color: #ff3279;
-    }
-    
-    #content {
-        display: flex;
-        justify-content: center;
-        margin: 1em 0em;
-    }
-    
-    a {
-        margin-left:  10px;
-    }
-    
-    .error-text {
-        color: red;
-    }
- }
+#content {
+   display: flex;
+   justify-content: center;
+}
+
+/* classes */
+.navItem {
+    justify-content: left;
+}
+
+.btn {
+   text-align: none;
+   columns: #000;
+   text-align: center;
+}
+
+.btn-primary {
+    background-color: blue;
+    color: white;
+    border-color: rgb(155, 154, 154);
+}
+
+.btn-danger {
+    background-color: red;
+    color: white;
+    border-color: #ff3279;
+}
+
+.error-text {
+    color: red;
+}
+
+/* tags */
  
- /* Medium devices (landscape tablets, 768px and up) */
- @media only screen and (min-width: 768px) {
-    .btn {
-        text-decoration: none;
-        color: #000;
-        text-align: center;
-        border: 1em;
-        margin-left: 10px;
-    }
-    
-    .btn-primary {
-        background-color: blue;
-        color: white;
-        border-color: rgb(155, 154, 154);
-    }
-    
-    .btn-danger {
-        background-color: red;
-        color: white;
-        border-color: #ff3279;
-    }
-    
-    #content {
-        display: flex;
-        justify-content: center;
-        margin: 1em 0em;
-    }
-    
-    a {
-        margin-left:  10px;
-    }
-    
-    .error-text {
-        color: red;
-    }
- }
- 
- /* Large devices (laptops/desktops, 992px and up) */
- @media only screen and (min-width: 992px) {
-    .btn {
-        display: flex;
-        text-decoration: none;
-        color: #000;
-        text-align: center;
-        border: 1em;
-        margin-left: 10px;
-    }
-    
-    .btn-primary {
-        background-color: blue;
-        color: white;
-        border-color: rgb(155, 154, 154);
-    }
-    
-    .btn-danger {
-        background-color: red;
-        color: white;
-        border-color: #ff3279;
-    }
-    
-    #content {
-        justify-content: center;
-        margin: 1em 0em;
-    }
-    
-    a {
-        margin-left:  10px;
-    }
-    
-    .error-text {
-        color: red;
-    }
- }
- 
- /* Extra large devices (large laptops and desktops, 1200px and up) */
- @media only screen and (min-width: 1200px) {
-    .btn {
-        text-decoration: none;
-        color: #000;
-        text-align: center;
-        border: 1em;
-        margin-left: 10px;
-    }
-    
-    .btn-primary {
-        background-color: blue;
-        color: white;
-        border-color: rgb(155, 154, 154);
-    }
-    
-    .btn-danger {
-        background-color: red;
-        color: white;
-        border-color: #ff3279;
-    }
-    
-    #content {
-        display: flex;
-        justify-content: center;
-        margin: 1em 0em;
-    }
-    
-    a {
-        margin-left:  10px;
-    }
-    
-    .error-text {
-        color: red;
-    }
- } 
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+/* ids */
+#content {
+    margin: 1em 0em;
+}
+
+/* classes */
+.btn {
+    border: 1em;
+    margin-left: 10px;
+}
+
+/* tags */
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) {
+/* ids */
+#content {
+    margin: 1em 0em;
+}
+
+/* classes */
+.btn {
+    border: 1em;
+    margin-left: 10px;
+}
+
+/* tags */
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) {
+/* ids */
+#content {
+    margin: 1em 0em;
+}
+
+/* classes */
+.btn {
+    border: 1em;
+    margin-left: 10px;
+}
+
+/* tags */
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) {
+/* ids */
+#content {
+    margin: 1em 0em;
+}
+
+/* classes */
+.btn {
+    border: 1em;
+    margin-left: 10px;
+}
+
+/* tags */
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+/* ids */
+#content {
+    margin: 1em 0em;
+}
+
+/* classes */
+.btn {
+    border: 1em;
+    margin-left: 10px;
+}
+
+/* tags */
+} 

@@ -22,8 +22,8 @@ services:
       - "30001:3001"
     volumes:
       - user-db:/app/db
-    environment:
-      - DATABASE_PATH=/app/db/user.sqlite
+    env_file:
+      - .env
     networks:
       - transcendanse
     restart: unless-stopped
@@ -36,8 +36,8 @@ services:
   #     - "3002:3002"
   #   volumes:
   #     - game-db:/app/db
-  #   environment:
-  #     - DATABASE_PATH=/app/game.sqlite
+  #   env_file:
+  #     - .env
   #   networks:
   #     - transcendanse
   #   restart: unless-stopped
@@ -50,8 +50,8 @@ services:
   #     - "3003:3003"
   #   volumes:
   #     - tournament-db:/app/tournament.sqlite
-  #   environment:
-  #     - DATABASE_PATH=/app/tournament.sqlite
+  #   env_file:
+  #     - .env
   #   networks:
   #     - transcendanse
   #   restart: unless-stopped

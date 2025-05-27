@@ -19,32 +19,57 @@ export function renderContent (route: string): void {
         case 'login':
             const loginForm = document.createElement('form');
             loginForm.innerHTML = `
-            <label>Username: <input type="text" id="username"></label><br/>
-            <label>Password: <input type="password" id="password"></label><br/>
-            <button class="btn" type="submit">Login</button>
-            <div id="error"></div>
+            <table>
+                <tr>
+                    <td><label>email:</label></td>
+                    <td><input type="email" id="email"></td>
+                </tr>
+                <tr>
+                    <td><label>Password:</label></td>
+                    <td><input type="password" id="password"></td>
+                </tr>
+                <tr>
+                    <td><button class="btn" type="submit">Login</button></td>
+                    <td><div id="error"></div></td>
+                </tr>
+            </table>
             `;
             loginForm.onsubmit = (e) => {
                 e.preventDefault();
-                const username = (document.getElementById('username') as HTMLInputElement).value;
+                const email = (document.getElementById('email') as HTMLInputElement).value;
                 const password = (document.getElementById('password') as HTMLInputElement).value;
-                login(username, password);
+                login(email, password);
             };
             content.appendChild(loginForm);
             break;
         case 'register':
             const registerForm = document.createElement('form');
             registerForm.innerHTML = `
-            <label>Username: <input type="text" id="username"></label><br/>
-            <label>Password: <input type="password" id="password"></label><br/>
-            <button class="btn" type="submit">register</button>
-            <div id="error"></div>
+            <table>
+                <tr>
+                    <td><label>email:</label></td>
+                    <td><input type="email" id="email"></td>
+                </tr>
+                <tr>
+                    <td><label>username:</label>
+                    <td><label><input type="text" id="username"></label></td>
+                </tr>
+                <tr>
+                    <td><label>Password:</label></td>
+                    <td><input type="password" id="password"></td>
+                </tr>
+                <tr>
+                    <td><button class="btn" type="submit">register</button></td>
+                    <td><div id="error"></div></td>
+                </tr>
+            </table>
             `;
             registerForm.onsubmit = (e) => {
                 e.preventDefault();
                 const username = (document.getElementById('username') as HTMLInputElement).value;
+                const email = (document.getElementById('email') as HTMLInputElement).value;
                 const password = (document.getElementById('password') as HTMLInputElement).value;
-                register(username, password);
+                register(username, password, email);
             };
             content.appendChild(registerForm);
             break;

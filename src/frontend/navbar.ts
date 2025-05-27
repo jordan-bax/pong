@@ -1,7 +1,7 @@
 import { renderContent } from "./contentRenderer.js";
-import { getLoggin, logout } from "./routing.js";
+import { getLoggin, getLogginServer, logout } from "./routing.js";
 
-export function renderNavbar(): void {
+export async function renderNavbar(): Promise<void> {
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
     navbar.innerHTML = '';
@@ -9,7 +9,7 @@ export function renderNavbar(): void {
     const homeLink = document.createElement('a');
     homeLink.href = '/';
     homeLink.textContent = 'Home';
-    homeLink.className = 'btn';
+    homeLink.className = 'btn navItem';
     homeLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
@@ -17,12 +17,13 @@ export function renderNavbar(): void {
     };
     navbar.appendChild(homeLink);
 
-    if (getLoggin()) {
+    const isLoggedIn = getLoggin;
+    const isLoggedInServer = await getLogginServer();
+    if (isLoggedIn() && isLoggedInServer) {
         const profileLink = document.createElement('a');
         profileLink.href = '/profile';
         profileLink.textContent = 'Profile';
-        homeLink.className = 'btn';
-        profileLink.style.marginLeft = '10px';
+        homeLink.className = 'btn navItem';
         profileLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/profile');
@@ -32,14 +33,14 @@ export function renderNavbar(): void {
 
         const logoutBtn = document.createElement('button');
         logoutBtn.textContent = 'Logout';
-        logoutBtn.className = 'btn btn-primary';
+        logoutBtn.className = 'btn btn-primary navItem';
         logoutBtn.onclick = logout;
         navbar.appendChild(logoutBtn);
     } else {
         const loginLink = document.createElement('a');
         loginLink.href = '/login';
         loginLink.textContent = 'Log in';
-        loginLink.className = 'btn';
+        loginLink.className = 'btn navItem';
         loginLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/login');
@@ -50,7 +51,7 @@ export function renderNavbar(): void {
         const registerLink = document.createElement('a');
         registerLink.textContent= 'Register';
         registerLink.href = '/register';
-        registerLink.className = 'btn';
+        registerLink.className = 'btn navItem';
         registerLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/register');

@@ -3,11 +3,10 @@ import { open, Database} from 'sqlite';
 
 sqlite3.verbose();
 
-const dbFile = process.env.DATABASE_PATH || '';
-if (dbFile == '')
-    console.log('empty');
-else
-    console.log(dbFile);
+const dbFile = process.env.USER_DATABASE_PATH;
+if (!dbFile) {
+    throw new Error("MISSING DATABASE ENV");
+}
 
 export const db: Promise<Database> = open({
     filename: dbFile,
@@ -23,24 +22,40 @@ export const db: Promise<Database> = open({
     await database.run(`
         CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        username TEXT NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE
         )
     `);
 
     return database;
 });
 
-export async function findUserByUsername(username: string): Promise<any>
+export async function findUserByEmail(email: string): Promise<any>
 {
-    const user = (await db).get('SELECT * FROM users WHERE username = ? ', [username]);
+    const database = await db;
+    const user = await database.get('SELECT * FROM users WHERE email = ? ', [email]);
     if (!user) {
         return null;
     }
     return user;
 }
 
-export async function insertUserIntoDatabase(username:string, password:string): Promise<void>
+export async function insertUserIntoDatabase(username:string, password:string, email: string): Promise<void>
 {
-    (await db).run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password]);
+    const database = await db;
+    await database.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email]);
+}
+
+async function seedDatabase() {
+    const database = await db;
+    const statement = await database.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)');
+    await statement.run('Alice', 'admin', 'aa@mail.com');
+    await statement.run('bob', 'test', 'bt@mail.com');
+    await statement.finalize();
+
+    await database.each('SELECT * FROM users', (err, row) => {
+        if (err) throw err;
+    });
+    await database.close();
 }

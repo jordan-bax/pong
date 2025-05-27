@@ -31,6 +31,12 @@ export function getCurrentUser(): string | null{
     return currentUser;
 }
 
+export async function getLogginServer(): Promise<string | null> {
+    const serverUser = await fetch('api/user/me')
+    const data = await serverUser.json();
+    return data.user?.username;
+}
+
 export async function checkSession() {
     const response = await fetch('/api/user/me');
     const data = await response.json();
@@ -40,11 +46,11 @@ export async function checkSession() {
     renderContent(routeFromPath[window.location.pathname] || 'not found');
 }
 
-export async function login(username: string, password: string): Promise<void> {
+export async function login(email: string, password: string): Promise<void> {
     const response = await fetch('/api/user/login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
     });
     const content = document.getElementById('error');
     if (!response.ok)
@@ -68,11 +74,11 @@ export async function login(username: string, password: string): Promise<void> {
     }
 }
 
-export async function register(username: string, password: string): Promise<void> {
+export async function register(username: string, password: string, email:string): Promise<void> {
     const response = await fetch('/api/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, email }),
     });
 
     const content = document.getElementById('error');
@@ -105,18 +111,3 @@ export async function logout(): Promise<void> {
     renderNavbar();
     renderContent('home');
 }
-
-// export function routeFromPath(pathname: string): string {
-//     switch (pathname) {
-//         case '/':
-//             return 'home';
-//         case '/profile':
-//             return 'profile';
-//         case '/login':
-//             return 'login';
-//         case '/register':
-//             return 'register';
-//         default:
-//             return 'not found';
-//     }
-// }

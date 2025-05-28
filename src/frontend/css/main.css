@@ -12,11 +12,12 @@
 /* classes */
 .navItem {
     justify-content: left;
+    text-decoration: none;
+    color: black;
 }
 
 .btn {
-   text-align: none;
-   columns: #000;
+   color: #000;
    text-align: center;
 }
 

@@ -60,4 +60,7 @@ export async function renderNavbar(): Promise<void> {
         navbar.appendChild(registerLink);
 
     }
+    const googleLogin = document.createElement('div');
+    googleLogin.id = 'google-signin-button';
+    navbar.appendChild(googleLogin);
 }

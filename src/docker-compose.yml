@@ -12,6 +12,8 @@ services:
       # - tournament
     networks:
       - transcendanse
+    env_file:
+      - .env
     restart: unless-stopped
 
   user:

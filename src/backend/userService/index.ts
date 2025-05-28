@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { db, findUserByEmail, insertUserIntoDatabase } from './userDb';
 import { registerSchema, loginSchema } from './schemas/userSchemas'
 import { verifyPassword } from './validation';
+import { OAuth2Client } from 'google-auth-library'
 
 const fastify = Fastify({ logger: true });
 const sessionSecret = process.env.SESSION_SECRET;
@@ -110,6 +111,24 @@ fastify.get('/me', (req, reply) => {
     return reply.send({ loggedIn: false });
   }
 });
+
+// google route
+const client = new OAuth2Client();
+
+async function verifyToken(idToken:string) {
+    const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (payload) {
+        const userId = payload['sub'];
+        const email = payload['email'];
+        // proceed with user login or account creattion
+    }
+}
+
 
 //protected route
 fastify.get('/items', async (req, reply) => {

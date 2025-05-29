@@ -3,7 +3,9 @@ import 'fastify'
 declare module 'fastify' {
     interface Session {
         user?: {
-            username: string;
+            email: string;
+            userId: number;
+            loginMethod: string;
         }
     }
 }

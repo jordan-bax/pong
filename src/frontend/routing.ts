@@ -34,14 +34,14 @@ export function getCurrentUser(): string | null{
 export async function getLogginServer(): Promise<string | null> {
     const serverUser = await fetch('api/user/me')
     const data = await serverUser.json();
-    return data.user?.username;
+    return data.user?.email;
 }
 
 export async function checkSession() {
     const response = await fetch('/api/user/me');
     const data = await response.json();
     isLoggedIn = data.loggedIn ? true : false;
-    currentUser = data.user?.username ?? null;
+    currentUser = data.user?.email ?? null;
     renderNavbar();
     renderContent(routeFromPath[window.location.pathname] || 'not found');
 }
@@ -110,4 +110,23 @@ export async function logout(): Promise<void> {
     checkSession();
     renderNavbar();
     renderContent('home');
+}
+
+export async function handleGoogleCredentials(request:{ credential: string}): Promise<void> {
+    console.log('sending credentaials to backend:', request.credential)
+    const response = await fetch ('api/user/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: request.credential }),
+        credentials: 'include',
+    });
+    if (response.ok) {
+        isLoggedIn = true;
+        history.pushState({}, '', '/profile');
+        checkSession();
+        renderNavbar();
+        renderContent('profile');
+    } else {
+        console.log('google login failed:', await response.json())
+    }
 }

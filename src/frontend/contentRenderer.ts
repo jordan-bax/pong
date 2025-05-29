@@ -1,4 +1,31 @@
-import { getCurrentUser, getLoggin, login, register } from "./routing.js";
+import { getCurrentUser, getLoggin, login, register, handleGoogleCredentials } from "./routing.js";
+
+declare global {
+    interface Window {
+        google: any;
+        onGsiLoad: () => void;
+    }
+}
+
+export function initGoogleSignInIfNeeded() {
+    const path = window.location.pathname;
+    const isLogin = path == '/login';
+    console.log(path);
+    const singInContainer = document.getElementById('google-signin');
+    if (!isLogin || !singInContainer) return;
+
+    if (singInContainer.childNodes.length > 0) return;
+
+    window.google.accounts.id.initialize({
+        client_id: '51710532102-br37sgrm5iodlnhsa2kahmcjr6lh8f8n.apps.googleusercontent.com', // my own google client id
+        callback: handleGoogleCredentials,
+    });
+
+    window.google.accounts.id.renderButton(singInContainer, {
+        theme: 'outline',
+        size: 'large',
+    });
+}
 
 export function renderContent (route: string): void {
     const content = document.getElementById('content');
@@ -17,6 +44,9 @@ export function renderContent (route: string): void {
             }
             break;
         case 'login':
+            const googleLogin = document.createElement('div');
+            googleLogin.id = 'google-signin';
+            content.appendChild(googleLogin);
             const loginForm = document.createElement('form');
             loginForm.innerHTML = `
             <table>
@@ -76,7 +106,7 @@ export function renderContent (route: string): void {
         default:
             content.textContent = 'Page not found.';
     }
-
+    initGoogleSignInIfNeeded();
     if (!getLoggin && route !== 'login' && route === 'profile') {
         history.pushState({}, '', '/login');
         renderContent('login');

@@ -24,7 +24,8 @@ export const db: Promise<Database> = open({
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
         password TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE
+        email TEXT NOT NULL UNIQUE,
+        isGoogleRegister NUMERIC DEFAULT 0
         )
     `);
 
@@ -45,6 +46,11 @@ export async function insertUserIntoDatabase(username:string, password:string, e
 {
     const database = await db;
     await database.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email]);
+}
+
+export async function insertGoogleUser(email:string) {
+    const database = await db;
+    await database.run('INSERT INTO users (username, password, email, isGoogleRegister) VALUES (? ? ? ?)', [' ', ' ', email, 1]);
 }
 
 async function seedDatabase() {

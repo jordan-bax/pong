@@ -4,7 +4,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import bcrypt from 'bcryptjs';
-import { db, findUserByEmail, insertUserIntoDatabase } from './userDb';
+import { db, findUserByEmail, insertGoogleUser, insertUserIntoDatabase } from './userDb';
 import { registerSchema, loginSchema } from './schemas/userSchemas'
 import { verifyPassword } from './validation';
 import { OAuth2Client } from 'google-auth-library'
@@ -61,7 +61,9 @@ fastify.post('/register',{
             return reply.code(500).send({ error: 'User was not added' });
         }
         req.session.user = {
-            username: user.username
+            email: user.email,
+            userId: user.id,
+            loginMethod: 'normal',
         };
         console.log('server session set complete');
         return reply.send({ success: true });
@@ -89,7 +91,9 @@ fastify.post('/login', {
         }
 
         req.session.user = {
-            username: user.username
+            email: user.email,
+            userId: user.id,
+            loginMethod: 'normal',
         };
         reply.send({ success: true });
     } catch(err) {
@@ -115,19 +119,31 @@ fastify.get('/me', (req, reply) => {
 // google route
 const client = new OAuth2Client();
 
-async function verifyToken(idToken:string) {
+fastify.post('/google', async (req, reply) => {
+    const  { idToken }  = req.body as { idToken: string };
+    if (!idToken) {
+        return reply.code(400).send({error: 'missing idToken' });
+    }
     const ticket = await client.verifyIdToken({
-        idToken,
+        idToken: idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
     });
-
     const payload = ticket.getPayload();
-    if (payload) {
-        const userId = payload['sub'];
-        const email = payload['email'];
-        // proceed with user login or account creattion
+    if(!payload || !payload.email) return reply.code(400).send({ error: 'invalid token' });
+
+    let user = await findUserByEmail(payload.email)
+    if (!user) {
+       insertGoogleUser(payload.email);
     }
-}
+    user = await findUserByEmail(payload.email);
+
+    req.session.user = { 
+        email: payload.email,
+        userId: user.id,
+        loginMethod: 'google',
+    };
+    reply.send({ success: true});
+})
 
 
 //protected route

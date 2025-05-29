@@ -8,8 +8,7 @@
     },
     "dependencies": {
         "@types/gapi": "^0.0.47",
-        "@types/gapi.auth2": "^0.0.61",
-        "dotenv":"^16.5.0"
+        "@types/gapi.auth2": "^0.0.61"
     },
     "devDependencies": {
       "cpx": "^1.2.1",

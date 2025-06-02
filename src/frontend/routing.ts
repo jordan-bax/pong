@@ -14,6 +14,7 @@ export const routeFromPath: { [key: string]: string } = {
     '/profile': 'profile',
     '/login': 'login',
     '/register': 'register',
+    '/google': 'google'
 };
 
 const fastifyErrorHandling:{ [key: string ]: string } = {
@@ -69,7 +70,6 @@ export async function login(email: string, password: string): Promise<void> {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderNavbar();
         renderContent('profile');
     }
 }
@@ -97,7 +97,6 @@ export async function register(username: string, password: string, email:string)
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderNavbar();
         renderContent('profile');
     }
 }
@@ -108,12 +107,10 @@ export async function logout(): Promise<void> {
     currentUser = null;
     history.pushState({}, '', '/');
     checkSession();
-    renderNavbar();
     renderContent('home');
 }
 
 export async function handleGoogleCredentials(request:{ credential: string}): Promise<void> {
-    console.log('sending credentaials to backend:', request.credential)
     const response = await fetch ('api/user/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,9 +121,16 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderNavbar();
         renderContent('profile');
     } else {
-        console.log('google login failed:', await response.json())
+        let errorMessage;
+        const cloned = response.clone();
+        try {
+            errorMessage = await cloned.json();
+        } catch (e) {
+            const text  = await cloned.text();
+            errorMessage = { error: text };
+        }
+        console.log('google login failed:', errorMessage);
     }
 }

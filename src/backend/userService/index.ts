@@ -5,7 +5,7 @@ import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import bcrypt from 'bcryptjs';
 import { db, findUserByEmail, insertGoogleUser, insertUserIntoDatabase } from './userDb';
-import { registerSchema, loginSchema } from './schemas/userSchemas'
+import { registerSchema, loginSchema, googleLogiSchema } from './schemas/userSchemas'
 import { verifyPassword } from './validation';
 import { OAuth2Client } from 'google-auth-library'
 
@@ -40,66 +40,68 @@ fastify.register(fastifyStatic, {
 // Auth Routes
 
 // Register user
-fastify.post('/register',{
-    schema:registerSchema
-}, async (req, reply) => {
-    try {
-        console.log('get to start');
-        const { username, password, email } = req.body as { username: string; password: string; email: string };
-        if (await findUserByEmail(email) != null) {
-            console.log('email found');
-            return reply.code(401).send({ error: 'email already in use' })
+fastify.post<{ Body: registerBody }>(
+    '/register',
+    { schema:registerSchema }, 
+    async (req, reply) => {
+        try {
+            console.log('get to start');
+            const { username, password, email } = req.body as { username: string; password: string; email: string };
+            if (await findUserByEmail(email) != null) {
+                console.log('email found');
+                return reply.code(401).send({ error: 'email already in use' })
+            }
+            console.log('email not found');
+            const hased = await bcrypt.hash(password, 10); // password, saltRounds
+            console.log('hashed password');
+            await insertUserIntoDatabase(username, hased, email);
+            console.log('inserted into database');
+            const user = await findUserByEmail(email);
+            if (!user) {
+                console.log('user not added');
+                return reply.code(500).send({ error: 'User was not added' });
+            }
+            req.session.user = {
+                email: user.email,
+                userId: user.id,
+                loginMethod: 'normal',
+            };
+            console.log('server session set complete');
+            return reply.send({ success: true });
+        } catch (err) {
+            console.log('got error');
+            return reply.code(500).send({ error: 'Internal server error' })
         }
-        console.log('email not found');
-        const hased = await bcrypt.hash(password, 10); // password, saltRounds
-        console.log('hashed password');
-        await insertUserIntoDatabase(username, hased, email);
-        console.log('inserted into database');
-        const user = await findUserByEmail(email);
-        if (!user) {
-            console.log('user not added');
-            return reply.code(500).send({ error: 'User was not added' });
-        }
-        req.session.user = {
-            email: user.email,
-            userId: user.id,
-            loginMethod: 'normal',
-        };
-        console.log('server session set complete');
-        return reply.send({ success: true });
-    } catch (err) {
-        console.log('got error');
-        return reply.code(500).send({ error: 'Internal server error' })
-    }
-});
+    });
 
 // login
-fastify.post('/login', {
-    schema:loginSchema
-}, async (req, reply) => {
-    try {
-        const {password, email} = req.body as { password:string; email: string };
+fastify.post<{ Body: loginBody }>(
+    '/login', 
+    { schema:loginSchema }, 
+    async (req, reply) => {
+        try {
+            const {password, email} = req.body as { password:string; email: string };
 
-        const user = await findUserByEmail(email);
-        if (!user) {
-                return reply.code(401).send({ error: 'Incorrect email or password' });
+            const user = await findUserByEmail(email);
+            if (!user) {
+                    return reply.code(401).send({ error: 'Incorrect email or password' });
+            }
+
+            const isPasswordCorrect = await verifyPassword( password, user.password);
+            if (!isPasswordCorrect) {
+                return reply.code(401).send({ error: 'incorrect email or password' });
+            }
+
+            req.session.user = {
+                email: user.email,
+                userId: user.id,
+                loginMethod: 'normal',
+            };
+            reply.send({ success: true });
+        } catch(err) {
+            return reply.code(500).send({ error: 'Internal server error' });
         }
-
-        const isPasswordCorrect = await verifyPassword( password, user.password);
-        if (!isPasswordCorrect) {
-            return reply.code(401).send({ error: 'incorrect email or password' });
-        }
-
-        req.session.user = {
-            email: user.email,
-            userId: user.id,
-            loginMethod: 'normal',
-        };
-        reply.send({ success: true });
-    } catch(err) {
-        return reply.code(500).send({ error: 'Internal server error' });
-    }
-});
+    });
 
 // logout
 fastify.post('/logout', (req, reply) => {
@@ -119,31 +121,36 @@ fastify.get('/me', (req, reply) => {
 // google route
 const client = new OAuth2Client();
 
-fastify.post('/google', async (req, reply) => {
-    const  { idToken }  = req.body as { idToken: string };
-    if (!idToken) {
-        return reply.code(400).send({error: 'missing idToken' });
-    }
-    const ticket = await client.verifyIdToken({
-        idToken: idToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
+fastify.post<{ Body: googleBody }>(
+    '/google', 
+    { schema: googleLogiSchema },
+    async (req, reply) => {
+        try {
+            const  { idToken }  = req.body;
+            const ticket = await client.verifyIdToken({
+                idToken: idToken,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+            const payload = ticket.getPayload();
+            if(!payload || !payload.email) return reply.code(400).send({ error: 'invalid token' });
+
+            let user = await findUserByEmail(payload.email)
+            if (!user) {
+                await insertGoogleUser(payload.email);
+            }
+            user = await findUserByEmail(payload.email);
+
+            req.session.user = { 
+                email: payload.email,
+                userId: user.id,
+                loginMethod: 'google',
+            };
+            reply.send({ success: true});
+        } catch (err) {
+            console.error('Google login error:', err);
+            return reply.code(500).send({ error: 'Internal Server Error' });
+        }
     });
-    const payload = ticket.getPayload();
-    if(!payload || !payload.email) return reply.code(400).send({ error: 'invalid token' });
-
-    let user = await findUserByEmail(payload.email)
-    if (!user) {
-       insertGoogleUser(payload.email);
-    }
-    user = await findUserByEmail(payload.email);
-
-    req.session.user = { 
-        email: payload.email,
-        userId: user.id,
-        loginMethod: 'google',
-    };
-    reply.send({ success: true});
-})
 
 
 //protected route
@@ -155,11 +162,11 @@ fastify.get('/items', async (req, reply) => {
     const database = await db;
     const row = await database.all("SELECT * FROM items");
     return row;
-})
+});
 
 fastify.setNotFoundHandler((req, reply) => {
     return reply.code(404).send({ error: 'Not Found' });
-})
+});
 
 fastify.listen({host: "0.0.0.0", port: 3001 }, err => {
     if (err) {
@@ -167,3 +174,18 @@ fastify.listen({host: "0.0.0.0", port: 3001 }, err => {
         process.exit(1);
     }
 });
+
+interface loginBody {
+    email: string;
+    password: string;
+};
+
+interface registerBody {
+    username: string;
+    password: string;
+    email: string;
+};
+
+interface googleBody {
+    idToken: string;
+};

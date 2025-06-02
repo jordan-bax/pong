@@ -10,6 +10,7 @@ services:
       - user
       # - game
       # - tournament
+      - page_content
     networks:
       - transcendanse
     env_file:
@@ -58,8 +59,23 @@ services:
   #     - transcendanse
   #   restart: unless-stopped
 
+  page_content:
+    build:
+      context: ./backend/pageContent
+    container_name: page_content
+    ports:
+      - '3004:3004'
+    volumes:
+      - page_content-db:/app/db
+    env_file:
+      - .env
+    networks:
+      - transcendanse
+    restart: unless-stopped
+
 volumes:
   user-db:
+  page_content-db:
   # game-db:
   # tournament-db:
 

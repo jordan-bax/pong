@@ -23,7 +23,7 @@ export async function renderNavbar(): Promise<void> {
         const profileLink = document.createElement('a');
         profileLink.href = '/profile';
         profileLink.textContent = 'Profile';
-        homeLink.className = 'btn navItem';
+        profileLink.className = 'btn navItem';
         profileLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/profile');

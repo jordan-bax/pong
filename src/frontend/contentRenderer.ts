@@ -10,7 +10,6 @@ declare global {
 export function initGoogleSignInIfNeeded() {
     const path = window.location.pathname;
     const isLogin = path == '/login';
-    console.log(path);
     const singInContainer = document.getElementById('google-signin');
     if (!isLogin || !singInContainer) return;
 

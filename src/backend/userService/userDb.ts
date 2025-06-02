@@ -50,7 +50,7 @@ export async function insertUserIntoDatabase(username:string, password:string, e
 
 export async function insertGoogleUser(email:string) {
     const database = await db;
-    await database.run('INSERT INTO users (username, password, email, isGoogleRegister) VALUES (? ? ? ?)', [' ', ' ', email, 1]);
+    await database.run('INSERT INTO users (username, password, email, isGoogleRegister) VALUES (?, ?, ?, ?)', [' ', ' ', email, 1]);
 }
 
 async function seedDatabase() {

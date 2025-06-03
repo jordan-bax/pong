@@ -1,7 +1,7 @@
 import { renderContent, initGoogleSignInIfNeeded } from "./contentRenderer.js";
 import { routeFromPath, checkSession } from "./routing.js";
 
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', async () => {
     renderContent(routeFromPath[window.location.pathname] || 'not found');
 });
 
@@ -13,7 +13,7 @@ window.onGsiLoad = function () {
     initGoogleSignInIfNeeded();
 };
 
-function getCookie(name: string):string | null {
+export function getCookie(name: string):string | null {
     const cookies = document.cookie.split(';').map(cookie => cookie.trim());
     for (const cookie of cookies) {
         const [key, value] = cookie.split('=');
@@ -29,8 +29,16 @@ function setCookie(name: string, value: string, days = 7) {
     document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
 }
 
-const cookieName = 'ft_transcendce_language';
-const language = navigator.language || (navigator as any)['userLanguage'] || 'en';
-if (!getCookie(cookieName)) {
+const cookieName = 'ft_transcendence_language';
+let language: string = navigator.language || (navigator as any)['userLanguage'] || 'en';
+const cookieLanguage = getCookie(cookieName);
+if (language.includes('nl') || language.indexOf('nl') != -1) {
+    language = 'nl';
+} else {
+    language = 'en';
+}
+if (!cookieLanguage) {
+    setCookie(cookieName, language);
+} else if (language != cookieLanguage){
     setCookie(cookieName, language);
 }

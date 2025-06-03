@@ -13,19 +13,19 @@ export const db: Promise<Database> = open({
     driver: sqlite3.Database
 }).then(async (database) => {
     await database.run(`
-        CREATE TABLE IF NOT EXISTS items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-        )
-    `);
-
-    await database.run(`
         CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
         password TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         isGoogleRegister NUMERIC DEFAULT 0
+        )
+    `);
+
+    await database.run(`
+        CREATE TABLE IF NOT EXISTS meta (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        seeded TEXT
         )
     `);
 
@@ -42,26 +42,38 @@ export async function findUserByEmail(email: string): Promise<any>
     return user;
 }
 
-export async function insertUserIntoDatabase(username:string, password:string, email: string): Promise<void>
+export async function insertUserIntoDatabase(
+    username:string, 
+    password:string, 
+    email: string
+): Promise<void>
 {
     const database = await db;
-    await database.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email]);
+    await database.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', 
+        [username, password, email]);
 }
 
-export async function insertGoogleUser(email:string) {
+export async function insertGoogleUser(email:string): Promise<void> {
     const database = await db;
-    await database.run('INSERT INTO users (username, password, email, isGoogleRegister) VALUES (?, ?, ?, ?)', [' ', ' ', email, 1]);
+    await database.run(`
+        INSERT INTO users (username, password, email, isGoogleRegister) 
+        VALUES (?, ?, ?, ?)`, [' ', ' ', email, 1]);
 }
 
-async function seedDatabase() {
+export async function seedDatabase(): Promise<void> {
     const database = await db;
-    const statement = await database.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)');
+    const isSeeded = await database.get('SELECT * from meta;');
+    if (isSeeded)
+        return;
+    await database.run(`INSERT INTO meta (seeded) VALUES ('true');`)
+    const statement = await database.prepare(`
+        INSERT INTO users (username, password, email) VALUES (?, ?, ?)`);
+
     await statement.run('Alice', 'admin', 'aa@mail.com');
     await statement.run('bob', 'test', 'bt@mail.com');
     await statement.finalize();
 
-    await database.each('SELECT * FROM users', (err, row) => {
+    await database.each('SELECT * FROM users;', (err, row) => {
         if (err) throw err;
     });
-    await database.close();
 }

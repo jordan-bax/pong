@@ -4,7 +4,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import bcrypt from 'bcryptjs';
-import { db, findUserByEmail, insertGoogleUser, insertUserIntoDatabase } from './userDb';
+import { findUserByEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase } from './userDb';
 import { registerSchema, loginSchema, googleLogiSchema } from './schemas/userSchemas'
 import { verifyPassword } from './validation';
 import { OAuth2Client } from 'google-auth-library'
@@ -152,23 +152,12 @@ fastify.post<{ Body: googleBody }>(
         }
     });
 
-
-//protected route
-fastify.get('/items', async (req, reply) => {
-    if (!req.session.user) {
-        return reply.code(401).send({ error: 'Unathorized' });
-    }
-
-    const database = await db;
-    const row = await database.all("SELECT * FROM items");
-    return row;
-});
-
 fastify.setNotFoundHandler((req, reply) => {
     return reply.code(404).send({ error: 'Not Found' });
 });
 
 fastify.listen({host: "0.0.0.0", port: 3001 }, err => {
+    seedDatabase();
     if (err) {
         fastify.log.error((err));
         process.exit(1);

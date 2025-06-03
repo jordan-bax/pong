@@ -1,3 +1,4 @@
+import { getCookie } from "./index.js";
 import { getCurrentUser, getLoggin, login, register, handleGoogleCredentials } from "./routing.js";
 
 declare global {
@@ -5,6 +6,35 @@ declare global {
         google: any;
         onGsiLoad: () => void;
     }
+}
+
+interface loginContent {
+    emailText: string;
+    passwordText: string;
+    loginButtonText: string;
+}
+
+interface registerContent {
+    emailText: string;
+    usernameText: string;
+    passwordText: string;
+    registerButtonText: string;
+}
+
+function queryStringBuilder(language: string, array: string[]): string {
+    let output = new URLSearchParams();
+    output.append('language', language);
+    array.forEach(tag => output.append('textKey', tag));
+    return output.toString();
+    
+}
+
+function getMapFromJson(data: any): Map<string, object> {
+    const map = new Map<string, object>();
+    for (const key in data) {
+        map.set(key, data[key]);
+    }
+    return map;
 }
 
 export function initGoogleSignInIfNeeded() {
@@ -26,7 +56,7 @@ export function initGoogleSignInIfNeeded() {
     });
 }
 
-export function renderContent (route: string): void {
+export async function renderContent (route: string): Promise<void> {
     const content = document.getElementById('content');
     if (!content) return;
     content.innerHTML = '';
@@ -39,7 +69,8 @@ export function renderContent (route: string): void {
             if (getLoggin()) {
                 content.textContent = `Hello ${getCurrentUser()}, this is your profile.`
             } else {
-                content.textContent = 'You must be logged in to view this page.';
+                window.location.href = '/login';
+                return;
             }
             break;
         case 'login':
@@ -47,18 +78,37 @@ export function renderContent (route: string): void {
             googleLogin.id = 'google-signin';
             content.appendChild(googleLogin);
             const loginForm = document.createElement('form');
+            let language = getCookie('ft_transcendence_language');
+            if (language == null) {
+                language = 'en';
+            }
+            const neededKeys = queryStringBuilder(language, ['emailText', 'passwordText', 'loginButtonText']);
+            const result = await fetch(`/api/page_content/getContent?${neededKeys}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            if (!result.ok) {
+                console.error("error result not ok");
+                throw new Error(`HTTP error! status ${result.status}`);
+            }
+            const body = await result.json();
+            const map = getMapFromJson(body);
+            const data = map.get('row') as loginContent;
+
             loginForm.innerHTML = `
             <table>
                 <tr>
-                    <td><label>email:</label></td>
+                    <td><label>${data.emailText}</label></td>
                     <td><input type="email" id="email"></td>
                 </tr>
                 <tr>
-                    <td><label>Password:</label></td>
+                    <td><label>${data.passwordText}</label></td>
                     <td><input type="password" id="password"></td>
                 </tr>
                 <tr>
-                    <td><button class="btn" type="submit">Login</button></td>
+                    <td><button class="btn" type="submit">${data.loginButtonText}</button></td>
                     <td><div id="error"></div></td>
                 </tr>
             </table>

@@ -8,7 +8,9 @@
         "esModuleInterop": true,
         "strict": true,
         "skipLibCheck": true,
-        "typeRoots": ["node_modules/@types"]
+        "typeRoots": ["node_modules/@types"],
+        "noImplicitAny": true,
+        "noImplicitReturns": true
     },
     "include": ["./*.ts", "./db"]
 }

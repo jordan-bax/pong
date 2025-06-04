@@ -13,7 +13,7 @@ window.onGsiLoad = function () {
     initGoogleSignInIfNeeded();
 };
 
-export function getCookie(name: string):string | null {
+export function getCookie(name: string): string | null {
     const cookies = document.cookie.split(';').map(cookie => cookie.trim());
     for (const cookie of cookies) {
         const [key, value] = cookie.split('=');
@@ -24,7 +24,7 @@ export function getCookie(name: string):string | null {
     return null;
 }
 
-function setCookie(name: string, value: string, days = 7) {
+function setCookie(name: string, value: string, days = 7): void {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
     document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
 }

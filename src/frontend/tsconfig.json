@@ -7,7 +7,9 @@
         "strict": true,
         "moduleResolution": "bundler",
         "lib": ["DOM", "ES6"],
-        "types": []
+        "types": [],
+        "noImplicitAny": true,
+        "noImplicitReturns": true
     },
     "include": ["*.ts"]
 }

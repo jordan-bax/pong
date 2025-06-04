@@ -86,16 +86,18 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('nl', 'usernameText', 'Gebruikersnaam:');
         await statement.run('en', 'registerButtonText', 'Register');
         await statement.run('nl', 'registerButtonText', 'Registreer:');
-        await statement.run('en', 'profileText', 'Hello ${email} this is your profile.');
-        await statement.run('nl', 'profileText', 'Hallo ${email} dit is uw profiel.');
+        await statement.run('en', 'profileText', 'Hello {email} this is your profile.');
+        await statement.run('nl', 'profileText', 'Hallo {email} dit is uw profiel.');
         await statement.run('en', 'logoutNavbarText', 'Logout');
         await statement.run('nl', 'logoutNavbarText', 'Uitloggen');
         await statement.run('en', 'loginNavbarText', 'Login');
         await statement.run('nl', 'loginNavbarText', 'Inloggen');
-        await statement.run('en', 'registerNavberText', 'Register');
-        await statement.run('nl', 'registerNavberText', 'Registreren');
+        await statement.run('en', 'registerNavbarText', 'Register');
+        await statement.run('nl', 'registerNavbarText', 'Registreren');
         await statement.run('en', 'homeNavbarText', 'Home Page');
-        await statement.run('nl', 'homeNavbarText', 'Hoofd Pagina')
+        await statement.run('nl', 'homeNavbarText', 'Hoofd Pagina');
+        await statement.run('en', 'profileNavbarText', 'Profile');
+        await statement.run('nl', 'profileNavbarText', 'Profiel');
         await statement.finalize();
 
     } catch (error: any) {

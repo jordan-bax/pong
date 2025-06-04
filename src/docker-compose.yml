@@ -21,8 +21,8 @@ services:
     build: 
       context: ./backend/userService
     container_name: user
-    ports:
-      - "30001:3001"
+    expose:
+      - "3001"
     volumes:
       - user-db:/app/db
     env_file:
@@ -35,8 +35,8 @@ services:
   #   build: 
   #     context: ./backend/gameService
   #   container_name: game
-  #   ports:
-  #     - "3002:3002"
+  #   expose:
+  #     - "3002"
   #   volumes:
   #     - game-db:/app/db
   #   env_file:
@@ -49,8 +49,8 @@ services:
   #   build: 
   #     context: ./backend/tournamentService
   #   container_name: tournament
-  #   ports:
-  #     - "3003:3003"
+  #   expose:
+  #     - "3003"
   #   volumes:
   #     - tournament-db:/app/tournament.sqlite
   #   env_file:
@@ -63,8 +63,8 @@ services:
     build:
       context: ./backend/pageContent
     container_name: page_content
-    ports:
-      - '3004:3004'
+    expose:
+      - '3004'
     volumes:
       - page_content-db:/app/db
     env_file:

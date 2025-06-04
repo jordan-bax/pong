@@ -4,3 +4,6 @@ dist
 .git
 .env
 package-lock.json
+*.js
+simple*
+*.md

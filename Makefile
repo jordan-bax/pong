@@ -51,4 +51,11 @@ pull:
 prune: clean
 	@docker system prune -a --volumes -f || true
 
+id:
+	@docker ps -a
+	# @docker images
+	
+open:
+	docker exec -it pong sh
+
 .PHONY: all up down start build clean re prune push pull

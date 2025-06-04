@@ -13,7 +13,6 @@ RUN npm install
 # RUN npm install -g typescript http-server
 
 # Create the TypeScript file
-# RUN echo 'document.body.innerHTML = "<h1>Hello, World!</h1>";' > pong.ts
 
 COPY . .
 

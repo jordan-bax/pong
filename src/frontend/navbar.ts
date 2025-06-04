@@ -2,17 +2,17 @@ import { renderContent, getPageContent } from "./contentRenderer.js";
 import { getCookie } from "./index.js";
 import { getLoggin, getLogginServer, logout } from "./routing.js";
 
-async function getNavbarContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
-    const navbarMap = await getPageContent(language, textKeys);
-    return navbarMap;
-}
-
 interface navbarContent {
     homeNavbarText: string;
     loginNavbarText: string;
     logoutNavbarText: string;
     profileNavbarText: string;
     registerNavbarText: string;
+}
+
+async function getNavbarContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
+    const navbarMap = await getPageContent(language, textKeys);
+    return navbarMap;
 }
 
 export async function renderNavbar(): Promise<void> {

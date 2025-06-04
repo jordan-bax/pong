@@ -4,12 +4,28 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import bcrypt from 'bcryptjs';
-import { findUserByEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase } from './userDb';
+import { db, findUserByEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase } from './userDb';
 import { registerSchema, loginSchema, googleLogiSchema } from './schemas/userSchemas'
 import { verifyPassword } from './validation';
 import { OAuth2Client } from 'google-auth-library'
 
+interface loginBody {
+    email: string;
+    password: string;
+};
+
+interface registerBody {
+    username: string;
+    password: string;
+    email: string;
+};
+
+interface googleBody {
+    idToken: string;
+};
+
 const fastify = Fastify({ logger: true });
+const client = new OAuth2Client();
 const sessionSecret = process.env.SESSION_SECRET;
 const cookieSecret = process.env.COOKIE_SECRET;
 
@@ -37,8 +53,6 @@ fastify.register(fastifyStatic, {
     prefix: '/',
 });
 
-// Auth Routes
-
 // Register user
 fastify.post<{ Body: registerBody }>(
     '/register',
@@ -48,17 +62,12 @@ fastify.post<{ Body: registerBody }>(
             console.log('get to start');
             const { username, password, email } = req.body as { username: string; password: string; email: string };
             if (await findUserByEmail(email) != null) {
-                console.log('email found');
                 return reply.code(401).send({ error: 'email already in use' })
             }
-            console.log('email not found');
             const hased = await bcrypt.hash(password, 10); // password, saltRounds
-            console.log('hashed password');
             await insertUserIntoDatabase(username, hased, email);
-            console.log('inserted into database');
             const user = await findUserByEmail(email);
             if (!user) {
-                console.log('user not added');
                 return reply.code(500).send({ error: 'User was not added' });
             }
             req.session.user = {
@@ -66,10 +75,8 @@ fastify.post<{ Body: registerBody }>(
                 userId: user.id,
                 loginMethod: 'normal',
             };
-            console.log('server session set complete');
             return reply.send({ success: true });
         } catch (err) {
-            console.log('got error');
             return reply.code(500).send({ error: 'Internal server error' })
         }
     });
@@ -118,8 +125,26 @@ fastify.get('/me', (req, reply) => {
   }
 });
 
+fastify.get('/me/data', async  (req, reply) => {
+    try {
+        const database = await db;
+        const email = req.session.user?.email;
+        if (!email) {
+            return reply.code(401).send({ error: 'Unauthorized' });
+        }
+        const user = await database.get('SELECT * FROM users WHERE email IS ?', email);
+        if (user) {
+            return reply.send({ user });
+        } else {
+            return reply.code(404).send({ error: 'User not found' });
+        }
+    } catch (err) {
+        console.error("user data error", err);
+        reply.code(500)
+    }
+});
+
 // google route
-const client = new OAuth2Client();
 
 fastify.post<{ Body: googleBody }>(
     '/google', 
@@ -163,18 +188,3 @@ fastify.listen({host: "0.0.0.0", port: 3001 }, err => {
         process.exit(1);
     }
 });
-
-interface loginBody {
-    email: string;
-    password: string;
-};
-
-interface registerBody {
-    username: string;
-    password: string;
-    email: string;
-};
-
-interface googleBody {
-    idToken: string;
-};

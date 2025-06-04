@@ -1,5 +1,5 @@
 import { getCookie } from "./index.js";
-import { getCurrentUser, getLoggin, login, register, handleGoogleCredentials } from "./routing.js";
+import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 
 declare global {
     interface Window {
@@ -163,6 +163,65 @@ function renderRegister(text: content): HTMLFormElement {
     return registerForm;
 }
 
+async function renderProfileData(text: content): Promise<HTMLElement | null> {
+    if (!getLoggin()) {
+        return null;
+    }
+    const user = await getLogginUserData();
+    if (!user) {
+        return null;
+    }
+
+    const profileForm = document.createElement('form');
+    profileForm.style.alignSelf = 'center';
+
+    const table = document.createElement('table');
+
+    const emailLabel = document.createElement('label');
+    emailLabel.textContent = text.emailText;
+    emailLabel.setAttribute('for', 'eamail');
+
+    const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.id = 'eamil';
+    emailInput.required = true;
+    emailInput.value = user.email;
+
+    table.appendChild(createRow(emailLabel, emailInput));
+
+    const usernameLable = document.createElement('label');
+    usernameLable.textContent = text.usernameText;
+    usernameLable.setAttribute('for', 'username');
+
+    const usernameInput = document.createElement('input');
+    usernameInput.type = 'text';
+    usernameInput.id = 'username';
+    usernameInput.required = true;
+    usernameInput.value = user.username;
+
+    table.appendChild(createRow(usernameInput, usernameInput));
+
+    const submitButton = document.createElement('button');
+    submitButton.type = 'submit';
+    submitButton.className = 'btn';
+    submitButton.textContent = text.loginButtonText;
+
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'error';
+
+    table.appendChild(createRow(submitButton, errorDiv));
+
+    profileForm.appendChild(table);
+    profileForm.onsubmit = (e) => {
+        e.preventDefault();
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+        const username = (document.getElementById('username') as HTMLInputElement).value;
+        updateUserInfo(email, username);
+    };
+
+    return profileForm;
+}
+
 function renderProfile(text: content): string | null {
     if (getLoggin()) {
         let textOriginal = text.profileText;
@@ -190,8 +249,12 @@ export async function renderContent (route: string): Promise<void> {
             break;
         case 'profile':
             const profileContent = renderProfile(textData);
+            const profileData = await renderProfileData(textData);
             if (profileContent) {
                 content.textContent = profileContent;
+                if (profileData !== null) {
+                    content.appendChild(profileData);
+                }
             } else {
                 window.location.href = '/login';
                 return;

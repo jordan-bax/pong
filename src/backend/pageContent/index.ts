@@ -2,6 +2,11 @@ import Fastify from "fastify";
 import { getAllContentOfPage, seedContentDb } from "./contentDB";
 import { getContentSchema } from "./schemas/contentSchemas";
 
+interface GetContentBody {
+    language: string;
+    textKey: string | string[];
+}
+
 const fastify = Fastify({ logger: true });
 
 fastify.get<{ Querystring: GetContentBody }>(
@@ -33,8 +38,3 @@ fastify.listen({ host: '0.0.0.0', port: 3004 }, error => {
         process.exit(1);
     }
 });
-
-interface GetContentBody {
-    language: string;
-    textKey: string | string[];
-}

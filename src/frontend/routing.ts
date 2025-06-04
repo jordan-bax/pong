@@ -17,6 +17,11 @@ export const routeFromPath: { [key: string]: string } = {
     '/google': 'google'
 };
 
+interface userInfo {
+    username: string;
+    email: string;
+}
+
 const fastifyErrorHandling:{ [key: string ]: string } = {
     FST_ERR_VALIDATION: 'Invalid input: use only letters and numbers',
 };
@@ -36,6 +41,41 @@ export async function getLogginServer(): Promise<string | null> {
     const serverUser = await fetch('api/user/me')
     const data = await serverUser.json();
     return data.user?.email;
+}
+
+export async function getLogginUserData(): Promise<userInfo | null> {
+    const serverUser = await fetch('api/user/me/data', {
+        credentials: 'include'
+    });
+    if (!serverUser.ok) {
+        return null;
+    }
+    const userData =await serverUser.json() as userInfo;
+    return userData;
+}
+
+export async function updateUserInfo(email: string, username: string): Promise<void> {
+    const response = await fetch('api/user/update', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, username })
+    });
+    const content = document.getElementById('error');
+    if (!response.ok) {
+        const errorData = await response.json();
+        const message = fastifyErrorHandling[errorData.code] ??
+                        statusHandlers[response.status] ??
+                        errorData.message ??
+                        'unknown error';
+        if (content) {
+            content.textContent = message;
+            content.className = 'eror-text';
+            return ;
+        }
+    }
+    history.pushState({}, '', '/profile');
+    checkSession();
+    renderContent('profile');
 }
 
 export async function checkSession() {

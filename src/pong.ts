@@ -1,3 +1,7 @@
+// import { io, Socket } from 'socket.io-client';
+// import { Server } from 'socket.io';
+// // import { test } from './test';
+// test(); // Call the test function to ensure it's working
 interface gameWallsInterface {
     width: number;
     height: number;
@@ -42,27 +46,141 @@ interface ballInterface {
     dx: number;
     dy: number;
     speed: number;
+    staticSpeed: number;
     height: number;
     width: number;
 }
+interface aiInterface {
+    reactionTime: number; // Time it takes for the AI to react
+}
+var ai_var: aiInterface = {
+    //The average (median) reaction time is 273 milliseconds
+    reactionTime: 100 // Default reaction time in milliseconds
+};
 var ballvar: ballInterface = {
     x: 98,
     y: 98,
     dx: 2,
     dy: 5,
     speed: 2,
+    staticSpeed: 20,
     height: 4,
     width: 4
 };
-var pauze: boolean = true; // Variable to control the pause state
-
-
 var sizeAduster: number = 1;
-player2.x -= player2.width; // Adjust player2's x position to account for its width
-startGame();
-async function startGame() {
+var fps: number = 10; // Frames per second
+var pauze: boolean = true; // Variable to control the pause state
+createCenterButtons();
+function createCenterButtons(){
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.top = '50%';
+    container.style.left = '50%';
+    container.style.transform = 'translate(-50%, -50%)';
+    container.style.display = 'flex';
+    container.style.gap = '20px';
+    container.style.zIndex = '1000';
+
+    // const host = document.createElement('button');
+    // host.textContent = 'host game';
+    // host.style.fontSize = '1.2em';
+    // host.style.padding = '10px 20px';
+    // host.onclick = () => nextFunction( () => hostGame() , container);
+
+    // const join = document.createElement('button');
+    // join.textContent = 'join game';
+    // join.style.fontSize = '1.2em';
+    // join.style.padding = '10px 20px';
+    // join.onclick = () => nextFunction( () => joinGame() , container);
+
+    const button1 = document.createElement('button');
+    button1.textContent = 'local';
+    button1.style.fontSize = '1.2em';
+    button1.style.padding = '10px 20px';
+    button1.onclick = () => nextFunction( () => startGame(false) , container);
+
+    const button2 = document.createElement('button');
+    button2.textContent = 'ai';
+    button2.style.fontSize = '1.2em';
+    button2.style.padding = '10px 20px';
+    button2.onclick = () => nextFunction( () => startGame(true) , container);
+    
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.placeholder = 'how many fps?';
+    input.style.fontSize = '1.2em';
+    input.style.padding = '10px 20px';
+
+    input.addEventListener('input', () => {
+        fps = parseInt(input.value) || 10; // Update fps based on input value, default to 10 if invalid
+        // You can access the input value with input.value
+        console.log('Input value:', input.value, 'FPS:', fps);
+    });
+
+    container.appendChild(button1);
+    container.appendChild(button2);
+    container.appendChild(input);
+
+    document.body.appendChild(container);
+}
+
+// Multiplayer communication using socket.io (requires a socket.io server)
+
+
+// let socket: Socket | null = null;
+
+// function hostGame() {
+//     socket = io("http://localhost:3000"); // Replace with your socket.io server URL
+//     socket.emit("host");
+
+//     socket.on("start", () => {
+//         // Both players are connected, start the game as host (player 1)
+//         startGame(false); // You may want to distinguish host/join logic
+//     });
+
+//     socket.on("state", (remoteState: any) => {
+//         // Handle remote player state (e.g., update player2)
+//         Object.assign(player2, remoteState);
+//     });
+// }
+
+// function joinGame() {
+//     socket = io("http://localhost:3000"); // Replace with your socket.io server URL
+//     socket.emit("join");
+
+//     socket.on("start", () => {
+//         // Both players are connected, start the game as client (player 2)
+//         startGame(false); // You may want to distinguish host/join logic
+//     });
+
+//     socket.on("state", (remoteState: any) => {
+//         // Handle remote player state (e.g., update player1)
+//         Object.assign(player1, remoteState);
+//     });
+// }
+
+// // Example: send local player state to the other player
+// function sendPlayerState(player: pcInterface) {
+//     if (socket) {
+//         socket.emit("state", player);
+//     }
+// }
+
+function nextFunction(callback: () => void, frame: HTMLDivElement): void {
+    document.body.removeChild(frame);
+    // This function is called to execute the next step in the game loop
+    if (callback) {
+        callback();
+    }
+}
+
+// player2.x -= player2.width; // Adjust player2's x position to account for its width
+async function startGame(use_ai :boolean = false) {
+    const delay: number = gamespeed(); // Set the initial delay based on the game speed
     let lastFrame: HTMLDivElement | null = null;
+    let intervalRef: NodeJS.Timeout | null = null;
     var background = makeBackground();
+    console.log('Game started with AI:', use_ai, 'FPS:', fps, 'Delay:', delay);
     while (true) {
         const HoleScreen = background.cloneNode(true) as HTMLDivElement;
         HoleScreen.appendChild(buildframe());
@@ -72,13 +190,53 @@ async function startGame() {
         document.body.appendChild(HoleScreen);
         lastFrame = HoleScreen;
         // Wait for a second
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, delay));
+        if (use_ai) {
+            if (!intervalRef) {
+                intervalRef = setInterval(() => {
+                    simpleAi();
+                }, ai_var.reactionTime);
+            }
+        } else if (intervalRef) {
+            clearInterval(intervalRef);
+            intervalRef = null;
+        }
         ballmove();
     }
+}
+function gamespeed(): number {
+    // Adjust the game speed based on the current FPS
+    if (fps < 1) {
+        fps = 1; // Ensure FPS is at least 1
+    } else if (fps > 60) {
+        fps = 60; // Cap FPS at 60
+    }
+    ballvar.speed = ballvar.staticSpeed / fps; // Set the ball speed based on FPS
+    return 1000 / fps; // Return the delay in milliseconds for the next frame
 }
 function WaitForASecond() {
     // Wait for a second
     return new Promise(resolve => setTimeout(resolve, 1000));
+}
+
+
+function simpleAi(): void {
+    // Simple AI to control player 2
+
+
+    if (ballvar.y < player2.y) {
+        player2.y -= player2.speed; // Move up
+    } else if (ballvar.y + ballvar.height > player2.y + player2.height) {
+        player2.y += player2.speed; // Move down
+    }
+    // Ensure the AI paddle stays within the game walls
+    if (player2.y < 0) {
+        player2.y = 0; // Prevent moving above the top wall
+    }
+    else if (player2.y + player2.height > gameWall.height) {
+        player2.y = gameWall.height - player2.height; // Prevent moving below the bottom wall
+    }
+
 }
 function ballmove(): void {
     // Move the ball

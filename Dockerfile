@@ -10,8 +10,11 @@ COPY package*.json ./
 
 # Install dependencies inside the container
 RUN npm install
+# RUN npm install express socket.io
 # RUN npm install -g typescript http-server
-
+RUN npm install socket.io-client
+RUN npm install socket.io
+# RUN npm install --save-dev @types/socket.io-client
 # Create the TypeScript file
 
 COPY . .
@@ -27,6 +30,7 @@ RUN npm run build
 
 # Expose port 8080 for the HTTP server
 EXPOSE 8080
+# EXPOSE 8081
 
 # Serve the HTML file using http-server
 # CMD ["http-server", "-p", "8080"]

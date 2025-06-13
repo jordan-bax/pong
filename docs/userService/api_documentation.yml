@@ -5,7 +5,7 @@ paths:
       Parameters:
       Responses:
         200:
-          description: user is logged in and known serve side
+          description: user is logged in and known server side
           content:
             application/json:
               schema:
@@ -65,6 +65,19 @@ paths:
                 type: object
                 items:
                   error: string with error message
+  /csrf-token:
+    get:
+      summary: gives the server csrf token
+      Parameters:
+      Responses:
+        200:
+          description: the string holding the csrf token
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  csrfToken: string of csrf token
   /register:
     post:
       summary: registers a user and make it known by the server 
@@ -75,6 +88,7 @@ paths:
             schema:
               type: multipart/form-data
               items:
+                _csrf: string with csrfToken
                 username: string with username
                 password: sting with password
                 email: string with email
@@ -115,6 +129,7 @@ paths:
             schema:
               type: multipart/form-data
               items:
+                _csrf: string with csrf token
                 email: string with email
                 password: string with password
       Responses:
@@ -154,15 +169,28 @@ paths:
     post:
       summary: logs user out and make the server forget the user
       Parameters:
+        content:
+          csrfToken:
+            type: string
+            items:
+              csrfToken: string with csrf token
       Responses:
         200:
-          description: logsout success
+          description: logout success
           content:
             application/json:
               schema:
                 type: object
                 items:
                   success: boolean
+        400:
+          description: no user logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
   /google:
     post:
       summary: login via google account
@@ -210,6 +238,7 @@ paths:
             schema:
               type: multipart/form-data and RequestCredentials
               items:
+                _csrf: string with csrf token
                 newUsername: string of username (optional)
                 newEmail: string of email (optional)
                 newPassword: string of password (optional)

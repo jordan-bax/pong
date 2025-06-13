@@ -4,6 +4,7 @@ import path from 'path';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
+import csrfProtection from'@fastify/csrf-protection'
 import bcrypt from 'bcryptjs';
 import { db, findUserByEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase, updateUserInfo } from './userDb';
 import { googleLogiSchema } from './schemas/userSchemas'
@@ -11,6 +12,7 @@ import { verifyPassword, validateUserUpdateData, validateRegisterData, validateL
 import { OAuth2Client } from 'google-auth-library'
 import fs from 'fs';
 import fastifyMultipart, { MultipartFile } from '@fastify/multipart';
+import { randomBytes } from 'crypto';
 
 export interface loginBody {
     email: string;
@@ -62,14 +64,26 @@ fastify.register(fastifySession, {
 
 fastify.register(fastifyMultipart);
 
+fastify.register(csrfProtection)
+
 fastify.register(fastifyStatic, {
     root: path.join(__dirname, './dist'),
     prefix: '/',
 });
 
+function generateStateToken() {
+    return randomBytes(32).toString('hex');
+}
+
+fastify.get('/csrf-token', async (req, reply) => {
+    const token = reply.generateCsrf();
+    reply.send({csrfToken: token});
+});
+
 // Register user
 fastify.post(
     '/register',
+    { preHandler: fastify.csrfProtection },
     async (req, reply) => {
         let userData = {} as registerBody;
         
@@ -113,6 +127,7 @@ fastify.post(
 // login
 fastify.post(
     '/login',
+    { preHandler: fastify.csrfProtection },
     async (req, reply) => {
         let userData = {} as loginBody;
         const parts = req.parts();
@@ -147,9 +162,15 @@ fastify.post(
     });
 
 // logout
-fastify.post('/logout', (req, reply) => {
+fastify.post('/logout',
+    { preHandler: fastify.csrfProtection },
+     (req, reply) => {
+    if (!req.session.user) {
+        return reply.code(400).send({ error: 'no one logged in' });
+    }
+
     delete req.session.user;
-    reply.send({ success: true });
+    return reply.send({ success: true });
 });
 
 // get current user
@@ -184,7 +205,10 @@ fastify.get('/me/data', async  (req, reply) => {
 
 fastify.post<{ Body: googleBody }>(
     '/google', 
-    { schema: googleLogiSchema },
+    { 
+        schema: googleLogiSchema ,
+        preHandler: fastify.csrfProtection,
+    },
     async (req, reply) => {
         try {
             const  { idToken }  = req.body;
@@ -247,6 +271,7 @@ async function validateFile(part: MultipartFile): Promise<'DONE' | 'TOO LARGE'> 
 
 fastify.patch(
     '/update',
+    { preHandler: fastify.csrfProtection },
     async (req, reply) => {
         let userData = {} as patchBody;
         

@@ -38,6 +38,17 @@ export function getCurrentUser(): string | null{
     return currentUser;
 }
 
+export async function getCsrfToken(): Promise<string | null> {
+    const response = await fetch('api/user/csrf-token', {
+        credentials: 'include'
+    });
+    if (response.ok) {
+        const data = await response.json();
+        return data.csrfToken;
+    }
+    return null;
+}
+
 export async function getLogginServer(): Promise<string | null> {
     const serverUser = await fetch('api/user/me')
     const data = await serverUser.json();
@@ -84,7 +95,6 @@ export async function updateUserInfo(
     }
     history.pushState({}, '', '/profile');
     checkSession();
-    // renderContent('profile');
 }
 
 export async function checkSession() {
@@ -102,27 +112,36 @@ export async function login(formData: FormData): Promise<void> {
         body: formData,
     });
     const content = document.getElementById('error');
-    if (!response.ok)
-    {
+    if (!response.ok) {
         const errorData = await response.json();
-        const message = statusHandlers[response.status] ??
-                        errorData.message ??
-                        'Unknown error occured.';
+        let messages = [];
+        if (errorData.error) {
+            messages.push(errorData.error as string);
+        }
+        if (errorData.errors) {
+            for(const error of errorData.erros as string[]) {
+                messages.push(error);
+            }
+        }
         if (content) {
-            content.innerHTML = `
-            <p class="error-text">${message}</p>
-            `
+            content.innerHTML = '';
+            for (const error of messages) {
+                const paragraph = document.createElement('p');
+                paragraph.style.color = 'red';
+
+                const text = document.createTextNode(error);
+                paragraph.appendChild(text);
+                content.appendChild(paragraph);
+            }
         }
     } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        //renderContent('profile');
     }
 }
 
 export async function register(formData: FormData): Promise<void> {
-    console.log(formData);
     const response = await fetch('/api/user/register', {
         method: 'POST',
         body: formData,
@@ -131,19 +150,29 @@ export async function register(formData: FormData): Promise<void> {
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = statusHandlers[response.status] ??
-                        errorData.message ??
-                        'Unknown error occured.';
+        let messages = [];
+        if (errorData.error) {
+            messages.push(errorData.error as string);
+        }
+        if (errorData.errors) {
+            for (const error of errorData.errors as string[]) {
+                messages.push(error);
+            }
+        }
         if (content) {
-            content.innerHTML = `
-            <p class="error-text">${message}</p>
-            `
+            content.innerHTML = '';
+            for (const error of messages) {
+                const paragraph = document.createElement('p');
+                paragraph.style.color = 'red';
+                const text = document.createTextNode(error);
+                paragraph.appendChild(text);
+                content.appendChild(paragraph);
+            }
         }
     } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        // renderContent('profile');
     }
 }
 
@@ -153,13 +182,25 @@ export async function logout(): Promise<void> {
     currentUser = null;
     history.pushState({}, '', '/');
     checkSession();
-    //renderContent('home');
+}
+
+let csrfToken: string | null = null;
+
+async function fetchCsrfToken() {
+    const res = await fetch('api/user/csrf-token', { credentials: 'include' });
+    const data = await res.json();
+    csrfToken = data.csrfToken;
 }
 
 export async function handleGoogleCredentials(request:{ credential: string}): Promise<void> {
+    if (!csrfToken) await fetchCsrfToken();
+
     const response = await fetch ('api/user/google', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json', 
+            'x-csrf-token': csrfToken ?? '',
+        },
         body: JSON.stringify({ idToken: request.credential }),
         credentials: 'include',
     });
@@ -167,7 +208,6 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        // renderContent('profile');
     } else {
         let errorMessage;
         const cloned = response.clone();

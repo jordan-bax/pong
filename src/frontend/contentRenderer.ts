@@ -1,5 +1,5 @@
 import { getCookie } from "./index.js";
-import { getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
+import { getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData, getCsrfToken } from "./routing.js";
 
 declare global {
     interface Window {
@@ -63,10 +63,23 @@ function renderGoogle(): HTMLDivElement {
     return googleLogin;
 }
 
-function renderLogin(text: content): HTMLFormElement {
+async function renderLogin(text: content): Promise<HTMLFormElement> {
     const loginForm = document.createElement('form');
     loginForm.id = 'loginForm';
     loginForm.enctype = 'multipart/form-data';
+
+    const csrf = await getCsrfToken();
+    if (!csrf) {
+        throw new Error('csrf missing');
+    }
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_csrf';
+    csrfInput.value = csrf;
+
+    loginForm.appendChild(csrfInput);
+
     const table = document.createElement('table');
 
     const emailLabel = document.createElement('label');
@@ -111,11 +124,22 @@ function renderLogin(text: content): HTMLFormElement {
     return loginForm;
 }
 
-function renderRegister(text: content): HTMLFormElement {
-    
+async function renderRegister(text: content): Promise<HTMLFormElement> {
+    const csrf = await getCsrfToken();
+    if (!csrf) {
+        throw new Error('csrf missing');
+    }
+
     const registerForm = document.createElement('form');
     registerForm.id = 'registerForm';
     registerForm.enctype = 'multipart/form-data';
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_csrf';
+    csrfInput.value = csrf;
+
+    registerForm.appendChild(csrfInput);
 
     const table = document.createElement('table');
 
@@ -198,6 +222,18 @@ async function renderProfileData(text: content): Promise<HTMLElement | null> {
     profileForm.style.alignSelf = 'center';
     profileForm.id = 'profileForm';
     profileForm.enctype = 'multipart/form-data';
+
+    const csrf = await getCsrfToken();
+    if (!csrf) {
+        throw new Error('csrf missing')
+    }
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_csrf';
+    csrfInput.value = csrf;
+
+    profileForm.appendChild(csrfInput);
 
     const table = document.createElement('table');
 
@@ -283,13 +319,13 @@ export async function renderContent (route: string): Promise<void> {
             break;
         case 'login':
             const googleLogin = renderGoogle();
-            const loginFrom = renderLogin(textData);
+            const loginFrom = await renderLogin(textData);
 
             content.appendChild(googleLogin);
             content.appendChild(loginFrom);
             break;
         case 'register':
-            const registerForm = renderRegister(textData);
+            const registerForm = await renderRegister(textData);
             content.appendChild(registerForm);
             break;
         default:

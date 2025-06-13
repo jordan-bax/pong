@@ -1,5 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { open, Database} from 'sqlite';
+import bcrypt from 'bcryptjs';
 
 sqlite3.verbose();
 
@@ -60,6 +61,28 @@ export async function insertGoogleUser(email:string): Promise<void> {
         VALUES (?, ?, ?, ?)`, [' ', ' ', email, 1]);
 }
 
+export async function updateUserInfo(
+    oldEmail:string, 
+    newEmail: string, 
+    newPassword: string, 
+    newUsername:string
+): Promise<boolean> 
+{
+    const database = await db;
+    const row = await database.run(`
+        UPDATE users
+        SET username = ?, password = ?, email = ?
+        WHERE email = ?`, [newUsername, newPassword, newEmail, oldEmail]);
+    const change = row.changes || 0;
+    if (change === 1) {
+        return true;
+    } else if (change > 1) {
+        throw new Error('more than one row was effected');
+    } else {
+        return false;
+    }
+}
+
 export async function seedDatabase(): Promise<void> {
     const database = await db;
     const isSeeded = await database.get('SELECT * from meta;');
@@ -68,9 +91,12 @@ export async function seedDatabase(): Promise<void> {
     await database.run(`INSERT INTO meta (seeded) VALUES ('true');`)
     const statement = await database.prepare(`
         INSERT INTO users (username, password, email) VALUES (?, ?, ?)`);
+    let password = await bcrypt.hash('admin', 10);
+    await statement.run('Alice', password, 'aa@mail.com');
 
-    await statement.run('Alice', 'admin', 'aa@mail.com');
-    await statement.run('bob', 'test', 'bt@mail.com');
+    password = await bcrypt.hash('test', 10);
+    await statement.run('bob', password, 'bt@mail.com');
+
     await statement.finalize();
 
     await database.each('SELECT * FROM users;', (err, row) => {

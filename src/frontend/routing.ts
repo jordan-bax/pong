@@ -20,6 +20,7 @@ export const routeFromPath: { [key: string]: string } = {
 interface userInfo {
     username: string;
     email: string;
+    password: string;
 }
 
 const fastifyErrorHandling:{ [key: string ]: string } = {
@@ -50,21 +51,29 @@ export async function getLogginUserData(): Promise<userInfo | null> {
     if (!serverUser.ok) {
         return null;
     }
-    const userData =await serverUser.json() as userInfo;
+    const data = await serverUser.json();
+    const userData = data.user as userInfo;
     return userData;
 }
 
-export async function updateUserInfo(email: string, username: string): Promise<void> {
+export async function updateUserInfo(
+    oldEmail: string, 
+    oldUsername: string, 
+    oldPassword:string, 
+    formData: FormData
+): Promise<void> {
+    formData.append('oldEmail', oldEmail);
+    formData.append('oldUsername', oldUsername);
+    formData.append('oldPassword', oldPassword);
     const response = await fetch('api/user/update', {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, username })
+        method: 'PATCH',
+        body: formData
     });
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = fastifyErrorHandling[errorData.code] ??
-                        statusHandlers[response.status] ??
+        const message = statusHandlers[response.status] ??
                         errorData.message ??
                         'unknown error';
         if (content) {
@@ -75,7 +84,7 @@ export async function updateUserInfo(email: string, username: string): Promise<v
     }
     history.pushState({}, '', '/profile');
     checkSession();
-    renderContent('profile');
+    // renderContent('profile');
 }
 
 export async function checkSession() {
@@ -87,18 +96,16 @@ export async function checkSession() {
     renderContent(routeFromPath[window.location.pathname] || 'not found');
 }
 
-export async function login(email: string, password: string): Promise<void> {
+export async function login(formData: FormData): Promise<void> {
     const response = await fetch('/api/user/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: formData,
     });
     const content = document.getElementById('error');
     if (!response.ok)
     {
         const errorData = await response.json();
-        const message = fastifyErrorHandling[errorData.code] ??
-                        statusHandlers[response.status] ??
+        const message = statusHandlers[response.status] ??
                         errorData.message ??
                         'Unknown error occured.';
         if (content) {
@@ -110,22 +117,21 @@ export async function login(email: string, password: string): Promise<void> {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderContent('profile');
+        //renderContent('profile');
     }
 }
 
-export async function register(username: string, password: string, email:string): Promise<void> {
+export async function register(formData: FormData): Promise<void> {
+    console.log(formData);
     const response = await fetch('/api/user/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, email }),
+        body: formData,
     });
 
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = fastifyErrorHandling[errorData.code] ??
-                        statusHandlers[response.status] ??
+        const message = statusHandlers[response.status] ??
                         errorData.message ??
                         'Unknown error occured.';
         if (content) {
@@ -137,7 +143,7 @@ export async function register(username: string, password: string, email:string)
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderContent('profile');
+        // renderContent('profile');
     }
 }
 
@@ -147,7 +153,7 @@ export async function logout(): Promise<void> {
     currentUser = null;
     history.pushState({}, '', '/');
     checkSession();
-    renderContent('home');
+    //renderContent('home');
 }
 
 export async function handleGoogleCredentials(request:{ credential: string}): Promise<void> {
@@ -161,7 +167,7 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderContent('profile');
+        // renderContent('profile');
     } else {
         let errorMessage;
         const cloned = response.clone();

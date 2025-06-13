@@ -12,9 +12,22 @@
 
 # .PHONY: all clean run
 
+USER_DATA = /home/splattje/data/user
+PAGE_CONTENT_DATA = /home/splattje/data/page_content
+GAME_DATA = /home/splattje/data/game
+TOURNAMENT_DATA = /home/splattje/data/tournament
+
 all: up
 
 up: build
+	@mkdir -p $(USER_DATA)
+	@mkdir -p $(PAGE_CONTENT_DATA)
+	@mkdir -p $(GAME_DATA)
+	@mkdir -p $(TOURNAMENT_DATA)
+	@chmod 777 $(USER_DATA)
+	@chmod 777 $(PAGE_CONTENT_DATA)
+	@chmod 777 $(GAME_DATA)
+	@chmod 777 $(TOURNAMENT_DATA)
 	docker-compose -f src/docker-compose.yml up -d
 
 build:
@@ -35,6 +48,10 @@ clean:
 	@docker rmi -f $$(docker images -qa) || true
 	@docker volume rm $$(docker volume ls -q) || true
 	@docker network rm $$(docker network ls -q) || true
+	@rm -rf $(USER_DATA) || true
+	@rm -rf $(PAGE_CONTENT_DATA) || true
+	@rm -rf $(GAME_DATA) || true
+	@rm -rf $(TOURNAMENT_DATA) || true
 
 re: clean up
 

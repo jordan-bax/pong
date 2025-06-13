@@ -1,0 +1,251 @@
+paths:
+  /me:
+    get:
+      summary: Retrieves data if the current user is logged in and known server side
+      Parameters:
+      Responses:
+        200:
+          description: user is logged in and known serve side
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  isLoggedin: boolean 
+                  user: string of user email
+        404:
+          description: no user is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  isLoggedin: boolean
+  /me/data:
+    get:
+      summary: Retrieves all data about the current logged in user 
+      Parameters:
+        description: extra info to get everything from the current user
+        content:
+          RequestCredentials:
+            schema:
+              type: RequestCredentials
+              items:
+                credentials: RequestCredentials
+      Responses:
+        200:
+          description: All data of the logged in user
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  user: object of table row form the database
+        401:
+          description: No user is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        404:
+          description: User is logged in but unknown in database
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+  /register:
+    post:
+      summary: registers a user and make it known by the server 
+      Parameters:
+        description: the data should come from the form itself
+        content:
+          multipart/form-data:
+            schema:
+              type: multipart/form-data
+              items:
+                username: string with username
+                password: sting with password
+                email: string with email
+                profilePicture: file of profilePicture (optional)
+      Responses:
+        200:
+          description: suer registration success
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+        400:
+          'description': input validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: if uploaded file has errors
+                  errors: an array of string of errors on the input
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+  /login:
+    post:
+      summary: logs the user in and make it known server side
+      Parameters:
+        description: the data should come from the form itself
+        content:
+          multipart/form-data:
+            schema:
+              type: multipart/form-data
+              items:
+                email: string with email
+                password: string with password
+      Responses:
+        200:
+          description: user loggin success
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+        400:
+          description: input validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  errors: an array of string of errors on the input
+        401:
+          description: user credentials do not match
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        500:
+          description: server error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+  /logout:
+    post:
+      summary: logs user out and make the server forget the user
+      Parameters:
+      Responses:
+        200:
+          description: logsout success
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+  /google:
+    post:
+      summary: login via google account
+      Parameters:
+        description: the client-id for google
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                idToken: string with google client-id
+                credentials: RequestCredentials
+      Responses:
+        200:
+          description: user login success
+          content: 
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+        400:
+          description: input validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        500:
+          description: server error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+  /update:
+    patch:
+      summary: updates data from current user
+      Parameters:
+        description: should come from the formdata
+        content:
+          multipart/form-data:
+            schema:
+              type: multipart/form-data and RequestCredentials
+              items:
+                newUsername: string of username (optional)
+                newEmail: string of email (optional)
+                newPassword: string of password (optional)
+                newProfilePicture: file of new profile picture (optional)
+                credentials: RequestCredentials
+      Responses:
+        200:
+          description: user info update success
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+        400:
+          description: validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string file errors
+                  errors: an array with errors on input data
+        404:
+          description: user not found
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        500:
+          description: serve error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message

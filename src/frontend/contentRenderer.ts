@@ -1,5 +1,5 @@
 import { getCookie } from "./index.js";
-import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
+import { getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 
 declare global {
     interface Window {
@@ -16,6 +16,8 @@ interface content {
     registerButtonText: string;
     profileText: string;
     homePageText: string;
+    updateProfileButtonText: string;
+    profilePictureLabelText: string;
 }
 
 const values = [
@@ -25,7 +27,9 @@ const values = [
     'loginButtonText',
     'registerButtonText',
     'profileText',
-    'homePageText'
+    'homePageText',
+    'updateProfileButtonText',
+    'profilePictureLabelText',
 ];
 
 function queryStringBuilder(language: string, array: string[]): string {
@@ -61,6 +65,8 @@ function renderGoogle(): HTMLDivElement {
 
 function renderLogin(text: content): HTMLFormElement {
     const loginForm = document.createElement('form');
+    loginForm.id = 'loginForm';
+    loginForm.enctype = 'multipart/form-data';
     const table = document.createElement('table');
 
     const emailLabel = document.createElement('label');
@@ -70,6 +76,7 @@ function renderLogin(text: content): HTMLFormElement {
     const emailInput = document.createElement('input');
     emailInput.type = 'email';
     emailInput.id = 'email';
+    emailInput.name = 'email';
     emailInput.required = true;
 
     table.appendChild(createRow(emailLabel, emailInput));
@@ -81,6 +88,7 @@ function renderLogin(text: content): HTMLFormElement {
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
     passwordInput.id = 'password';
+    passwordInput.name = 'password';
     passwordInput.required = true;
 
     table.appendChild(createRow(passwordLabel, passwordInput));
@@ -97,9 +105,8 @@ function renderLogin(text: content): HTMLFormElement {
     loginForm.appendChild(table);
     loginForm.onsubmit = (e) => {
         e.preventDefault();
-        const email = (document.getElementById('email') as HTMLInputElement).value;
-        const password = (document.getElementById('password') as HTMLInputElement).value;
-        login(email, password)
+        const formData = new FormData(loginForm);
+        login(formData);
     };
     return loginForm;
 }
@@ -107,7 +114,21 @@ function renderLogin(text: content): HTMLFormElement {
 function renderRegister(text: content): HTMLFormElement {
     
     const registerForm = document.createElement('form');
+    registerForm.id = 'registerForm';
+    registerForm.enctype = 'multipart/form-data';
+
     const table = document.createElement('table');
+
+    const profilePictureLable = document.createElement('label');
+    profilePictureLable.textContent = text.profilePictureLabelText;
+    profilePictureLable.setAttribute('for', 'profilePicture');
+
+    const profilePictureInput = document.createElement('input');
+    profilePictureInput.type = 'file';
+    profilePictureInput.id = 'profilePicture';
+    profilePictureInput.name = 'profilePicture';
+
+    table.appendChild(createRow(profilePictureLable, profilePictureInput));
 
     const emailLabel = document.createElement('label');
     emailLabel.textContent = text.emailText;
@@ -116,6 +137,7 @@ function renderRegister(text: content): HTMLFormElement {
     const emailInput = document.createElement('input');
     emailInput.type = 'email';
     emailInput.id = 'email';
+    emailInput.name = 'email';
     emailInput.required = true;
 
     table.appendChild(createRow(emailLabel, emailInput));
@@ -127,6 +149,7 @@ function renderRegister(text: content): HTMLFormElement {
     const usernameInput = document.createElement('input');
     usernameInput.type = 'text';
     usernameInput.id = 'username';
+    usernameInput.name = 'username';
     usernameInput.required = true;
 
     table.appendChild(createRow(usernameLable, usernameInput));
@@ -138,6 +161,7 @@ function renderRegister(text: content): HTMLFormElement {
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
     passwordInput.id = 'password';
+    passwordInput.name = 'password';
     passwordInput.required = true;
 
     table.appendChild(createRow(passwordLabel, passwordInput));
@@ -155,10 +179,8 @@ function renderRegister(text: content): HTMLFormElement {
     registerForm.appendChild(table);
     registerForm.onsubmit = (e) => {
         e.preventDefault();
-        const email = (document.getElementById('email') as HTMLInputElement).value;
-        const username = (document.getElementById('username') as HTMLInputElement).value;
-        const password = (document.getElementById('password') as HTMLInputElement).value;
-        register(username, password, email);
+        const formData = new FormData(registerForm);
+        register(formData);
     };
     return registerForm;
 }
@@ -174,37 +196,51 @@ async function renderProfileData(text: content): Promise<HTMLElement | null> {
 
     const profileForm = document.createElement('form');
     profileForm.style.alignSelf = 'center';
+    profileForm.id = 'profileForm';
+    profileForm.enctype = 'multipart/form-data';
 
     const table = document.createElement('table');
 
     const emailLabel = document.createElement('label');
     emailLabel.textContent = text.emailText;
-    emailLabel.setAttribute('for', 'eamail');
+    emailLabel.setAttribute('for', 'newEmail');
 
     const emailInput = document.createElement('input');
     emailInput.type = 'email';
-    emailInput.id = 'eamil';
+    emailInput.id = 'newEmail';
     emailInput.required = true;
     emailInput.value = user.email;
+    emailInput.name = 'newEmail';
 
     table.appendChild(createRow(emailLabel, emailInput));
 
     const usernameLable = document.createElement('label');
     usernameLable.textContent = text.usernameText;
-    usernameLable.setAttribute('for', 'username');
+    usernameLable.setAttribute('for', 'newUsername');
 
     const usernameInput = document.createElement('input');
     usernameInput.type = 'text';
-    usernameInput.id = 'username';
+    usernameInput.id = 'newUsername';
     usernameInput.required = true;
     usernameInput.value = user.username;
+    usernameInput.name = 'newUsername';
 
-    table.appendChild(createRow(usernameInput, usernameInput));
+    table.appendChild(createRow(usernameLable, usernameInput));
+
+    const passwordLabel = document.createElement('label');
+    passwordLabel.textContent = text.passwordText;
+    passwordLabel.setAttribute('for', 'newPassword');
+
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.id = 'newPassword';
+    passwordInput.name = 'newPassword';
+    table.appendChild(createRow(passwordLabel, passwordInput));
 
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
     submitButton.className = 'btn';
-    submitButton.textContent = text.loginButtonText;
+    submitButton.textContent = text.updateProfileButtonText;
 
     const errorDiv = document.createElement('div');
     errorDiv.id = 'error';
@@ -214,22 +250,11 @@ async function renderProfileData(text: content): Promise<HTMLElement | null> {
     profileForm.appendChild(table);
     profileForm.onsubmit = (e) => {
         e.preventDefault();
-        const email = (document.getElementById('email') as HTMLInputElement).value;
-        const username = (document.getElementById('username') as HTMLInputElement).value;
-        updateUserInfo(email, username);
+        const formData = new FormData(profileForm);
+        updateUserInfo(user.email, user.username, user.password, formData);
     };
 
     return profileForm;
-}
-
-function renderProfile(text: content): string | null {
-    if (getLoggin()) {
-        let textOriginal = text.profileText;
-        const user = { email: getCurrentUser() || '' };
-        textOriginal = replacePlaceholders(textOriginal, user);
-        return textOriginal;
-    }
-    return null;
 }
 
 export async function renderContent (route: string): Promise<void> {
@@ -241,20 +266,16 @@ export async function renderContent (route: string): Promise<void> {
         language ='en';
     }
     const textMap = await getPageContent(language, values)
-    const textData = textMap.get('row') as content
+    const textData = textMap.get('row') as content;
     switch (route)
     {
         case 'home':
             content.textContent = textData.homePageText;
             break;
         case 'profile':
-            const profileContent = renderProfile(textData);
             const profileData = await renderProfileData(textData);
-            if (profileContent) {
-                content.textContent = profileContent;
-                if (profileData !== null) {
-                    content.appendChild(profileData);
-                }
+            if (profileData !== null) {
+                content.appendChild(profileData);
             } else {
                 window.location.href = '/login';
                 return;
@@ -284,10 +305,7 @@ export async function renderContent (route: string): Promise<void> {
 export async function getPageContent(language: string, textKeys: string[]): Promise<Map<string, object>> {
     const neededKeys = queryStringBuilder(language, textKeys);
     const result = await fetch(`/api/page_content/getContent?${neededKeys}`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json'
-        }
+        method: 'GET'
     });
     if (!result.ok) {
         console.error('error result for page content not ok');

@@ -91,33 +91,35 @@ export async function findUserByEmail(email: string): Promise<any>
 export async function insertUserIntoDatabase(
     username:string, 
     password:string, 
-    email: string
+    email: string | null,
+    googleEmail: string | null
 ): Promise<void>
 {
     const database = await db;
-    await database.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', 
-        [username, password, email]);
+    await database.run('INSERT INTO users (username, password, email, googleEmail) VALUES (?, ?, ?, ?)', 
+        [username, password, email, googleEmail]);
 }
 
 export async function insertGoogleUser(email:string): Promise<void> {
     const database = await db;
     await database.run(`
-        INSERT INTO users (username, password, email, isGoogleRegister) 
-        VALUES (?, ?, ?, ?)`, [' ', ' ', email, 1]);
+        INSERT INTO users (username, password, email, googleEmail, isGoogleRegister) 
+        VALUES (?, ?, ?, ?, ?)`, [' ', ' ', '', email, 1]);
 }
 
 export async function updateUserInfo(
     oldEmail:string, 
     newEmail: string, 
     newPassword: string, 
-    newUsername:string
+    newUsername: string,
+    googleEmail: string
 ): Promise<boolean> 
 {
     const database = await db;
     const row = await database.run(`
         UPDATE users
-        SET username = ?, password = ?, email = ?
-        WHERE email = ?`, [newUsername, newPassword, newEmail, oldEmail]);
+        SET username = ?, password = ?, email = ?, googleEmail = ?
+        WHERE email = ?`, [newUsername, newPassword, newEmail, googleEmail, oldEmail]);
     const change = row.changes || 0;
     if (change === 1) {
         return true;

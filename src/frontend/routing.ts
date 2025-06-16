@@ -17,7 +17,7 @@ export const routeFromPath: { [key: string]: string } = {
     '/google': 'google'
 };
 
-interface userInfo {
+export interface userInfo {
     username: string;
     email: string;
     password: string;
@@ -73,6 +73,7 @@ export async function updateUserInfo(
     oldPassword:string, 
     formData: FormData
 ): Promise<void> {
+    console.log('in UpdateUserInfo');
     formData.append('oldEmail', oldEmail);
     formData.append('oldUsername', oldUsername);
     formData.append('oldPassword', oldPassword);
@@ -89,7 +90,29 @@ export async function updateUserInfo(
                         'unknown error';
         if (content) {
             content.textContent = message;
-            content.className = 'eror-text';
+            content.style.color = 'red';
+            return ;
+        }
+    }
+    history.pushState({}, '', '/profile');
+    checkSession();
+}
+
+export async function googleUserUpdate(formData: FormData): Promise<void> {
+    const response = await fetch('api/user/update-google', {
+        credentials: 'include',
+        method: 'PATCH',
+        body: formData
+    });
+    const content = document.getElementById('error');
+    if (!response.ok) {
+        const errorData = await response.json();
+        const message = statusHandlers[response.status] ??
+                        errorData.message ??
+                        'unknown error';
+        if (content) {
+            content.textContent = message;
+            content.style.color = 'red';
             return ;
         }
     }

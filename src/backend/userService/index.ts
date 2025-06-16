@@ -12,7 +12,6 @@ import { verifyPassword, validateUserUpdateData, validateRegisterData, validateL
 import { OAuth2Client } from 'google-auth-library'
 import fs from 'fs';
 import fastifyMultipart, { MultipartFile } from '@fastify/multipart';
-import { randomBytes } from 'crypto';
 
 export interface loginBody {
     email: string;
@@ -28,6 +27,11 @@ export interface registerBody {
 interface googleBody {
     idToken: string;
 };
+
+interface googleUpdateBody {
+    idToken: string;
+    formData: FormData;
+}
 
 export interface patchBody {
     newUsername: string | null;
@@ -70,10 +74,6 @@ fastify.register(fastifyStatic, {
     root: path.join(__dirname, './dist'),
     prefix: '/',
 });
-
-function generateStateToken() {
-    return randomBytes(32).toString('hex');
-}
 
 fastify.get('/csrf-token', async (req, reply) => {
     const token = reply.generateCsrf();
@@ -237,6 +237,30 @@ fastify.post<{ Body: googleBody }>(
         }
     });
 
+fastify.post<{ Body: googleUpdateBody}>(
+    '/google-check', 
+    { preHandler: fastify.csrfProtection },
+async (req, reply) => {
+    try {
+        const body  = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken: body.idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) return reply.code(400).send({ error: 'invalid token' });
+        
+        const user = await findUserByEmail(payload.email);
+        if (!user) {
+            return reply.code(404).send({ error: 'user not found' });
+        }
+        reply.send({ success: true });
+    } catch (err) {
+        console.log('Google login update check error:', err);
+        return reply.code(500).send({ error: 'Internal Server Error' });
+    }
+});
+
 fastify.decorateRequest('isAuthenticated', function (this: FastifyRequest) {
     return !!this.session?.user;
 });
@@ -307,6 +331,33 @@ fastify.patch(
         }
     }
 );
+
+fastify.patch(
+    '/update-google',
+    async (req, reply) => {
+        let userData= {} as patchBody;
+        const parts = req.parts();
+        for await (const part of parts) {
+            if (part.type === 'file') {
+                const fileHandler = await validateFile(part);
+                if (fileHandler !== 'DONE') {
+                    if (fileHandler === 'TOO LARGE') {
+                        return reply.code(400).send('file is larger than 10MB');
+                    }
+                }
+            } else if (part.type === 'field' && typeof part.value === 'string') {
+                userData[part.fieldname as keyof patchBody] = part.value;
+            }
+        }
+        const errors = validateUserUpdateData(userData);
+        if (errors.length > 0) {
+            return reply.code(400).send({ errors });
+        }
+        try {
+            const user = findUserByEmail()
+            if (await updateUserInfo())
+        }
+    });
 
 fastify.setNotFoundHandler((req, reply) => {
     return reply.code(404).send({ error: 'Not Found' });

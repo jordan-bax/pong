@@ -95,7 +95,7 @@ paths:
                 profilePicture: file of profilePicture (optional)
       Responses:
         200:
-          description: suer registration success
+          description: user registration success
           content:
             application/json:
               schema:

@@ -18,10 +18,55 @@ export const db: Promise<Database> = open({
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
         password TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        isGoogleRegister NUMERIC DEFAULT 0
+        email TEXT,
+        googleEmail TEXT,
+        isGoogleRegister NUMERIC DEFAULT 0,
+        CHECK (
+            email IS NOT NULL AND email <> ''
+            OR googleEmail IS NOT NULL AND googleEmail <> ''
         )
+    );
     `);
+
+    await database.run(`
+        CREATE TRIGGER enforce_email_uniqueness
+        BEFORE INSERT INTO users
+        FOR EACH ROW
+        WHEN (
+            (NEW.email IS NOT NULL AND EXISTS (
+                SELECT 1 FROM users
+                WHERE email = NEW.email OR googleEmail = NEW.email
+            ))
+            OR
+            (NEW.googleEmail IS NOT NULL AND EXISTS (
+                SELECT 1 FROM users
+                WHERE email = NEW.googleEmail OR googleEmail = NEW.googleEmail
+            ))
+        )
+    BEGIN
+        SELECT RAISE(ABORT, 'email already in use');
+    END;`);
+
+    await database.run(`
+        CREATE TRIGGER enforce_email_uniqueness_update
+        BEFORE UPDATE users
+        FOR EACH ROW
+        WHEN (
+            (NEW.email IS NOT NULL AND EXISTS (
+                SELECT 1 FROM users
+                WHERE (email = NEW.email OR googleEmail = NEW.email)
+                AND id != OLD.id
+            ))
+            OR
+            (NEW.googleEmail IS NOT NULL AND EXISTS (
+                SELECT 1 FROM users
+                WHERE (email = NEW.googleEmail OR googleEmail = NEW.googleEmail)
+                AND id != OLD.id
+            ))
+        )
+    BEGIN
+        SELECT RAISE(ABORT, 'email already in use');
+    END;`)
 
     await database.run(`
         CREATE TABLE IF NOT EXISTS meta (

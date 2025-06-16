@@ -21,11 +21,18 @@ export async function renderNavbar(): Promise<void> {
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
     navbar.innerHTML = '';
+    navbar.style.display = 'flex';
 
     const homeLink = document.createElement('a');
     homeLink.href = '/';
     homeLink.textContent = navbarText.homeNavbarText;
-    homeLink.className = 'btn navItem';
+    homeLink.style.color = 'black';
+    homeLink.style.display = 'flex';
+    homeLink.style.textAlign = 'center';
+    homeLink.style.justifyContent = 'left';
+    homeLink.style.textDecoration = 'none';
+    homeLink.style.marginLeft = '10px';
+    homeLink.style.border = '1em';
     homeLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
@@ -39,7 +46,13 @@ export async function renderNavbar(): Promise<void> {
         const profileLink = document.createElement('a');
         profileLink.href = '/profile';
         profileLink.textContent = navbarText.profileNavbarText;
-        profileLink.className = 'btn navItem';
+        profileLink.style.color = 'black';
+        profileLink.style.display = 'flex';
+        profileLink.style.textAlign = 'center';
+        profileLink.style.justifyContent = 'left';
+        profileLink.style.textDecoration = 'none';
+        profileLink.style.marginLeft = '10px';
+        profileLink.style.border = '1em';
         profileLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/profile');
@@ -49,14 +62,26 @@ export async function renderNavbar(): Promise<void> {
 
         const logoutBtn = document.createElement('button');
         logoutBtn.textContent = navbarText.logoutNavbarText;
-        logoutBtn.className = 'btn btn-primary navItem';
+        logoutBtn.style.color = 'black';
+        logoutBtn.style.display = 'flex';
+        logoutBtn.style.textAlign = 'center';
+        logoutBtn.style.justifyContent = 'left';
+        logoutBtn.style.textDecoration = 'none';
+        logoutBtn.style.marginLeft = '10px';
+        logoutBtn.style.border = '1em';
         logoutBtn.onclick = logout;
         navbar.appendChild(logoutBtn);
     } else {
         const loginLink = document.createElement('a');
         loginLink.href = '/login';
         loginLink.textContent = navbarText.loginNavbarText;
-        loginLink.className = 'btn navItem';
+        loginLink.style.color = 'black';
+        loginLink.style.display = 'flex';
+        loginLink.style.textAlign = 'center';
+        loginLink.style.justifyContent = 'left';
+        loginLink.style.textDecoration = 'none';
+        loginLink.style.marginLeft = '10px';
+        loginLink.style.border = '1em';
         loginLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/login');
@@ -67,7 +92,13 @@ export async function renderNavbar(): Promise<void> {
         const registerLink = document.createElement('a');
         registerLink.textContent= navbarText.registerNavbarText;
         registerLink.href = '/register';
-        registerLink.className = 'btn navItem';
+        registerLink.style.color = 'black';
+        registerLink.style.display = 'flex';
+        registerLink.style.textAlign = 'center';
+        registerLink.style.justifyContent = 'left';
+        registerLink.style.textDecoration = 'none';
+        registerLink.style.marginLeft = '10px';
+        registerLink.style.border = '1em';
         registerLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/register');

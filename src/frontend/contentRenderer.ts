@@ -1,5 +1,5 @@
 import { getCookie } from "./index.js";
-import { getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData, getCsrfToken } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo } from "./routing.js";
 
 declare global {
     interface Window {
@@ -108,7 +108,10 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
 
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
-    submitButton.className = 'btn';
+    submitButton.style.color = 'black';
+    submitButton.style.textAlign = 'center';
+    submitButton.style.border = '1em';
+    submitButton.style.marginLeft = ' 10px';
     submitButton.textContent = text.loginButtonText;
     
     const errorDiv = document.createElement('div');
@@ -192,7 +195,10 @@ async function renderRegister(text: content): Promise<HTMLFormElement> {
 
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
-    submitButton.className = 'btn';
+    submitButton.style.color = 'black';
+    submitButton.style.textAlign = 'center';
+    submitButton.style.border = '1em';
+    submitButton.style.marginLeft = ' 10px';
     submitButton.textContent = text.registerButtonText;
 
     const errorDiv = document.createElement('div');
@@ -209,7 +215,122 @@ async function renderRegister(text: content): Promise<HTMLFormElement> {
     return registerForm;
 }
 
-async function renderProfileData(text: content): Promise<HTMLElement | null> {
+async function rendderConformation(text: content): Promise<HTMLElement | null> {
+    console.log('renderConfromation is used');
+    const user = await getLogginUserData();
+    if (!user) return null;
+    const passwordOverlay = document.createElement('div');
+    passwordOverlay.id = 'secureUpdate';
+    passwordOverlay.style.position = 'fixed';
+    passwordOverlay.style.top = '0';
+    passwordOverlay.style.left = '0';
+    passwordOverlay.style.width = '100%';
+    passwordOverlay.style.height = '100%';
+    passwordOverlay.style.background = 'rgba(0,0,0,0.5)';
+    passwordOverlay.style.display = 'none';
+    passwordOverlay.style.justifyContent = 'center';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.style.marginTop = '10%';
+    contentDiv.style.marginBottom = '10%';
+    contentDiv.style.height = '2%';
+
+    const info =document.createElement('p');
+    const infoText = document.createTextNode('please enter password to confirm update');
+    info.appendChild(infoText);
+    info.style.color = 'white';
+    info.style.display = 'flex';
+    info.style.justifyContent = 'center';
+    contentDiv.appendChild(info);
+
+
+    const overlayLabel = document.createElement('label');
+    overlayLabel.textContent = text.passwordText;
+    overlayLabel.style.color = 'white';
+    contentDiv.appendChild(overlayLabel);
+
+    const overlayInput = document.createElement('input');
+    overlayInput.type = 'password';
+    overlayInput.id = 'password';
+    overlayInput.name = 'oldPassword';
+    overlayInput.ariaRequired = 'true';
+
+    contentDiv.appendChild(overlayInput);
+
+    const overlaySubitButton = document.createElement('button');
+    overlaySubitButton.id = 'passworSubmit';
+    overlaySubitButton.textContent = 'Confirm';
+    overlaySubitButton.onclick = () => {
+        const password = (document.getElementById('password') as HTMLInputElement).value;
+        if (!password) {
+            const error = document.getElementById('error');
+            if (!error) return;
+            const text = document.createTextNode('password is required');
+            const errorParagraph = document.createElement('p');
+            errorParagraph.appendChild(text);
+            errorParagraph.style.color = 'red';
+            error.appendChild(errorParagraph);
+        }
+        const formInfo = document.getElementById('profileForm') as HTMLFormElement | null;
+        if (!formInfo) return;
+        const formData = new FormData(formInfo);
+        updateUserInfo(user.email, user.username, password, formData);
+    }
+
+    contentDiv.appendChild(overlaySubitButton);
+
+    const overlayGoogleLogin = document.createElement('div');
+    overlayGoogleLogin.id = 'google-auth';
+    const formInfo = document.getElementById('profileForm') as HTMLFormElement | null;
+    if (!formInfo) return null;
+    window.google.accounts.id.initialize({
+        client_id: '51710532102-br37sgrm5iodlnhsa2kahmcjr6lh8f8n.apps.googleusercontent.com',
+        formData: new FormData(formInfo),
+        user: user,
+        callback: handleGoogleCheck
+    });
+    window.google.accounts.id.renderButton(overlayGoogleLogin, {
+        theme: 'outline',
+        size: 'large',
+    });
+
+    contentDiv.appendChild(overlayGoogleLogin);
+    passwordOverlay.appendChild(contentDiv);
+    console.log('renderConfirm is loaded');
+    return passwordOverlay;
+}
+
+async function handleGoogleCheck(request:{ credential: string, formData: FormData, user: userInfo, password: string}) {
+    console.log('in google callback function');
+    const response = await fetch('api/user/csrf-token', {credentials: 'include'});
+    const data = await response.json();
+    const csrf = data.csrfToken;
+    const googleResponse = await fetch('api/user/google-check', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrf,
+        },
+        body: request.formData,
+        credentials: 'include',
+    });
+    if (googleResponse.ok) {
+        googleUserUpdate(request.formData);
+        updateUserInfo(request.user.email, request.user.username, request.password, request.formData)
+    } else {
+        let errorMessage;
+        const cloned = googleResponse.clone();
+        try {
+            errorMessage = await cloned.json();
+        } catch (err) {
+            const text = await cloned.text();
+            errorMessage = { error: text };
+        }
+        console.log('google login failed:', errorMessage);
+    }
+}
+
+async function renderProfileData(text: content): Promise<HTMLFormElement | null> {
     if (!getLoggin()) {
         return null;
     }
@@ -275,7 +396,10 @@ async function renderProfileData(text: content): Promise<HTMLElement | null> {
 
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
-    submitButton.className = 'btn';
+    submitButton.style.color = 'black';
+    submitButton.style.textAlign = 'center';
+    submitButton.style.border = '1em';
+    submitButton.style.marginLeft = ' 10px';
     submitButton.textContent = text.updateProfileButtonText;
 
     const errorDiv = document.createElement('div');
@@ -286,8 +410,14 @@ async function renderProfileData(text: content): Promise<HTMLElement | null> {
     profileForm.appendChild(table);
     profileForm.onsubmit = (e) => {
         e.preventDefault();
-        const formData = new FormData(profileForm);
-        updateUserInfo(user.email, user.username, user.password, formData);
+        const confirm = document.getElementById('secureUpdate');
+        if (!confirm) {
+            console.log('secureUpdate not found');
+            return;
+        }
+        confirm.style.display = 'flex';
+        console.log('submit button clicked');
+        // updateUserInfo(user.email, user.username, user.password, formData);
     };
 
     return profileForm;
@@ -297,6 +427,9 @@ export async function renderContent (route: string): Promise<void> {
     const content = document.getElementById('content');
     if (!content) return;
     content.innerHTML = '';
+    content.style.display = 'flex';
+    content.style.margin = '1em 0em';
+    content.style.justifyContent = 'center';
     let language = getCookie('ft_transcendence_language');
     if (language === null) {
         language ='en';
@@ -312,6 +445,10 @@ export async function renderContent (route: string): Promise<void> {
             const profileData = await renderProfileData(textData);
             if (profileData !== null) {
                 content.appendChild(profileData);
+                const secureUpdate = await rendderConformation(textData);
+                if(secureUpdate) {
+                    content.appendChild(secureUpdate);
+                }
             } else {
                 window.location.href = '/login';
                 return;

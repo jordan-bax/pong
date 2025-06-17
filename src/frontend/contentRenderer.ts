@@ -1,5 +1,6 @@
 import { getCookie } from "./index.js";
 import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
+import { pongbutton } from "./pongMenu.js";
 
 declare global {
     interface Window {
@@ -270,6 +271,10 @@ export async function renderContent (route: string): Promise<void> {
         case 'register':
             const registerForm = renderRegister(textData);
             content.appendChild(registerForm);
+            break;
+        case 'game':
+            content.textContent = 'Game page is under construction.';
+            pongbutton();
             break;
         default:
             content.textContent = 'Page not found.';

@@ -11,6 +11,7 @@ COPY package*.json ./
 # Install dependencies inside the container
 RUN npm install
 
+# COPY src/frontend/sharedValuesPong.ts ./sharedValuesPong.ts
 COPY . .
 
 # Compile TypeScript to JavaScript

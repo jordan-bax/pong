@@ -8,7 +8,7 @@ services:
       - "8000:8000"
     depends_on:
       - user
-      # - game
+      - game
       # - tournament
       - page_content
     networks:
@@ -31,19 +31,19 @@ services:
       - transcendanse
     restart: unless-stopped
     
-  # game:
-  #   build: 
-  #     context: ./backend/gameService
-  #   container_name: game
-  #   expose:
-  #     - "3002"
-  #   volumes:
-  #     - game-db:/app/db
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - transcendanse
-  #   restart: unless-stopped
+  game:
+    build: 
+      context: ./backend/gameService
+    container_name: game
+    expose:
+      - "3002"
+    volumes:
+      - game-db:/app/db
+    env_file:
+      - .env
+    networks:
+      - transcendanse
+    restart: unless-stopped
   
   # tournament:
   #   build: 
@@ -76,7 +76,7 @@ services:
 volumes:
   user-db:
   page_content-db:
-  # game-db:
+  game-db:
   # tournament-db:
 
 networks:

@@ -8,6 +8,7 @@ interface navbarContent {
     logoutNavbarText: string;
     profileNavbarText: string;
     registerNavbarText: string;
+    gameNavbarText: string;
 }
 
 async function getNavbarContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
@@ -32,6 +33,17 @@ export async function renderNavbar(): Promise<void> {
         renderContent('home');
     };
     navbar.appendChild(homeLink);
+
+    const gameLink = document.createElement('a');
+    gameLink.href = '/gameMenu';
+    gameLink.textContent = 'games';
+    gameLink.className = 'btn navItem';
+    gameLink.onclick = (e) => {
+        e.preventDefault();
+        history.pushState({}, '', '/gameMenu');
+        renderContent('game');
+    };
+    navbar.appendChild(gameLink);
 
     const isLoggedIn = getLoggin;
     const isLoggedInServer = await getLogginServer();

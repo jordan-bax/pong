@@ -78,6 +78,34 @@ paths:
                 type: object
                 items:
                   csrfToken: string of csrf token
+  /profile-picture:
+    get:
+      summary: gets the profile picture of the user
+      Parameters:
+      Responses:
+      200:
+        description: gives a stream to the user profile picture
+        content:
+          fs.ReadStream:
+            schema:
+              type: fs.ReadStream
+              items:
+      404:
+        description: file not found
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                error: string with error message
+      500:
+        description: Server error
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                error: string with error message
   /register:
     post:
       summary: registers a user and make it known by the server 
@@ -228,6 +256,55 @@ paths:
                 type: object
                 items:
                   error: string with error message
+  /google-check:
+    post:
+      summary: checks if user is logged in via google
+      Parameters:
+        description: should come from the formdata
+        content:
+          multipart/form-data:
+            schema:
+              type: multipart/form-data and RequestCredentials
+              items:
+                _csrf: string with csrf token
+                newUsername: string of username (optional)
+                newEmail: string of email (optional)
+                newPassword: string of password (optional)
+                newProfilePicture: file of new profilePicture (optional)
+                credentials: RequestCredentials
+      Responses:
+        200:
+          description: user info update success
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+        400:
+          description: google verivication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        404:
+          description: user not found in database
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        500:
+          description: server error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string witht error message
   /update:
     patch:
       summary: updates data from current user
@@ -272,6 +349,53 @@ paths:
                   error: string with error message
         500:
           description: serve error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+  /update-google:
+    patch:
+      summary: updates user data for users that made an account via google
+      Parameters:
+        description:
+        content:
+          multipart/form-data:
+            schema:
+              type: multipart/form-data;
+              items:
+                newUsername: string of username (optional)
+                newEmail: string of email (optional)
+                newPassword: string of password (optional)
+                newProfilePicture: file of new profile picture
+      Responses:
+        200:
+          description: user info update success
+          content:
+            application/json:
+              schema:
+                type: object
+                items: 
+                  success: boolean
+        400:
+          description: input validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        404:
+          description: user not found
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        500:
+          description: server error
           content:
             application/json:
               schema:

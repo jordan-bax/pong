@@ -216,7 +216,6 @@ async function renderRegister(text: content): Promise<HTMLFormElement> {
 }
 
 async function rendderConformation(text: content): Promise<HTMLElement | null> {
-    console.log('renderConfromation is used');
     const user = await getLogginUserData();
     if (!user) return null;
     const passwordOverlay = document.createElement('div');
@@ -296,7 +295,6 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
 
     contentDiv.appendChild(overlayGoogleLogin);
     passwordOverlay.appendChild(contentDiv);
-    console.log('renderConfirm is loaded');
     return passwordOverlay;
 }
 
@@ -316,7 +314,6 @@ async function handleGoogleCheck(request:{ credential: string, formData: FormDat
     });
     if (googleResponse.ok) {
         googleUserUpdate(request.formData);
-        updateUserInfo(request.user.email, request.user.username, request.password, request.formData)
     } else {
         let errorMessage;
         const cloned = googleResponse.clone();
@@ -358,6 +355,21 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
 
     const table = document.createElement('table');
 
+    const fileLabel = document.createElement('label');
+    fileLabel.textContent = text.profilePictureLabelText;
+    fileLabel.setAttribute('for', 'newProfilePicture');
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.id = 'newProfilePicture';
+    fileInput.name = 'newProfilePicture';
+    console.log(user);
+    if (user.pathToProfilePicture !== '') {
+        fileInput.value = user.pathToProfilePicture;
+    }
+
+    table.appendChild(createRow(fileLabel, fileInput));
+
     const emailLabel = document.createElement('label');
     emailLabel.textContent = text.emailText;
     emailLabel.setAttribute('for', 'newEmail');
@@ -365,7 +377,6 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
     const emailInput = document.createElement('input');
     emailInput.type = 'email';
     emailInput.id = 'newEmail';
-    emailInput.required = true;
     emailInput.value = user.email;
     emailInput.name = 'newEmail';
 
@@ -378,7 +389,6 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
     const usernameInput = document.createElement('input');
     usernameInput.type = 'text';
     usernameInput.id = 'newUsername';
-    usernameInput.required = true;
     usernameInput.value = user.username;
     usernameInput.name = 'newUsername';
 
@@ -423,10 +433,37 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
     return profileForm;
 }
 
+async function renderProfilePicture(): Promise<HTMLImageElement | null> {
+    try {
+        const respone = await fetch('api/user/profile-picture', {
+            credentials: 'include'
+        });
+        if (!respone.ok) {
+            throw new Error(`Failed to load image:${respone.statusText}`);
+        }
+        const blob = await respone.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        const imgElement = document.createElement('img');
+        imgElement.src = imageUrl;
+        imgElement.alt = 'Profile Picture';
+        imgElement.style.width = '10%';
+        imgElement.style.aspectRatio = '1/1';
+        return imgElement;
+    } catch (err) {
+        console.error('Error loading profile picture', err);
+        return null;
+    }
+}
+
 export async function renderContent (route: string): Promise<void> {
     const content = document.getElementById('content');
     if (!content) return;
     content.innerHTML = '';
+    const child = content.querySelector('#secureUpdate');
+    if (child) {
+        content.removeChild(child);
+    }
+    
     content.style.display = 'flex';
     content.style.margin = '1em 0em';
     content.style.justifyContent = 'center';
@@ -442,6 +479,10 @@ export async function renderContent (route: string): Promise<void> {
             content.textContent = textData.homePageText;
             break;
         case 'profile':
+            const profilePicture = await renderProfilePicture();
+            if (profilePicture !== null) {
+                content.appendChild(profilePicture);
+            }
             const profileData = await renderProfileData(textData);
             if (profileData !== null) {
                 content.appendChild(profileData);

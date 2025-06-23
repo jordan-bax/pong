@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { patchBody, registerBody, loginBody } from './index';
+import fs from 'fs';
 
 function testPasswordPattern(password: string ): boolean {
     const re = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()\-\_=+\[\]{};:'",.<>\/?\\|]).+$/);
@@ -88,6 +89,11 @@ export function validateUserUpdateData(data: patchBody): string[] {
         errors.push('Old password needs to be a string');
     }
 
+    if (typeof data.pathToProfileP === 'string') {
+        if (!fs.existsSync(data.pathToProfileP)) {
+            errors.push('path to profile does not exist');
+        }
+    }
     return errors;
 }
 

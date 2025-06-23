@@ -21,6 +21,7 @@ export interface userInfo {
     username: string;
     email: string;
     password: string;
+    pathToProfilePicture: string;
 }
 
 const fastifyErrorHandling:{ [key: string ]: string } = {

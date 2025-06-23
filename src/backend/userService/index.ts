@@ -1,17 +1,17 @@
-import Fastify from 'fastify';
-import { FastifyRequest } from 'fastify';
-import path from 'path';
 import fastifyCookie from '@fastify/cookie';
+import csrfProtection from '@fastify/csrf-protection';
+import fastifyMultipart, { MultipartFile } from '@fastify/multipart';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
-import csrfProtection from'@fastify/csrf-protection'
 import bcrypt from 'bcryptjs';
-import { db, findUserByEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase, updateUserInfo } from './userDb';
-import { googleLogiSchema } from './schemas/userSchemas'
-import { verifyPassword, validateUserUpdateData, validateRegisterData, validateLoginData } from './validation';
-import { OAuth2Client } from 'google-auth-library'
+import Fastify, { FastifyRequest } from 'fastify';
 import fs from 'fs';
-import fastifyMultipart, { MultipartFile } from '@fastify/multipart';
+import { OAuth2Client } from 'google-auth-library';
+import path from 'path';
+import { googleLogiSchema } from './schemas/userSchemas';
+import { db, findUserByEmail, findUserByGoogleEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase, updateUserInfoGoogle } from './userDb';
+import { validateLoginData, validateRegisterData, validateUserUpdateData, verifyPassword } from './validation';
+import mime from 'mime-types';
 
 export interface loginBody {
     email: string;
@@ -22,6 +22,7 @@ export interface registerBody {
     username: string;
     password: string;
     email: string;
+    pathToProfileP: string;
 };
 
 interface googleBody {
@@ -39,7 +40,9 @@ export interface patchBody {
     newEmail: string | null;
     oldUsername: string;
     oldPassword: string;
-    oldEmail: string;
+    oldEmail: string | null;
+    googleEmail:string | null;
+    pathToProfileP: string | null;
 }
 
 const fastify = Fastify({ logger: true });
@@ -91,10 +94,11 @@ fastify.post(
         for await (const part of parts) {
             if (part.type === 'file') {
                 const fileHandler = await validateFile(part);
-                if (fileHandler !== 'DONE') {
-                    if (fileHandler === 'TOO LARGE') {
-                        return reply.code (400).send({ error: 'file is larger then 10MB' });
-                    }
+                if (fileHandler === 'TOO LARGE') {
+                    return reply.code (400).send({ error: 'file is larger then 10MB' });
+                }
+                if (userData['pathToProfileP'] !== '') {
+                    userData['pathToProfileP'] = fileHandler;
                 }
             } else if (part.type === 'field' && typeof part.value === 'string') {
                 userData[part.fieldname as keyof registerBody] = part.value;
@@ -106,7 +110,7 @@ fastify.post(
         }
         const hash = await bcrypt.hash(userData.password, 10);
         try {
-            await insertUserIntoDatabase(userData.username, hash, userData.email);
+            await insertUserIntoDatabase(userData.username, hash, userData.email, null, userData.pathToProfileP);
             const user = await findUserByEmail(userData.email);
             if (!user) {
                 req.log.error('user not added');
@@ -189,7 +193,7 @@ fastify.get('/me/data', async  (req, reply) => {
         if (!email) {
             return reply.code(401).send({ error: 'Unauthorized' });
         }
-        const user = await database.get('SELECT * FROM users WHERE email IS ?', email);
+        let user = await database.get('SELECT * FROM users WHERE email IS ? OR googleEmail IS ?', email, email);
         if (user) {
             return reply.send({ user });
         } else {
@@ -217,20 +221,30 @@ fastify.post<{ Body: googleBody }>(
                 audience: process.env.GOOGLE_CLIENT_ID,
             });
             const payload = ticket.getPayload();
-            if(!payload || !payload.email) return reply.code(400).send({ error: 'invalid token' });
-
-            let user = await findUserByEmail(payload.email)
+            if(!payload || !payload.email) {
+                return reply.code(400).send({ error: 'invalid token' });
+            }
+            console.log('finding user');
+            let user = await findUserByGoogleEmail(payload.email)
             if (!user) {
                 await insertGoogleUser(payload.email);
             }
-            user = await findUserByEmail(payload.email);
-
+            user = await findUserByGoogleEmail(payload.email);
+            let email: string;
+            if (!user.email && !user.googleEmail) {
+                return reply.code(404).send({error: 'not found' });
+            }
+            if (user.email) {
+                email = user.email;
+            } else {
+                email = user.googleEmail;
+            }
             req.session.user = { 
-                email: payload.email,
+                email: email,
                 userId: user.id,
                 loginMethod: 'google',
             };
-            reply.send({ success: true});
+            return reply.send({ success: true});
         } catch (err) {
             console.error('Google login error:', err);
             return reply.code(500).send({ error: 'Internal Server Error' });
@@ -250,7 +264,7 @@ async (req, reply) => {
         const payload = ticket.getPayload();
         if (!payload || !payload.email) return reply.code(400).send({ error: 'invalid token' });
         
-        const user = await findUserByEmail(payload.email);
+        const user = await findUserByGoogleEmail(payload.email);
         if (!user) {
             return reply.code(404).send({ error: 'user not found' });
         }
@@ -271,7 +285,7 @@ fastify.addHook('preHandler', async (req, reply) => {
     }
 });
 
-async function validateFile(part: MultipartFile): Promise<'DONE' | 'TOO LARGE'> {
+async function validateFile(part: MultipartFile): Promise<string> {
     let size = 0;
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     const chunks = [];
@@ -290,7 +304,7 @@ async function validateFile(part: MultipartFile): Promise<'DONE' | 'TOO LARGE'> 
     console.log('filepath:', filePath);
     console.log('fileName:', fileName);
     fs.writeFileSync(filePath, fileBuffer);
-    return 'DONE';
+    return filePath;
 }
 
 fastify.patch(
@@ -317,10 +331,13 @@ fastify.patch(
             return reply.code(400).send({ errors });
         }
         try {
-            if (await updateUserInfo(userData.oldEmail, 
-                userData.newEmail || userData.oldEmail,
-                userData.newPassword || userData.oldPassword,
-                userData.newUsername || userData.oldUsername) === false) {
+            if (await updateUserInfoGoogle(
+                userData.newEmail,
+                userData.newPassword,
+                userData.newUsername,
+                userData.googleEmail || '',
+                userData.pathToProfileP
+            ) === false) {
                 return reply.code(404).send({ error: 'user not found' });
             }
             
@@ -354,10 +371,59 @@ fastify.patch(
             return reply.code(400).send({ errors });
         }
         try {
-            const user = findUserByEmail()
-            if (await updateUserInfo())
+            if (!userData.googleEmail) {
+                return reply.code(400).send({error: 'no google email is known'});
+            }
+            const user = await findUserByGoogleEmail(userData.googleEmail)
+            if (!user) {
+                return reply.code(404).send({ error: 'user not found' });
+            }
+            if (await updateUserInfoGoogle(
+                userData.newEmail,
+                userData.newPassword,
+                userData.newUsername,
+                userData.googleEmail,
+                userData.pathToProfileP
+            ) === false) {
+                return reply.code(404).send({ error: 'user not found' });
+            }
+            return reply.send({ success: true });
+        } catch (err) {
+            req.log.error('error updateing user');
+            return reply.code(500).send({ error: 'Internal Server Error' });
         }
     });
+
+fastify.get('/profile-picture', async (req, reply) => {
+    const user = req.session.user;
+    if (!user) {
+        return reply.code(404).send({ error: 'no user found' });
+    }
+    let dbInfo = await findUserByEmail(user.email);
+    if (!dbInfo) {
+        dbInfo = await findUserByGoogleEmail(user.email);
+        if (!dbInfo) {
+            console.error('user in request but not database');
+            return reply.code(500).send({ error: 'Internal Server Errror' })
+        }
+    }
+    if (typeof dbInfo.pathToProfilePicture !== 'string')
+    {
+        console.error('pathToProfilePicture is not a string')
+        return reply.code(404).send('image not found');
+    }
+    console.log('makeing path');
+    console.log('original path is:', dbInfo.pathToProfilePicture);
+    const imagePath = path.join(path.resolve(dbInfo.pathToProfilePicture));
+    console.log('path is:', imagePath);
+    if (!fs.existsSync(imagePath)) {
+        console.error('image is not found')
+        return reply.code(404).send('image not found')
+    }
+    const mimeTypes = mime.lookup(imagePath) || 'application/octet-stream';
+    reply.header('content-type', mimeTypes);
+    return reply.send(fs.createReadStream(imagePath));
+});
 
 fastify.setNotFoundHandler((req, reply) => {
     return reply.code(404).send({ error: 'Not Found' });

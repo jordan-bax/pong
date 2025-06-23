@@ -40,9 +40,9 @@ export async function renderNavbar(): Promise<void> {
     };
     navbar.appendChild(homeLink);
 
-    const isLoggedIn = getLoggin;
+    const isLoggedIn = getLoggin();
     const isLoggedInServer = await getLogginServer();
-    if (isLoggedIn() && isLoggedInServer) {
+    if (isLoggedIn && isLoggedInServer !== null) {
         const profileLink = document.createElement('a');
         profileLink.href = '/profile';
         profileLink.textContent = navbarText.profileNavbarText;

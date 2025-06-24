@@ -75,9 +75,21 @@ services:
 
 volumes:
   user-db:
+    name: user
+    driver: local
+    driver_opts:
+      device: /home/splattje/data/user
+      o: bind
+      type: none
   page_content-db:
   game-db:
   # tournament-db:
+  #   name: tournament
+  #   driver: local
+  #   driver_opts:
+  #     device: /home/USER/data/tournament
+  #     o: bind
+  #     type: none
 
 networks:
   transcendanse:

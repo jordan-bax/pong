@@ -1,0 +1,31 @@
+paths:
+  /getContent:
+    get:
+      summery: get all the text content for the page it can handle multiple keys in 1(one) request
+      Parameters:
+        description: a querystring with all the keys for the text needed
+        querystring: a querystring holding the language and all the text keys you want to request
+      Usage: querystring is added to the end of the request string (/api/page_content/getContent?${querystring})
+      Responses:
+        200:
+          descrption: requested content found
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  row: object of the rows of all requested content
+        404:
+          description: not found
+          content:
+            schema:
+              type: object
+              items:
+                error: string with error message
+        500:
+          description: server error
+          content:
+            schema:
+              type: object
+              items:
+                error: string with error message

@@ -8,4 +8,9 @@ declare module 'fastify' {
             loginMethod: string;
         }
     }
+
+    interface FastifyRequest {
+        session: Session;
+        isAuthenticated: () => boolean;
+    }
 }

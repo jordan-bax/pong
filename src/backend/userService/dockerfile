@@ -16,6 +16,9 @@ COPY . .
 # Compile TypeScript to JavaScript
 RUN npm run build
 
+RUN mkdir -p /app/uploads
+RUN mkdir -p /app/uploads/profile_pictures
+
 # Expose port 3001
 EXPOSE 3001
 

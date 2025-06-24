@@ -98,6 +98,10 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('nl', 'homeNavbarText', 'Hoofd Pagina');
         await statement.run('en', 'profileNavbarText', 'Profile');
         await statement.run('nl', 'profileNavbarText', 'Profiel');
+        await statement.run('en', 'updateProfileButtonText', 'Update');
+        await statement.run('nl', 'updateProfileButtonText', 'Updaten');
+        await statement.run('en', 'profilePictureLabelText', 'Profile picture');
+        await statement.run('nl', 'profilePictureLabelText', 'Profiel foto');
         await statement.finalize();
 
     } catch (error: any) {

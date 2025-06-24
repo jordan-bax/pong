@@ -22,7 +22,7 @@ fastify.get<{ Querystring: GetContentBody }>(
             return reply.code(500).send({ error: 'Database error' });
         }
         if (!row) {
-            return reply.code(400).send({ error: 'Not found' });
+            return reply.code(404).send({ error: 'Not found' });
         }
         return reply.send({ row: Object.fromEntries(row) });
     } catch (error: any) {

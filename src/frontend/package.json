@@ -3,8 +3,9 @@
     "version": "1.0.0",
     "description": "A simple TypeScript project",
     "scripts": {
+      "create-upload-folder": "shx mkdir -p ./dist/uploads/profile_pictures",
       "copy-html": "cpx \"./**/*.{html,js,css}\" ./dist",
-      "build": "tsc --build && npm run copy-html"
+      "build": "tsc --build && npm run copy-html && npm run create-upload-folder"
     },
     "dependencies": {
         "@types/gapi": "^0.0.47",
@@ -12,6 +13,7 @@
     },
     "devDependencies": {
       "cpx": "^1.2.1",
+      "shx": "^0.4.0",
       "typescript": "^5.0.0"
     }
   }

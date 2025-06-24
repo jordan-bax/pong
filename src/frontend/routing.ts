@@ -17,9 +17,11 @@ export const routeFromPath: { [key: string]: string } = {
     '/google': 'google'
 };
 
-interface userInfo {
+export interface userInfo {
     username: string;
     email: string;
+    password: string;
+    pathToProfilePicture: string;
 }
 
 const fastifyErrorHandling:{ [key: string ]: string } = {
@@ -37,6 +39,17 @@ export function getCurrentUser(): string | null{
     return currentUser;
 }
 
+export async function getCsrfToken(): Promise<string | null> {
+    const response = await fetch('api/user/csrf-token', {
+        credentials: 'include'
+    });
+    if (response.ok) {
+        const data = await response.json();
+        return data.csrfToken;
+    }
+    return null;
+}
+
 export async function getLogginServer(): Promise<string | null> {
     const serverUser = await fetch('api/user/me')
     const data = await serverUser.json();
@@ -50,32 +63,62 @@ export async function getLogginUserData(): Promise<userInfo | null> {
     if (!serverUser.ok) {
         return null;
     }
-    const userData =await serverUser.json() as userInfo;
+    const data = await serverUser.json();
+    const userData = data.user as userInfo;
     return userData;
 }
 
-export async function updateUserInfo(email: string, username: string): Promise<void> {
+export async function updateUserInfo(
+    oldEmail: string, 
+    oldUsername: string, 
+    oldPassword:string, 
+    formData: FormData
+): Promise<void> {
+    console.log('in UpdateUserInfo');
+    formData.append('oldEmail', oldEmail);
+    formData.append('oldUsername', oldUsername);
+    formData.append('oldPassword', oldPassword);
     const response = await fetch('api/user/update', {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, username })
+        method: 'PATCH',
+        body: formData
     });
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = fastifyErrorHandling[errorData.code] ??
-                        statusHandlers[response.status] ??
+        const message = statusHandlers[response.status] ??
                         errorData.message ??
                         'unknown error';
         if (content) {
             content.textContent = message;
-            content.className = 'eror-text';
+            content.style.color = 'red';
             return ;
         }
     }
     history.pushState({}, '', '/profile');
     checkSession();
-    renderContent('profile');
+}
+
+export async function googleUserUpdate(formData: FormData): Promise<void> {
+    const response = await fetch('api/user/update-google', {
+        credentials: 'include',
+        method: 'PATCH',
+        body: formData
+    });
+    const content = document.getElementById('error');
+    if (!response.ok) {
+        const errorData = await response.json();
+        const message = statusHandlers[response.status] ??
+                        errorData.message ??
+                        'unknown error';
+        if (content) {
+            content.textContent = message;
+            content.style.color = 'red';
+            return ;
+        }
+    }
+    history.pushState({}, '', '/profile');
+    checkSession();
 }
 
 export async function checkSession() {
@@ -87,57 +130,73 @@ export async function checkSession() {
     renderContent(routeFromPath[window.location.pathname] || 'not found');
 }
 
-export async function login(email: string, password: string): Promise<void> {
+export async function login(formData: FormData): Promise<void> {
     const response = await fetch('/api/user/login', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: formData,
     });
     const content = document.getElementById('error');
-    if (!response.ok)
-    {
+    if (!response.ok) {
         const errorData = await response.json();
-        const message = fastifyErrorHandling[errorData.code] ??
-                        statusHandlers[response.status] ??
-                        errorData.message ??
-                        'Unknown error occured.';
+        let messages = [];
+        if (errorData.error) {
+            messages.push(errorData.error as string);
+        }
+        if (errorData.errors) {
+            for(const error of errorData.erros as string[]) {
+                messages.push(error);
+            }
+        }
         if (content) {
-            content.innerHTML = `
-            <p class="error-text">${message}</p>
-            `
+            content.innerHTML = '';
+            for (const error of messages) {
+                const paragraph = document.createElement('p');
+                paragraph.style.color = 'red';
+
+                const text = document.createTextNode(error);
+                paragraph.appendChild(text);
+                content.appendChild(paragraph);
+            }
         }
     } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderContent('profile');
     }
 }
 
-export async function register(username: string, password: string, email:string): Promise<void> {
+export async function register(formData: FormData): Promise<void> {
     const response = await fetch('/api/user/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, email }),
+        body: formData,
     });
 
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = fastifyErrorHandling[errorData.code] ??
-                        statusHandlers[response.status] ??
-                        errorData.message ??
-                        'Unknown error occured.';
+        let messages = [];
+        if (errorData.error) {
+            messages.push(errorData.error as string);
+        }
+        if (errorData.errors) {
+            for (const error of errorData.errors as string[]) {
+                messages.push(error);
+            }
+        }
         if (content) {
-            content.innerHTML = `
-            <p class="error-text">${message}</p>
-            `
+            content.innerHTML = '';
+            for (const error of messages) {
+                const paragraph = document.createElement('p');
+                paragraph.style.color = 'red';
+                const text = document.createTextNode(error);
+                paragraph.appendChild(text);
+                content.appendChild(paragraph);
+            }
         }
     } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderContent('profile');
     }
 }
 
@@ -147,13 +206,25 @@ export async function logout(): Promise<void> {
     currentUser = null;
     history.pushState({}, '', '/');
     checkSession();
-    renderContent('home');
+}
+
+let csrfToken: string | null = null;
+
+async function fetchCsrfToken() {
+    const res = await fetch('api/user/csrf-token', { credentials: 'include' });
+    const data = await res.json();
+    csrfToken = data.csrfToken;
 }
 
 export async function handleGoogleCredentials(request:{ credential: string}): Promise<void> {
+    if (!csrfToken) await fetchCsrfToken();
+
     const response = await fetch ('api/user/google', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json', 
+            'x-csrf-token': csrfToken ?? '',
+        },
         body: JSON.stringify({ idToken: request.credential }),
         credentials: 'include',
     });
@@ -161,7 +232,6 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
         checkSession();
-        renderContent('profile');
     } else {
         let errorMessage;
         const cloned = response.clone();

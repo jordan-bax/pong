@@ -203,7 +203,7 @@ fastify.post('/leave', async (req, reply) => {
     console.log('Player leaving game with ID:', gameid);
     const game = findGamebyplayerId(gameid);
     if (!game) {
-        reply.status(404).send({ error: 'Game not found' });
+        reply.status(404).send({ status: 'Game not found' });
         return;
     }
     // Remove the game from the games array
@@ -228,12 +228,12 @@ fastify.post('/pause', async (req, reply) => {
     // console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', gameid);
     const game = findGamebyplayerId(gameid);
     if (!game) {
-        reply.status(404).send({ error: 'Game not found' });
+        reply.status(404).send({ status: 'Game not found' });
         return;
     }
     if (game.gamePause) {
         game.gamePause = false; // Resume the game
-        reply.send({ status: 'resumed' });
+        reply.send({ status: 'started' });
         return;
     }
     // if (player === '-1') {
@@ -249,11 +249,11 @@ fastify.post('/move', async (req, reply) => {
     console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', gameid);
     const game = findGamebyplayerId(gameid);
     if (!game) {
-        reply.status(404).send({ error: 'Game not found' });
+        reply.status(404).send({ status: 'no Game' });
         return;
     }
     if (game.gamePause) {
-        reply.status(400).send({ error: 'Game is paused' });
+        reply.status(400).send({ status: 'paused' });
         return;
     }
     if (player === '1') {

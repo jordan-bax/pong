@@ -12,10 +12,10 @@
 
 # .PHONY: all clean run
 
-USER_DATA = /home/splattje/data/user
-PAGE_CONTENT_DATA = /home/splattje/data/page_content
-GAME_DATA = /home/splattje/data/game
-TOURNAMENT_DATA = /home/splattje/data/tournament
+USER_DATA = ~/data/user
+PAGE_CONTENT_DATA = ~/data/page_content
+GAME_DATA = ~/data/game
+TOURNAMENT_DATA = ~/data/tournament
 
 all: up
 

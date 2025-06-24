@@ -45,6 +45,13 @@ export async function renderNavbar(): Promise<void> {
     gameLink.href = '/gameMenu';
     gameLink.textContent = 'games';
     gameLink.className = 'btn navItem';
+    gameLink.style.color = 'black';
+    gameLink.style.display = 'flex';
+    gameLink.style.textAlign = 'center';
+    gameLink.style.justifyContent = 'left';
+    gameLink.style.textDecoration = 'none';
+    gameLink.style.marginLeft = '10px';
+    gameLink.style.border = '1em'
     gameLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/gameMenu');

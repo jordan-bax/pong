@@ -78,7 +78,7 @@ volumes:
     name: user
     driver: local
     driver_opts:
-      device: /home/splattje/data/user
+      device: ~/data/user
       o: bind
       type: none
   page_content-db:

@@ -1,0 +1,133 @@
+paths:
+  /start:
+    post:
+      summery: starts a new game
+      Parameters:
+        description: a querystring with all the keys for the text needed
+        content:
+          multipart/form-data:
+            schema:
+              type: multipart/form-data
+              items:
+                type: string with type of game, like "online", "local", "ai"
+                playername: string with the name of the player
+                playerid: string with id of the player
+      Responses:
+        200:
+          descrption: game started successfully and added to the list
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  gameid: a string with the id of the game and player position at the end (-1/-2)
+                  status: string with the status of the game, like "left", "started", "error"
+  /leave:
+    post:
+      summary: leave the game
+      parameters:
+        description: a querystring with the gameid and playerid in one string
+        querystring: a querystring holding the gameid
+      usage: game/leave?gameid=1234-1 
+      responses:
+        200:
+          description: player left the game successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  gameid: a string with the id of the game and player position at the end (-1/-2)
+                  status: string with the status of the game, like "left", "started", "error"
+        404:
+          description: error in the leave, game not found
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  status: a string with the error message, like "game not found"
+                
+  /pause:
+    post:
+      summary: pause the game
+      parameters:
+        description: a querystring with the gameid and playerid in one string
+        querystring: a querystring holding the gameid
+      usage: game/pause?gameid=1234-1 
+      responses:
+        200:
+          description: game paused successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  gameid: a string with the id of the game and player position at the end (-1/-2)
+                  status: string with the status of the game, like "paused", "started", "error"
+        404:
+          description: error in the pause, game not found
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  status: a string with the error message, like "game not found"
+  
+  /move:
+    post:
+      summary: move a player in the game. by a set amount
+      parameters:
+        description: a querystring with the gameid, playerid and the move in one string
+        querystring: a querystring holding the gameid, playerid and move
+      usage: game/move?gameid=1234-1
+      content:
+          multipart/form-data:
+            schema:
+              type: multipart/form-data
+              items:
+                direction: string with the direction of the move, like "up", "down"         
+      responses:
+        200:
+          description: move made successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  gameid: a string with the id of the game and player position at the end (-1/-2)
+                  status: string with the status of the game, like "moved", "started", "error"
+        400:
+          description: error in the move, game not found
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  status: a string with the error message, like "game not found"
+        404:
+          description: error in the move, game is paused or not started
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  status: a string with the error message, like "paused" or "not started"
+
+  /state:
+    get:
+      summary: get the state of the game. all information about the game state so you can render the game
+      parameters:
+        description: a querystring with the gameid and playerid in one string
+        querystring: a querystring holding the gameid
+      usage: game/state?gameid=1234-1 
+      responses:
+        200:
+          description: state of the game returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  gamestateinterface: a interface with all the information about the game state. found in the sharedValuesPong.ts file
+                  error: if there is an error, it will be returned here

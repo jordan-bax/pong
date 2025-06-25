@@ -28,10 +28,10 @@ up: build
 	@chmod 777 $(PAGE_CONTENT_DATA)
 	@chmod 777 $(GAME_DATA)
 	@chmod 777 $(TOURNAMENT_DATA)
-	docker-compose -f src/docker-compose.yml up -d
+	docker-compose -f src/docker-compose.yml up -d --force-recreate
 
 build:
-	docker-compose -f src/docker-compose.yml build
+	docker-compose -f src/docker-compose.yml build --no-chache
 
 down:
 	docker-compose -f src/docker-compose.yml down
@@ -60,4 +60,22 @@ prune: clean
 
 fresh: prune up
 
-.PHONY: all up down start build clean re prune fresh
+rebuild-user:
+	docker-compose -f src/docker-compose build --no-chache user
+	docker-compose -f src/docker-compse up -d --force-recreate user
+
+rebuild-page_content:
+	docker-compose -f src/docker-compose build --no-chache page_content
+	docker-compose -f src/docker-compse up -d --force-recreate page_content
+
+rebuild-game:
+	docker-compose -f src/docker-compose build --no-chache game
+	docker-compose -f src/docker-compse up -d --force-recreate game
+
+rebuild-nginx:
+	docker-compose -f src/docker-compose build --no-chache nginx
+	docker-compose -f src/docker-compse up -d --force-recreate nginx
+
+rebuild-backend: rebuild-user rebuild-page_content rebuild-game
+
+.PHONY: all up down start build clean re prune fresh rebuild-user rebuild-page_content rebuild.game rebuild-nginx rebuild-backend

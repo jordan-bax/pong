@@ -75,7 +75,7 @@ export async function seedContentDb(): Promise<void> {
         );
 
         await statement.run('en', 'homePageText', `Welcome to the home page!`);
-        await statement.run('nl', 'homePageText', 'Welkome op the hoofd pagina!');
+        await statement.run('nl', 'homePageText', 'Welkome op de hoofd pagina!');
         await statement.run('en', 'emailText', 'Email:');
         await statement.run('nl', 'emailText', 'Email:');
         await statement.run('en', 'passwordText', 'Password:');
@@ -86,8 +86,6 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('nl', 'usernameText', 'Gebruikersnaam:');
         await statement.run('en', 'registerButtonText', 'Register');
         await statement.run('nl', 'registerButtonText', 'Registreer:');
-        await statement.run('en', 'profileText', 'Hello {email} this is your profile.');
-        await statement.run('nl', 'profileText', 'Hallo {email} dit is uw profiel.');
         await statement.run('en', 'logoutNavbarText', 'Logout');
         await statement.run('nl', 'logoutNavbarText', 'Uitloggen');
         await statement.run('en', 'loginNavbarText', 'Login');
@@ -102,6 +100,14 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('nl', 'updateProfileButtonText', 'Updaten');
         await statement.run('en', 'profilePictureLabelText', 'Profile picture');
         await statement.run('nl', 'profilePictureLabelText', 'Profiel foto');
+        await statement.run('en', 'exitButtonText', 'Exit');
+        await statement.run('nl', 'exitButtonText', 'Exit');
+        await statement.run('en', 'notFoundText', 'Page not found');
+        await statement.run('nl', 'notFoundText', 'Pagina niet gevonden');
+        await statement.run('en', 'gameNavbarText', 'Games');
+        await statement.run('nl', 'gameNavbarText', 'Spel');
+        await statement.run('en', 'languageOptionText', 'EN');
+        await statement.run('nl', 'languageOptionText', 'NL');
         await statement.finalize();
 
     } catch (error: any) {

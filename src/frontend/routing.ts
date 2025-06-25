@@ -1,14 +1,6 @@
 import { renderContent } from "./contentRenderer.js";
 import { renderNavbar } from "./navbar.js";
 
-
-const statusHandlers: { [key: number]: string } = {
-    401: 'Invalid login credentials',
-    404: 'User not found',
-    409: 'Username already in use',
-    500: 'Internal server error'
-};
-
 export const routeFromPath: { [key: string]: string } = {
     '/': 'home',
     '/profile': 'profile',
@@ -23,10 +15,6 @@ export interface userInfo {
     password: string;
     pathToProfilePicture: string;
 }
-
-const fastifyErrorHandling:{ [key: string ]: string } = {
-    FST_ERR_VALIDATION: 'Invalid input: use only letters and numbers',
-};
 
 let isLoggedIn = false;
 let currentUser: string | null = null;
@@ -86,8 +74,7 @@ export async function updateUserInfo(
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = statusHandlers[response.status] ??
-                        errorData.message ??
+        const message = errorData.message ??
                         'unknown error';
         if (content) {
             content.textContent = message;
@@ -108,8 +95,7 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = statusHandlers[response.status] ??
-                        errorData.message ??
+        const message = errorData.message ??
                         'unknown error';
         if (content) {
             content.textContent = message;

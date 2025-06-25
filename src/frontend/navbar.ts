@@ -1,6 +1,6 @@
 import { renderContent, getPageContent } from "./contentRenderer.js";
-import { getCookie } from "./index.js";
-import { getLoggin, getLogginServer, logout } from "./routing.js";
+import { getLanguage, setLanguage } from "./index.js";
+import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
 
 interface navbarContent {
     homeNavbarText: string;
@@ -17,7 +17,8 @@ async function getNavbarContent(language:string, textKeys: string[]): Promise<Ma
 }
 
 export async function renderNavbar(): Promise<void> {
-    const navbarMapData = await getNavbarContent(getCookie('ft_transcendence_language') || 'en', ['loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText']);
+    const language = await getLanguage();
+    const navbarMapData = await getNavbarContent(language.toLowerCase(), ['loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText', 'gameNavbarText']);
     const navbarText = navbarMapData.get('row') as navbarContent;
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
@@ -43,7 +44,7 @@ export async function renderNavbar(): Promise<void> {
 
     const gameLink = document.createElement('a');
     gameLink.href = '/gameMenu';
-    gameLink.textContent = 'games';
+    gameLink.textContent = navbarText.gameNavbarText;
     gameLink.className = 'btn navItem';
     gameLink.style.color = 'black';
     gameLink.style.display = 'flex';
@@ -124,8 +125,34 @@ export async function renderNavbar(): Promise<void> {
             renderContent('register');
         };
         navbar.appendChild(registerLink);
-
     }
+
+    const languageDropdown = document.createElement('select');
+    const options = ['NL', 'EN'];
+    options.forEach((text, index) => {
+        const option = document.createElement('option');
+        option.value  = options[index];
+        option.textContent = text;
+        languageDropdown.appendChild(option);
+    });
+    
+    languageDropdown.style.display = 'flex';
+    languageDropdown.style.position = 'absolute';
+    languageDropdown.style.right = '20px';
+    navbar.appendChild(languageDropdown);
+    Array.from(languageDropdown.options).forEach((option) => {
+        if (option.text == language) {
+            option.selected = true;
+        } else {
+            option.selected = false;
+        }
+    })
+    languageDropdown.addEventListener('change', (event) => {
+        const target = event.target as HTMLSelectElement;
+        setLanguage(target.value);
+        checkSession();
+    })
+
     const googleLogin = document.createElement('div');
     googleLogin.id = 'google-signin-button';
     navbar.appendChild(googleLogin);

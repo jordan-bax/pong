@@ -19,6 +19,7 @@ function testEmailPattern(email: string): boolean {
 
 export function validateUserUpdateData(data: patchBody): string[] {
     const errors = [];
+    console.log('validate data is:', data);
     if (typeof data.newUsername !== 'string' && typeof data.newUsername !== null) {
         errors.push('New Username needs to be string or null');
     }
@@ -60,28 +61,31 @@ export function validateUserUpdateData(data: patchBody): string[] {
         }
     }
 
-    if (typeof data.oldEmail !== 'string' || data.oldEmail === '') {
+    if ((typeof data.oldEmail !== 'string' && data.oldEmail !== null) || data.oldEmail === '') {
         errors.push('Old email needs to be a string')
     } else {
-        data.oldEmail = data.oldEmail.trim();
-        if (typeof data.oldEmail === 'undefined') {
-            errors.push('Old Email is undefined');
+        if (data.oldEmail !== null) {}
+            data.oldEmail = data.oldEmail?.trim() as string;
+            if (typeof data.oldEmail === 'undefined') {
+                errors.push('Old Email is undefined');
+            }
+            else if (!testEmailPattern(data.oldEmail) || data.oldEmail.length > 320) {
+                errors.push('Invalid old email address format');
+            }
         }
-        else if (!testEmailPattern(data.oldEmail) || data.oldEmail.length > 320) {
-            errors.push('Invalid old email address format');
-        }
-    }
 
-    if (typeof data.oldPassword !== 'string' || data.oldPassword === '') {
+    if ((typeof data.oldPassword !== 'string' && data.oldEmail !== null) || data.oldPassword === '') {
         errors.push('Old password needs to be a string');
     } else {
-        data.oldPassword = data.oldPassword.trim();
-        if (!testPasswordPattern(data.oldPassword) || data.oldPassword.length < 12) {
-            errors.push(`Invalid password: your password should be at least 12 characters long, 
-                have at least 1 upper case letter, 
-                have at least 1 lower case letter, 
-                have at least 1 number, 
-                and have at least 1 special character`);
+        if (data.oldPassword !== null) {
+            data.oldPassword = data.oldPassword.trim();
+            if (!testPasswordPattern(data.oldPassword) || data.oldPassword.length < 12) {
+                errors.push(`Invalid password: your password should be at least 12 characters long, 
+                    have at least 1 upper case letter, 
+                    have at least 1 lower case letter, 
+                    have at least 1 number, 
+                    and have at least 1 special character`);
+            }
         }
     }
 

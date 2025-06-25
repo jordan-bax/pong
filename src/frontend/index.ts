@@ -13,32 +13,31 @@ window.onGsiLoad = function () {
     initGoogleSignInIfNeeded();
 };
 
-export function getCookie(name: string): string | null {
-    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-    for (const cookie of cookies) {
-        const [key, value] = cookie.split('=');
-        if (key == name) {
-            return decodeURIComponent(value);
-        }
+export async function setLanguage(language: string): Promise<void> {
+   const response = await fetch('api/page_content/language', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+        'Content-type': 'application/json',
+    },
+    body: JSON.stringify(language),
+   });
+   if (!response.ok) {
+    throw new Error('Failed to set language');
+   }
+}
+
+export async function getLanguage(): Promise<string>{
+     const response = await fetch('api/page_content/language', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Accept': 'application/json',
+        },
+    });
+    if (!response.ok) {
+        throw new Error('Failed to fetch language');
     }
-    return null;
-}
-
-function setCookie(name: string, value: string, days = 7): void {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-}
-
-const cookieName = 'ft_transcendence_language';
-let language: string = navigator.language || (navigator as any)['userLanguage'] || 'en';
-const cookieLanguage = getCookie(cookieName);
-if (language.includes('nl') || language.indexOf('nl') != -1) {
-    language = 'nl';
-} else {
-    language = 'en';
-}
-if (!cookieLanguage) {
-    setCookie(cookieName, language);
-} else if (language != cookieLanguage){
-    setCookie(cookieName, language);
+    const language = await response.text();
+    return language;
 }

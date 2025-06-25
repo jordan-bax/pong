@@ -82,12 +82,18 @@ volumes:
       o: bind
       type: none
   page_content-db:
+    name: page_content
+    driver: local
+    driver_opts:
+      device: ~/data/page_content
+      o: bind
+      type: none
   game-db:
   # tournament-db:
   #   name: tournament
   #   driver: local
   #   driver_opts:
-  #     device: /home/USER/data/tournament
+  #     device: ~/data/tournament
   #     o: bind
   #     type: none
 

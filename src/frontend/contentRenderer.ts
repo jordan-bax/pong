@@ -1,7 +1,7 @@
-import { getCookie } from "./index.js";
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
+import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession } from "./routing.js";
 
 declare global {
     interface Window {
@@ -16,10 +16,11 @@ interface content {
     usernameText: string;
     loginButtonText: string;
     registerButtonText: string;
-    profileText: string;
     homePageText: string;
     updateProfileButtonText: string;
     profilePictureLabelText: string;
+    exitButtonText: string;
+    notFoundText: string;
 }
 
 const values = [
@@ -28,10 +29,11 @@ const values = [
     'usernameText',
     'loginButtonText',
     'registerButtonText',
-    'profileText',
     'homePageText',
     'updateProfileButtonText',
     'profilePictureLabelText',
+    'exitButtonText',
+    'notFoundText',
 ];
 
 function queryStringBuilder(language: string, array: string[]): string {
@@ -115,6 +117,7 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
     submitButton.style.border = '1em';
     submitButton.style.marginLeft = ' 10px';
     submitButton.textContent = text.loginButtonText;
+    submitButton.id = 'login-btn';
     
     const errorDiv = document.createElement('div');
     errorDiv.id = 'error';
@@ -202,6 +205,7 @@ async function renderRegister(text: content): Promise<HTMLFormElement> {
     submitButton.style.border = '1em';
     submitButton.style.marginLeft = ' 10px';
     submitButton.textContent = text.registerButtonText;
+    submitButton.id = 'register-btn';
 
     const errorDiv = document.createElement('div');
     errorDiv.id = 'error';
@@ -236,7 +240,7 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     contentDiv.style.marginBottom = '10%';
     contentDiv.style.height = '2%';
 
-    const info =document.createElement('p');
+    const info = document.createElement('p');
     const infoText = document.createTextNode('please enter password to confirm update');
     info.appendChild(infoText);
     info.style.color = 'white';
@@ -252,17 +256,17 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
 
     const overlayInput = document.createElement('input');
     overlayInput.type = 'password';
-    overlayInput.id = 'password';
+    overlayInput.id = 'oldPassword';
     overlayInput.name = 'oldPassword';
     overlayInput.ariaRequired = 'true';
 
     contentDiv.appendChild(overlayInput);
 
     const overlaySubitButton = document.createElement('button');
-    overlaySubitButton.id = 'passworSubmit';
+    overlaySubitButton.id = 'passwordSubmit';
     overlaySubitButton.textContent = 'Confirm';
     overlaySubitButton.onclick = () => {
-        const password = (document.getElementById('password') as HTMLInputElement).value;
+        const password = (document.getElementById('oldPassword') as HTMLInputElement).value;
         if (!password) {
             const error = document.getElementById('error');
             if (!error) return;
@@ -284,11 +288,16 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     overlayGoogleLogin.id = 'google-auth';
     const formInfo = document.getElementById('profileForm') as HTMLFormElement | null;
     if (!formInfo) return null;
+    const formData = new FormData(formInfo);
     window.google.accounts.id.initialize({
         client_id: '51710532102-br37sgrm5iodlnhsa2kahmcjr6lh8f8n.apps.googleusercontent.com',
-        formData: new FormData(formInfo),
-        user: user,
-        callback: handleGoogleCheck
+        callback: (googleResponse: any) => {
+            handleGoogleCheck({
+                idToken: googleResponse.credential,
+                formData,
+                user,
+            });
+        }
     });
     window.google.accounts.id.renderButton(overlayGoogleLogin, {
         theme: 'outline',
@@ -296,22 +305,36 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     });
 
     contentDiv.appendChild(overlayGoogleLogin);
+    
+    const exitButton = document.createElement('button');
+    exitButton.id = 'exit-btn';
+    exitButton.textContent = text.exitButtonText;
+    exitButton.onclick = () => {
+        history.pushState({}, '', '/profile');
+        checkSession();
+    }
+
+    contentDiv.appendChild(exitButton);
+
     passwordOverlay.appendChild(contentDiv);
     return passwordOverlay;
 }
 
-async function handleGoogleCheck(request:{ credential: string, formData: FormData, user: userInfo, password: string}) {
+async function handleGoogleCheck(request:{ idToken: string, formData: FormData, user: userInfo}) {
     console.log('in google callback function');
+    console.log('credentials is:',request.idToken);
+    console.log('formdata is:', request.formData);
+    console.log('user is', request.user);
     const response = await fetch('api/user/csrf-token', {credentials: 'include'});
     const data = await response.json();
     const csrf = data.csrfToken;
     const googleResponse = await fetch('api/user/google-check', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'x-csrf-token': csrf,
+            'Content-Type': 'application/json'
         },
-        body: request.formData,
+        body: JSON.stringify({idToken: request.idToken}),
         credentials: 'include',
     });
     if (googleResponse.ok) {
@@ -450,6 +473,7 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
         imgElement.alt = 'Profile Picture';
         imgElement.style.width = '10%';
         imgElement.style.aspectRatio = '1/1';
+        imgElement.id = 'profilePicture';
         return imgElement;
     } catch (err) {
         console.error('Error loading profile picture', err);
@@ -465,14 +489,10 @@ export async function renderContent (route: string): Promise<void> {
     if (child) {
         content.removeChild(child);
     }
-    
     content.style.display = 'flex';
     content.style.margin = '1em 0em';
     content.style.justifyContent = 'center';
-    let language = getCookie('ft_transcendence_language');
-    if (language === null) {
-        language ='en';
-    }
+    let language = (await getLanguage()).toLowerCase();
     const textMap = await getPageContent(language, values)
     const textData = textMap.get('row') as content;
     switch (route)
@@ -513,7 +533,7 @@ export async function renderContent (route: string): Promise<void> {
             pongbutton();
             break;
         default:
-            content.textContent = 'Page not found.';
+            content.textContent = textData.notFoundText;
     }
     initGoogleSignInIfNeeded();
     if (!getLoggin && route !== 'login' && route === 'profile') {

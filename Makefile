@@ -40,7 +40,7 @@ stop:
 	docker-compose -f src/docker-compose.yml stop
 
 start:
-	docker-compose -f src/docker-compose.ym start
+	docker-compose -f src/docker-compose.yml start
 
 clean:
 	@docker stop $$(docker ps -qa) || true

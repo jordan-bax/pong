@@ -9,7 +9,7 @@ import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
 import path from 'path';
 import { googleLogiSchema } from './schemas/userSchemas';
-import { db, findUserByEmail, findUserByGoogleEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase, updateUserInfoGoogle } from './userDb';
+import { db, findUserByEmail, findUserByGoogleEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase, updateUserInfo, updateUserInfoGoogle } from './userDb';
 import { validateLoginData, validateRegisterData, validateUserUpdateData, verifyPassword } from './validation';
 import mime from 'mime-types';
 
@@ -22,7 +22,7 @@ export interface registerBody {
     username: string;
     password: string;
     email: string;
-    pathToProfileP: string;
+    pathToProfileP: string | null;
 };
 
 interface googleBody {
@@ -38,8 +38,8 @@ export interface patchBody {
     newUsername: string | null;
     newPassword: string | null;
     newEmail: string | null;
-    oldUsername: string;
-    oldPassword: string;
+    oldUsername: string | null;
+    oldPassword: string | null;
     oldEmail: string | null;
     googleEmail:string | null;
     pathToProfileP: string | null;
@@ -61,6 +61,7 @@ fastify.register(fastifyCookie, {
 });
 fastify.register(fastifySession, {
     secret: sessionSecret,
+    cookieName: 'UserInfo',
     cookie: {
         secure: false, // Set true when uing HTTPS
         maxAge: 1000 * 60 * 60 * 24, // 1 day 
@@ -93,12 +94,17 @@ fastify.post(
         const parts = req.parts();
         for await (const part of parts) {
             if (part.type === 'file') {
-                const fileHandler = await validateFile(part);
-                if (fileHandler === 'TOO LARGE') {
-                    return reply.code (400).send({ error: 'file is larger then 10MB' });
-                }
-                if (userData['pathToProfileP'] !== '') {
-                    userData['pathToProfileP'] = fileHandler;
+                console.log("part is:", part);
+                if (part.filename && part.filename !== '') {
+                    const fileHandler = await validateFile(part);
+                    if (fileHandler === 'TOO LARGE') {
+                        return reply.code (400).send({ error: 'file is larger then 10MB' });
+                    }
+                    if (userData['pathToProfileP'] !== '') {
+                        userData['pathToProfileP'] = fileHandler;
+                    }
+                } else {
+                    userData['pathToProfileP'] = null;
                 }
             } else if (part.type === 'field' && typeof part.value === 'string') {
                 userData[part.fieldname as keyof registerBody] = part.value;
@@ -331,11 +337,15 @@ fastify.patch(
             return reply.code(400).send({ errors });
         }
         try {
-            if (await updateUserInfoGoogle(
+            if (userData.oldEmail === null) {
+                return reply.code(400).send({ error: 'wrong info' });
+            }
+            if (await updateUserInfo(
+                userData.oldEmail,
                 userData.newEmail,
                 userData.newPassword,
                 userData.newUsername,
-                userData.googleEmail || '',
+                userData.googleEmail,
                 userData.pathToProfileP
             ) === false) {
                 return reply.code(404).send({ error: 'user not found' });
@@ -356,15 +366,39 @@ fastify.patch(
         const parts = req.parts();
         for await (const part of parts) {
             if (part.type === 'file') {
-                const fileHandler = await validateFile(part);
-                if (fileHandler !== 'DONE') {
+                if (!part.filename && part.filename !== '') {
+                    const fileHandler = await validateFile(part);
                     if (fileHandler === 'TOO LARGE') {
                         return reply.code(400).send('file is larger than 10MB');
+                    } else {
+                        userData['pathToProfileP'] = fileHandler;
                     }
+                } else {
+                    userData['pathToProfileP'] = null;
                 }
             } else if (part.type === 'field' && typeof part.value === 'string') {
-                userData[part.fieldname as keyof patchBody] = part.value;
+                if (part.value === '') {
+                    userData[part.fieldname as keyof patchBody] = null;
+                } else {
+                    userData[part.fieldname as keyof patchBody] = part.value;
+                }
             }
+        }
+        const googleEmail = req.session.user?.email;
+        if (!googleEmail) {
+            return reply.code(400).send({error: 'no user logged in'});
+        }
+        const user = await findUserByGoogleEmail(googleEmail);
+        if (!user) {
+            return reply.code(400).send({error: 'no user logged in'});
+        }
+        userData['googleEmail'] = googleEmail;
+        userData['oldEmail'] = user.email;
+        userData['oldPassword'] = user.password;
+        userData['oldUsername'] = user.username;
+        console.log('userdata is:',userData);
+        if (!userData['googleEmail']) {
+            return reply.code(400).send({error: 'no user logged in'});
         }
         const errors = validateUserUpdateData(userData);
         if (errors.length > 0) {

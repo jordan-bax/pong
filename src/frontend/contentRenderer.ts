@@ -284,17 +284,14 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
 
     contentDiv.appendChild(overlaySubitButton);
 
+
     const overlayGoogleLogin = document.createElement('div');
     overlayGoogleLogin.id = 'google-auth';
-    const formInfo = document.getElementById('profileForm') as HTMLFormElement | null;
-    if (!formInfo) return null;
-    const formData = new FormData(formInfo);
     window.google.accounts.id.initialize({
         client_id: '51710532102-br37sgrm5iodlnhsa2kahmcjr6lh8f8n.apps.googleusercontent.com',
         callback: (googleResponse: any) => {
             handleGoogleCheck({
                 idToken: googleResponse.credential,
-                formData,
                 user,
             });
         }
@@ -320,11 +317,13 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     return passwordOverlay;
 }
 
-async function handleGoogleCheck(request:{ idToken: string, formData: FormData, user: userInfo}) {
+async function handleGoogleCheck(request:{ idToken: string, user: userInfo}) {
     console.log('in google callback function');
     console.log('credentials is:',request.idToken);
-    console.log('formdata is:', request.formData);
     console.log('user is', request.user);
+    const formInfo = document.getElementById('profileForm') as HTMLFormElement;
+    const formData = new FormData(formInfo);
+    console.log('formData in callback:', formData)
     const response = await fetch('api/user/csrf-token', {credentials: 'include'});
     const data = await response.json();
     const csrf = data.csrfToken;
@@ -338,7 +337,7 @@ async function handleGoogleCheck(request:{ idToken: string, formData: FormData, 
         credentials: 'include',
     });
     if (googleResponse.ok) {
-        googleUserUpdate(request.formData);
+        googleUserUpdate(formData);
     } else {
         let errorMessage;
         const cloned = googleResponse.clone();

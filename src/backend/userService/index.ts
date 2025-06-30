@@ -29,7 +29,7 @@ interface googleBody {
     idToken: string;
 };
 
-interface googleUpdateBody {
+export interface googleUpdateBody {
     idToken: string;
     formData: FormData;
 }
@@ -369,6 +369,7 @@ fastify.patch(
                 if (!part.filename && part.filename !== '') {
                     const fileHandler = await validateFile(part);
                     if (fileHandler === 'TOO LARGE') {
+                        console.log('file too large')
                         return reply.code(400).send('file is larger than 10MB');
                     } else {
                         userData['pathToProfileP'] = fileHandler;
@@ -386,10 +387,12 @@ fastify.patch(
         }
         const googleEmail = req.session.user?.email;
         if (!googleEmail) {
+            console.log('no google email found')
             return reply.code(400).send({error: 'no user logged in'});
         }
         const user = await findUserByGoogleEmail(googleEmail);
         if (!user) {
+            console.log('no user found in db');
             return reply.code(400).send({error: 'no user logged in'});
         }
         userData['googleEmail'] = googleEmail;
@@ -398,18 +401,22 @@ fastify.patch(
         userData['oldUsername'] = user.username;
         console.log('userdata is:',userData);
         if (!userData['googleEmail']) {
+            console.log('no googleEmail found in data');
             return reply.code(400).send({error: 'no user logged in'});
         }
         const errors = validateUserUpdateData(userData);
         if (errors.length > 0) {
+            console.log('validation error');
             return reply.code(400).send({ errors });
         }
         try {
             if (!userData.googleEmail) {
+                console.log('userdata.google is empty')
                 return reply.code(400).send({error: 'no google email is known'});
             }
             const user = await findUserByGoogleEmail(userData.googleEmail)
             if (!user) {
+                console.log('no user found in database with google email')
                 return reply.code(404).send({ error: 'user not found' });
             }
             if (await updateUserInfoGoogle(
@@ -419,6 +426,7 @@ fastify.patch(
                 userData.googleEmail,
                 userData.pathToProfileP
             ) === false) {
+                console.log('update user failed')
                 return reply.code(404).send({ error: 'user not found' });
             }
             return reply.send({ success: true });

@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { patchBody, registerBody, loginBody } from './index';
+import { patchBody, registerBody, loginBody, googleUpdateBody } from './index';
 import fs from 'fs';
 
 function testPasswordPattern(password: string ): boolean {
@@ -20,14 +20,17 @@ function testEmailPattern(email: string): boolean {
 export function validateUserUpdateData(data: patchBody): string[] {
     const errors = [];
     console.log('validate data is:', data);
-    if (typeof data.newUsername !== 'string' && typeof data.newUsername !== null) {
+    console.log('new username is null', data.newUsername === null);
+    console.log('new password is null', data.newPassword === null);
+    console.log('new email is null', data.newEmail === null);
+    if (typeof data.newUsername !== 'string' && data.newUsername !== null) {
         errors.push('New Username needs to be string or null');
     }
     if (typeof data.newUsername === 'string' && data.newUsername === '') {
         data.newUsername = null;
     }
 
-    if (typeof data.newPassword !== 'string' && typeof data.newPassword !== null) {
+    if (typeof data.newPassword !== 'string' && data.newPassword !== null) {
         errors.push('New Password needs to be  string or null');
     } else if (typeof data.newPassword === 'string') {
         data.newPassword = data.newPassword.trim();
@@ -44,7 +47,7 @@ export function validateUserUpdateData(data: patchBody): string[] {
         }
     }
 
-    if (typeof data.newEmail !== 'string' && typeof data.newEmail !== null) {
+    if (typeof data.newEmail !== 'string' && data.newEmail !== null) {
         errors.push('New Email must be a valid email address or null');
     }
     if (typeof data.newEmail === 'undefined') {
@@ -64,7 +67,7 @@ export function validateUserUpdateData(data: patchBody): string[] {
     if ((typeof data.oldEmail !== 'string' && data.oldEmail !== null) || data.oldEmail === '') {
         errors.push('Old email needs to be a string')
     } else {
-        if (data.oldEmail !== null) {}
+        if (data.oldEmail !== null) {
             data.oldEmail = data.oldEmail?.trim() as string;
             if (typeof data.oldEmail === 'undefined') {
                 errors.push('Old Email is undefined');
@@ -73,6 +76,7 @@ export function validateUserUpdateData(data: patchBody): string[] {
                 errors.push('Invalid old email address format');
             }
         }
+    }
 
     if ((typeof data.oldPassword !== 'string' && data.oldEmail !== null) || data.oldPassword === '') {
         errors.push('Old password needs to be a string');
@@ -89,8 +93,8 @@ export function validateUserUpdateData(data: patchBody): string[] {
         }
     }
 
-    if (typeof data.oldUsername !== 'string' || data.oldUsername === '') {
-        errors.push('Old password needs to be a string');
+    if (typeof data.oldUsername === 'string' || data.oldUsername === '') {
+        errors.push('Old username needs to be a string');
     }
 
     if (typeof data.pathToProfileP === 'string') {

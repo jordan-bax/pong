@@ -48,7 +48,9 @@ var g_gametype: string = ''; // Default game type
             player.y = gameWall.height - player.height; // Prevent moving below the bottom wall
         }
     }
-
+function getplayerData(){
+    
+}
 export async function startGame(gametype :string) : Promise<scoreInterface> {
     console.log('Starting game with AI:', gametype);
     const gameinfo = await fetch('/api/game/start', {

@@ -10,6 +10,10 @@ COPY package*.json ./
 
 # Install dependencies inside the container
 RUN npm install
+# npm install concurrently --save
+# "scripts": {
+#   "start": "concurrently \"node dist/game.js\" \"node dist/other.js\""
+# }
 
 # COPY src/frontend/sharedValuesPong.ts ./sharedValuesPong.ts
 COPY . .

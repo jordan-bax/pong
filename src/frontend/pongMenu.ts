@@ -22,6 +22,62 @@ export async function pongbutton(): Promise<void> {
 	// });
 }
 
+async function testaddPlayerButton(frame: HTMLIFrameElement): Promise<void> {
+	try {
+		const response = await fetch('/api/players', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ name: 'New Player' })
+		});
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		console.log('Player added:', data);
+		alert('Player added: ' + JSON.stringify(data));
+	} catch (error) {
+		console.error('Error adding player:', error);
+		alert('Failed to add player');
+	}
+}
+
+async function testData(frame: HTMLIFrameElement): Promise<void> {
+	// This function is just a placeholder for testing purposes
+	console.log('test function called');
+	// You can add your test logic here
+	const container = document.createElement('div');
+	container.style.position = 'fixed';
+	container.style.top = '50%';
+	container.style.left = '50%';
+	container.style.transform = 'translate(-50%, -50%)';
+	container.style.display = 'flex';
+
+	const backbutton = document.createElement('button');
+	backbutton.textContent = 'back';
+	backbutton.style.fontSize = '1.2em';
+	backbutton.style.padding = '10px 20px';
+	backbutton.onclick = () => {
+		frame?.removeChild(container); // Remove the container before going back
+		return
+	};
+	container.appendChild(backbutton);
+
+	const addPlayerButton = document.createElement('button');
+	addPlayerButton.textContent = 'add player';
+	addPlayerButton.style.fontSize = '1.2em';
+	addPlayerButton.style.padding = '10px 20px';
+	addPlayerButton.onclick = () => {
+		frame?.removeChild(container); // Remove the container before adding a player
+		testaddPlayerButton(frame);
+		console.log('Add player button clicked');
+	};
+	container.appendChild(addPlayerButton);
+
+
+	frame.appendChild(container);
+}
 function createCenterButtons(){
 	const frame = document.getElementById('content');
 	if (!frame) {
@@ -37,17 +93,18 @@ function createCenterButtons(){
 	container.style.gap = '20px';
 	container.style.zIndex = '1000';
 
-	// const host = document.createElement('button');
-	// host.textContent = 'host game';
-	// host.style.fontSize = '1.2em';
-	// host.style.padding = '10px 20px';
-	// host.onclick = () => nextFunction( () => hostGame() , container);
+	
 
-	// const join = document.createElement('button');
-	// join.textContent = 'join game';
-	// join.style.fontSize = '1.2em';
-	// join.style.padding = '10px 20px';
-	// join.onclick = () => nextFunction( () => joinGame() , container);
+	const test = document.createElement('button');
+	test.textContent = 'test game';
+	test.style.fontSize = '1.2em';
+	test.style.padding = '10px 20px';
+	test.onclick = () => {
+		frame?.removeChild(container); // Remove the container before starting the game
+		nextFunction( () => testData(frame as HTMLIFrameElement) );
+		console.log('Test game button clicked');
+	};
+	container.appendChild(test);
 
 	const online = document.createElement('button');
 	online.textContent = 'online';

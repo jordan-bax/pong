@@ -332,7 +332,13 @@ fastify.patch(
                 userData[part.fieldname as keyof patchBody] = part.value;
             }
         }
-        const errors = validateUserUpdateData(userData);
+        console.log('update userdata', userData);
+
+        let user: any;
+        if (userData.oldEmail !== null) {
+            user = await findUserByEmail(userData.oldEmail);
+        }
+        const errors = validateUserUpdateData(userData, user.isGoogleLogin);
         if (errors.length > 0) {
             return reply.code(400).send({ errors });
         }
@@ -346,7 +352,9 @@ fastify.patch(
                 userData.newPassword,
                 userData.newUsername,
                 userData.googleEmail,
-                userData.pathToProfileP
+                userData.pathToProfileP,
+                userData.oldPassword,
+                userData.oldUsername
             ) === false) {
                 return reply.code(404).send({ error: 'user not found' });
             }
@@ -404,7 +412,7 @@ fastify.patch(
             console.log('no googleEmail found in data');
             return reply.code(400).send({error: 'no user logged in'});
         }
-        const errors = validateUserUpdateData(userData);
+        const errors = validateUserUpdateData(userData, user.isGoogleLogin);
         if (errors.length > 0) {
             console.log('validation error');
             return reply.code(400).send({ errors });
@@ -418,6 +426,9 @@ fastify.patch(
             if (!user) {
                 console.log('no user found in database with google email')
                 return reply.code(404).send({ error: 'user not found' });
+            }
+            if (userData.newPassword !== null) {
+                userData.newPassword = await bcrypt.hash(userData.newPassword, 10);
             }
             if (await updateUserInfoGoogle(
                 userData.newEmail,

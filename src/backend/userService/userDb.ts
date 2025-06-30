@@ -124,9 +124,23 @@ export async function updateUserInfo(
     newPassword: string | null, 
     newUsername: string | null,
     googleEmail: string | null,
-    pathToPP: string | null
+    pathToPP: string | null,
+    oldPassword: string | null,
+    oldUsername: string | null
 ): Promise<boolean> 
 {
+    if (newEmail === null) {
+        newEmail = oldEmail;
+    }
+    if (newPassword === null) {
+        newPassword = oldPassword
+    }
+    if (newUsername === null) {
+        newUsername = oldUsername;
+    }
+    if (newPassword !== null) {
+        newPassword = await bcrypt.hash(newPassword, 10);
+    }
     const database = await db;
     const row = await database.run(`
         UPDATE users

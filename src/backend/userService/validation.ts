@@ -17,7 +17,7 @@ function testEmailPattern(email: string): boolean {
     return re.test(email);
 }
 
-export function validateUserUpdateData(data: patchBody): string[] {
+export function validateUserUpdateData(data: patchBody, isGoogleLogin: number): string[] {
     const errors = [];
     console.log('validate data is:', data);
     console.log('new username is null', data.newUsername === null);
@@ -92,9 +92,10 @@ export function validateUserUpdateData(data: patchBody): string[] {
             }
         }
     }
-
-    if (typeof data.oldUsername === 'string' || data.oldUsername === '') {
-        errors.push('Old username needs to be a string');
+    if (isGoogleLogin === 0) {
+        if (typeof data.oldUsername !== 'string' || data.oldUsername === '') {
+            errors.push('Old username needs to be a string');
+        }
     }
 
     if (typeof data.pathToProfileP === 'string') {

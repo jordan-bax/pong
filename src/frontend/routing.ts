@@ -66,6 +66,7 @@ export async function updateUserInfo(
     formData.append('oldEmail', oldEmail);
     formData.append('oldUsername', oldUsername);
     formData.append('oldPassword', oldPassword);
+    console.log('userUpdate formdata:', formData);
     const response = await fetch('api/user/update', {
         credentials: 'include',
         method: 'PATCH',

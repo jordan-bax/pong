@@ -323,11 +323,10 @@ fastify.patch(
         for await (const part of parts) {
             if (part.type === 'file') {
                 const fileHandler = await validateFile(part);
-                if (fileHandler !== 'DONE') {
-                    if (fileHandler === 'TOO LARGE') {
-                        return reply.code (400).send({ error: 'file is larger then 10MB' });
-                    }
+                if (fileHandler === 'TOO LARGE') {
+                    return reply.code (400).send({ error: 'file is larger then 10MB' });
                 }
+                userData['pathToProfileP'] = fileHandler;
             } else if (part.type === 'field' && typeof part.value === 'string') {
                 userData[part.fieldname as keyof patchBody] = part.value;
             }

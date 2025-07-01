@@ -16,6 +16,17 @@ async function getNavbarContent(language:string, textKeys: string[]): Promise<Ma
     return navbarMap;
 }
 
+function navbarStyling(navItem: HTMLAnchorElement): HTMLAnchorElement {
+    navItem.style.color = 'black';
+    navItem.style.display = 'flex';
+    navItem.style.textAlign = 'center';
+    navItem.style.justifyContent = 'left';
+    navItem.style.textDecoration = 'none';
+    navItem.style.marginLeft = '10px';
+    navItem.style.border = '1em';
+    return navItem;
+}
+
 export async function renderNavbar(): Promise<void> {
     const language = await getLanguage();
     const navbarMapData = await getNavbarContent(language.toLowerCase(), ['loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText', 'gameNavbarText']);
@@ -25,16 +36,10 @@ export async function renderNavbar(): Promise<void> {
     navbar.innerHTML = '';
     navbar.style.display = 'flex';
 
-    const homeLink = document.createElement('a');
+    let homeLink = document.createElement('a');
     homeLink.href = '/';
     homeLink.textContent = navbarText.homeNavbarText;
-    homeLink.style.color = 'black';
-    homeLink.style.display = 'flex';
-    homeLink.style.textAlign = 'center';
-    homeLink.style.justifyContent = 'left';
-    homeLink.style.textDecoration = 'none';
-    homeLink.style.marginLeft = '10px';
-    homeLink.style.border = '1em';
+    homeLink = navbarStyling(homeLink);
     homeLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
@@ -42,17 +47,11 @@ export async function renderNavbar(): Promise<void> {
     };
     navbar.appendChild(homeLink);
 
-    const gameLink = document.createElement('a');
+    let gameLink = document.createElement('a');
     gameLink.href = '/gameMenu';
     gameLink.textContent = navbarText.gameNavbarText;
     gameLink.className = 'btn navItem';
-    gameLink.style.color = 'black';
-    gameLink.style.display = 'flex';
-    gameLink.style.textAlign = 'center';
-    gameLink.style.justifyContent = 'left';
-    gameLink.style.textDecoration = 'none';
-    gameLink.style.marginLeft = '10px';
-    gameLink.style.border = '1em'
+    gameLink = navbarStyling(gameLink);
     gameLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/gameMenu');
@@ -63,16 +62,10 @@ export async function renderNavbar(): Promise<void> {
     const isLoggedIn = getLoggin();
     const isLoggedInServer = await getLogginServer();
     if (isLoggedIn && isLoggedInServer !== null) {
-        const profileLink = document.createElement('a');
+        let profileLink = document.createElement('a');
         profileLink.href = '/profile';
         profileLink.textContent = navbarText.profileNavbarText;
-        profileLink.style.color = 'black';
-        profileLink.style.display = 'flex';
-        profileLink.style.textAlign = 'center';
-        profileLink.style.justifyContent = 'left';
-        profileLink.style.textDecoration = 'none';
-        profileLink.style.marginLeft = '10px';
-        profileLink.style.border = '1em';
+        profileLink = navbarStyling(profileLink);
         profileLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/profile');
@@ -92,16 +85,10 @@ export async function renderNavbar(): Promise<void> {
         logoutBtn.onclick = logout;
         navbar.appendChild(logoutBtn);
     } else {
-        const loginLink = document.createElement('a');
+        let loginLink = document.createElement('a');
         loginLink.href = '/login';
         loginLink.textContent = navbarText.loginNavbarText;
-        loginLink.style.color = 'black';
-        loginLink.style.display = 'flex';
-        loginLink.style.textAlign = 'center';
-        loginLink.style.justifyContent = 'left';
-        loginLink.style.textDecoration = 'none';
-        loginLink.style.marginLeft = '10px';
-        loginLink.style.border = '1em';
+        loginLink = navbarStyling(loginLink);
         loginLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/login');
@@ -109,16 +96,10 @@ export async function renderNavbar(): Promise<void> {
         };
         navbar.appendChild(loginLink);
 
-        const registerLink = document.createElement('a');
+        let registerLink = document.createElement('a');
         registerLink.textContent= navbarText.registerNavbarText;
         registerLink.href = '/register';
-        registerLink.style.color = 'black';
-        registerLink.style.display = 'flex';
-        registerLink.style.textAlign = 'center';
-        registerLink.style.justifyContent = 'left';
-        registerLink.style.textDecoration = 'none';
-        registerLink.style.marginLeft = '10px';
-        registerLink.style.border = '1em';
+        registerLink = navbarStyling(registerLink);
         registerLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/register');

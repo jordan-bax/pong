@@ -13,6 +13,7 @@
 # .PHONY: all clean run
 
 USER_DATA = ~/data/user
+USER_PROFILE_PICTURE = ~/data/user/uploads/profile_pictures
 PAGE_CONTENT_DATA = ~/data/page_content
 GAME_DATA = ~/data/game
 TOURNAMENT_DATA = ~/data/tournament
@@ -24,10 +25,12 @@ up: build
 	@mkdir -p $(PAGE_CONTENT_DATA)
 	@mkdir -p $(GAME_DATA)
 	@mkdir -p $(TOURNAMENT_DATA)
+	@mkdir -p $(USER_PROFILE_PICTURE)
 	@chmod 777 $(USER_DATA)
 	@chmod 777 $(PAGE_CONTENT_DATA)
 	@chmod 777 $(GAME_DATA)
 	@chmod 777 $(TOURNAMENT_DATA)
+	@chmod 777 $(USER_PROFILE_PICTURE)
 	docker-compose -f src/docker-compose.yml up -d --force-recreate
 
 build:
@@ -52,6 +55,7 @@ clean:
 	@rm -rf $(PAGE_CONTENT_DATA) || true
 	@rm -rf $(GAME_DATA) || true
 	@rm -rf $(TOURNAMENT_DATA) || true
+	@rm -rf $(USER_PROFILE_PICTURE) || true
 
 re: clean up
 

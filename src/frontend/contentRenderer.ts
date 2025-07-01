@@ -387,11 +387,6 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
     fileInput.type = 'file';
     fileInput.id = 'newProfilePicture';
     fileInput.name = 'newProfilePicture';
-    console.log(user);
-    if (user.pathToProfilePicture !== '') {
-        fileInput.value = user.pathToProfilePicture;
-    }
-
     table.appendChild(createRow(fileLabel, fileInput));
 
     const emailLabel = document.createElement('label');

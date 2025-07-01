@@ -25,6 +25,7 @@ services:
       - "3001"
     volumes:
       - user-db:/app/db
+      - user-profilePicture:/app/uploads/profile_pictures
     env_file:
       - .env
     networks:
@@ -79,6 +80,13 @@ volumes:
     driver: local
     driver_opts:
       device: ~/data/user
+      o: bind
+      type: none
+  user-profilePicture:
+    name: profile_pictures
+    driver: local
+    driver_opts:
+      device: ~/data/user/uploads/profile_pictures
       o: bind
       type: none
   page_content-db:

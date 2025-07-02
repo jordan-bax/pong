@@ -99,6 +99,8 @@ fastify.post(
                     const fileHandler = await validateFile(part);
                     if (fileHandler === 'TOO LARGE') {
                         return reply.code (400).send({ error: 'file is larger then 10MB' });
+                    } if (fileHandler === 'MIMETYPE INCORRECT') {
+                        return reply.code(400).send({error: 'wrong file format'});
                     }
                     if (userData['pathToProfileP'] !== '') {
                         userData['pathToProfileP'] = fileHandler;
@@ -291,6 +293,17 @@ fastify.addHook('preHandler', async (req, reply) => {
     }
 });
 
+function checkMimeType(type: string ): boolean
+{
+    const list = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/webp', 'image/svg+xml'];
+    for (const item in list) {
+        if (type === item) {
+            return true;
+        }
+    }
+    return false;
+}
+
 async function validateFile(part: MultipartFile): Promise<string> {
     let size = 0;
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -305,7 +318,10 @@ async function validateFile(part: MultipartFile): Promise<string> {
     const fileBuffer = Buffer.concat(chunks);
     const ext = path.extname(part.filename);
     const fileName = `user_${Date.now()}${ext}`;
-
+    const mimeType = part.mimetype;
+    if (!checkMimeType(mimeType)) {
+        return 'MIMETYPE INCORRECT';
+    }
     const filePath = path.join(__dirname, '..', 'uploads', 'profile_pictures', fileName);
     console.log('filepath:', filePath);
     console.log('fileName:', fileName);
@@ -324,7 +340,9 @@ fastify.patch(
             if (part.type === 'file') {
                 const fileHandler = await validateFile(part);
                 if (fileHandler === 'TOO LARGE') {
-                    return reply.code (400).send({ error: 'file is larger then 10MB' });
+                    return reply.code(400).send({ error: 'file is larger then 10MB' });
+                } else if (fileHandler === 'MIMETYPE INCORRECT') {
+                    return reply.code(400).send({error: 'wrong file format'});
                 }
                 userData['pathToProfileP'] = fileHandler;
             } else if (part.type === 'field' && typeof part.value === 'string') {
@@ -378,6 +396,8 @@ fastify.patch(
                     if (fileHandler === 'TOO LARGE') {
                         console.log('file too large')
                         return reply.code(400).send('file is larger than 10MB');
+                    } else if (fileHandler === 'MIMETYPE INCORRECT') {
+                        return reply.code(400).send({error: 'wrong file format'});
                     } else {
                         userData['pathToProfileP'] = fileHandler;
                     }

@@ -29,3 +29,29 @@ paths:
               type: object
               items:
                 error: string with error message
+  /language:
+    get:
+      summery: get the current language for the text of the website
+      Parameters:
+      Responses:
+        200:
+          description: returns the language for the website
+          content:
+            string:
+              schema:
+                type: string
+                items: the text with the language
+    post:
+      summery: set the language for the website
+      Parameters:
+        string: the new language for the website
+      Responses:
+        200:
+          description: sets the new language for the text of the website
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+

@@ -65,20 +65,20 @@ prune: clean
 fresh: prune up
 
 rebuild-user:
-	docker-compose -f src/docker-compose build --no-cache user
-	docker-compose -f src/docker-compse up -d --force-recreate user
+	docker-compose -f src/docker-compose.yml build --no-cache user
+	docker-compose -f src/docker-compose.yml up -d --force-recreate user
 
 rebuild-page_content:
-	docker-compose -f src/docker-compose build --no-cache page_content
-	docker-compose -f src/docker-compse up -d --force-recreate page_content
+	docker-compose -f src/docker-compose.yml build --no-cache page_content
+	docker-compose -f src/docker-compose.yml up -d --force-recreate page_content
 
 rebuild-game:
-	docker-compose -f src/docker-compose build --no-cache game
-	docker-compose -f src/docker-compse up -d --force-recreate game
+	docker-compose -f src/docker-compose.yml build --no-cache game
+	docker-compose -f src/docker-compose.yml up -d --force-recreate game
 
 rebuild-nginx:
-	docker-compose -f src/docker-compose build --no-cache nginx
-	docker-compose -f src/docker-compse up -d --force-recreate nginx
+	docker-compose -f src/docker-compose.yml build --no-cache nginx
+	docker-compose -f src/docker-compose.yml up -d --force-recreate nginx
 
 rebuild-backend: rebuild-user rebuild-page_content rebuild-game
 

@@ -1,4 +1,5 @@
-import { renderContent } from "./contentRenderer.js";
+import { renderContent, getPageContent } from "./contentRenderer.js";
+import { getLanguage } from "./index.js";
 import { renderNavbar } from "./navbar.js";
 
 export const routeFromPath: { [key: string]: string } = {
@@ -16,8 +17,71 @@ export interface userInfo {
     pathToProfilePicture: string;
 }
 
+interface ierrors {
+    fileTooLarge: string;
+    fileIncorrectMime: string;
+    serverError: string;
+    incorrectLogin: string;
+    noLogin: string;
+    unauthorized: string;
+    noUser: string;
+    googleToken: string;
+    wrongInfo: string;
+    noGmail: string;
+    noUserDb: string;
+    noImage: string;
+    errorUsername: string;
+    errorNewUsername: string;
+    errorPasswordType: string;
+    errorNewPassword: string;
+    errorNewEmailType: string;
+    errorEmailUndefined: string;
+    errorEmailFormat: string;
+    errorEmailNoString: string;
+    errorPasswordNoString: string;
+    errorUsernameNoString: string;
+    errorNoPath: string;
+}
+
 let isLoggedIn = false;
 let currentUser: string | null = null;
+const errorMessages = [
+        'fileTooLarge',
+        'fileIncorrectMime',
+        'serverError',
+        'incorrectLogin',
+        'noLogin',
+        'unauthorized',
+        'noUser',
+        'googleToken',
+        'wrongInfo',
+        'noGmail',
+        'noUserDb',
+        'noImage',
+        'errorUsername',
+        'errorNewUsername',
+        'errorPasswordType',
+        'errorNewPassword',
+        'errorNewEmailType',
+        'errorEmailUndefined',
+        'errorEmailFormat',
+        'errorEmailNoString',
+        'errorPasswordNoString',
+        'errorUsernameNoString',
+        'errorNoPath',
+    ];
+
+async function getErrorMessages(): Promise<ierrors> {
+    let language: string;
+    try {
+        language = await getLanguage();
+    } catch(err) {
+        throw new Error('Server Error');
+    }
+    const errors = await getPageContent(language.toLowerCase(), errorMessages);
+    const output = errors.get('row') as ierrors;
+    return output;
+}
 
 export function getLoggin(): boolean {
     return isLoggedIn;
@@ -75,11 +139,28 @@ export async function updateUserInfo(
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = errorData.message ??
-                        'unknown error';
+        const errors = await getErrorMessages();
+        let message = [];
+        if (errorData.error) {
+            const name = errorData.error as string;
+            message.push(errors[name as keyof ierrors]);
+        } else if (errorData.errors) {
+            const serverErrors = errorData.errors as string[];
+            const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+            for (let err = 0; err < displayErrors.length; ++err) {
+                message.push(displayErrors[err]);
+            }
+        }
         if (content) {
-            content.textContent = message;
-            content.style.color = 'red';
+            content.innerHTML = '';
+            for (const error of message) {
+                const paragraph = document.createElement('p');
+                paragraph.style.color = 'red';
+
+                const text = document.createTextNode(error);
+                paragraph.appendChild(text);
+                content.appendChild(paragraph);
+            }
             return ;
         }
     }
@@ -96,11 +177,28 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
-        const message = errorData.message ??
-                        'unknown error';
+        const errors = await getErrorMessages();
+        let message = [];
+        if (errorData.error) {
+            const name = errorData.error as string;
+            message.push(errors[name as keyof ierrors]);
+        } else if (errorData.errors) {
+            const serverErrors = errorData.errors as string[];
+            const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+            for (let err = 0; err < displayErrors.length; ++err) {
+                message.push(displayErrors[err]);
+            }
+        }
         if (content) {
-            content.textContent = message;
-            content.style.color = 'red';
+            content.innerHTML = '';
+            for (const error of message) {
+                const paragraph = document.createElement('p');
+                paragraph.style.color = 'red';
+
+                const text = document.createTextNode(error);
+                paragraph.appendChild(text);
+                content.appendChild(paragraph);
+            }
             return ;
         }
     }
@@ -125,13 +223,18 @@ export async function login(formData: FormData): Promise<void> {
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
+        const errors = await getErrorMessages();
         let messages = [];
         if (errorData.error) {
-            messages.push(errorData.error as string);
+            const name = errorData.error as string;
+
+            messages.push(errors[name as keyof ierrors]);
         }
         if (errorData.errors) {
-            for(const error of errorData.erros as string[]) {
-                messages.push(error);
+            const serverErrors = errorData.errors as string[];
+            const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+            for (let err = 0; err < displayErrors.length; ++err) {
+                messages.push(displayErrors[err]);
             }
         }
         if (content) {
@@ -139,7 +242,7 @@ export async function login(formData: FormData): Promise<void> {
             for (const error of messages) {
                 const paragraph = document.createElement('p');
                 paragraph.style.color = 'red';
-
+                
                 const text = document.createTextNode(error);
                 paragraph.appendChild(text);
                 content.appendChild(paragraph);
@@ -161,13 +264,16 @@ export async function register(formData: FormData): Promise<void> {
     const content = document.getElementById('error');
     if (!response.ok) {
         const errorData = await response.json();
+        const errors = await getErrorMessages();
         let messages = [];
         if (errorData.error) {
-            messages.push(errorData.error as string);
+            messages.push(errors[(errorData.error as string) as keyof ierrors]);
         }
         if (errorData.errors) {
-            for (const error of errorData.errors as string[]) {
-                messages.push(error);
+            const serverErrors = errorData.errors as string[];
+            const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+            for (let error = 0; error < displayErrors.length; ++error) {
+                messages.push(displayErrors[error]);
             }
         }
         if (content) {

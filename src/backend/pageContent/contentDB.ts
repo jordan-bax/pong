@@ -44,7 +44,7 @@ export async function getAllContentOfPage(language: string, textkeys: string[]):
             ...textkeys,
         ]);
         console.log('expected textkyes:', textkeys);
-        console.log('fetched rows:', rows.map(r => r.textKey))
+        console.log('fetched rows:', rows.map(r => r.textKey));
         if (rows.length < textkeys.length) {
             return null;
         }
@@ -108,6 +108,52 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('nl', 'gameNavbarText', 'Spel');
         await statement.run('en', 'languageOptionText', 'EN');
         await statement.run('nl', 'languageOptionText', 'NL');
+        await statement.run('en', 'fileTooLarge', 'File is larger then 10MB');
+        await statement.run('nl', 'fileTooLarge', 'Bestand is groter dan 10MB');
+        await statement.run('en', 'fileIncorrectMime', 'Wrong file format');
+        await statement.run('nl', 'fileIncorrectMime', 'Verkeerden bestand formaat.');
+        await statement.run('en', 'serverError', 'Internal Server Error');
+        await statement.run('nl', 'serverError', 'Interne Server Error');
+        await statement.run('en', 'incorrectLogin', 'Incorrect email or password');
+        await statement.run('nl', 'incorrectLogin', 'Verkereden email of wachtwoord');
+        await statement.run('en', 'noLogin', 'No user logged in');
+        await statement.run('nl', 'noLogin', 'Geen gebruiker is ingelogt');
+        await statement.run('en', 'unauthorized', 'Unauthorized');
+        await statement.run('nl', 'unauthorized', 'Geen toegang');
+        await statement.run('en', 'noUser', 'User not found');
+        await statement.run('nl', 'noUser', 'Gebruiker niet gevonden');
+        await statement.run('en', 'googleToken', 'Invalid token');
+        await statement.run('nl', 'googleToken', 'Verkeerden token');
+        await statement.run('en', 'wrongInfo', 'Wrong info');
+        await statement.run('nl', 'wrongInfo', 'Verkeerde informatie');
+        await statement.run('en', 'noGmail', 'No user with this gmail is found');
+        await statement.run('nl', 'noGmail', 'Geen gebruiker met deze gmail is gevonden');
+        await statement.run('en', 'noUserDb', 'User not found');
+        await statement.run('nl', 'noUserDb', 'Gebruiker niet gevonden');
+        await statement.run('en', 'noImage', 'Image not found');
+        await statement.run('nl', 'noImage', 'Foto niet gevonden');
+        await statement.run('en', 'errorUsername', 'Username needs to contain only upper- and lowercase letters and/or numbers');
+        await statement.run('nl', 'errorUsername', 'Gebruikersnaam moet alleen bestaan uit groten en kleinen letters en/of getallen');
+        await statement.run('en', 'errorNewUsername', 'Username needs to be a string or empty');
+        await statement.run('nl', 'errorNewUsername', 'Gebruikersnaam moet een string zijn of leeg');
+        await statement.run('en', 'errorPasswordType', 'Password needs to be a string or emtpy');
+        await statement.run('nl', 'errorPasswordType', 'Wachtwoord moet text zijn of leeg');
+        await statement.run('en', 'errorNewPassword', 'Invalid password, it should have at least 1 uppercase character, 1 lowercase chareacter, 1 number, 1 special character, and be at least 12 characters long');
+        await statement.run('nl', 'errorNewPassword', 'Fout wachtwoord, het moet tenminsten 1 hoofdletter, 1 kleinen letter, 1 getal hebben, en tenminste 12 charakters lang zijn');
+        await statement.run('en', 'errorNewEmailType', 'Email must be a valid email or empty');
+        await statement.run('nl', 'errorNewEmailType', 'Email moet een goed geformateerde email zijn, of leeg');
+        await statement.run('en', 'errorEmailUndefined', 'Email is undefined');
+        await statement.run('nl', 'errorEmailUndefined', 'Email is ombekend');
+        await statement.run('en', 'errorEmailFormat', 'Email is not formatted properly');
+        await statement.run('nl', 'errorEmailFormat', 'Email is niet juist geformateerd');
+        await statement.run('en', 'errorEmailNoString', 'Email needs to be a valid email');
+        await statement.run('nl', 'errorEmailNoString', 'Email moet een goed geformateerde email zijn');
+        await statement.run('en', 'errorPasswordNoString', 'Password cannot be empty');
+        await statement.run('nl', 'errorPasswordNoString', 'Wachtwoord kan niet leeg zijn');
+        await statement.run('en', 'errorUsernameNoString', 'Username cannot be empty');
+        await statement.run('nl', 'errorUsernameNoString', 'Gebruikesnaam mag niet leeg zijn');
+        await statement.run('en', 'errorNoPath', 'Path does not exist');
+        await statement.run('nl', 'errorNoPath', 'Het pad bestaad niet');
         await statement.finalize();
 
     } catch (error: any) {

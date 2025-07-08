@@ -68,7 +68,7 @@ fastify.get('/language', async (req, reply) => {
 fastify.post('/language', async (req, reply) => {
     const lang = req.body as string;
     req.session.language = lang;
-    return reply.send({ success: 'true' });
+    return reply.send({ success: true });
 });
 
 fastify.listen({ host: '0.0.0.0', port: 3004 }, error => {

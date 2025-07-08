@@ -1,19 +1,15 @@
 import {gamestateinterface, ballvarTemplate, player1Template, player2Template,scoreInterface, pcInterface, aiInterface, ballInterface, gameWall } from './sharedValuesPong.js';
 // import { io, Socket } from 'socket.io-client';
 // import { Server } from 'socket.io';
+import { getLogginUserData, userInfo } from './routing.js';
 
 
 var player1: pcInterface = player1Template
 var player2: pcInterface = player2Template;
-var ai_var: aiInterface = {
-	//The average (median) reaction time is 273 milliseconds
-	reactionTime: 100 // Default reaction time in milliseconds
-};
 var ballvar: ballInterface = ballvarTemplate;
 var sizeAduster: number = 1;
 var pauze: boolean = true;
 var fps: number = 30; // Default frames per second
-var gameID : string = '';
 var g_gametype: string = ''; // Default game type
 
     function gamespeed(): number {
@@ -39,32 +35,81 @@ var g_gametype: string = ''; // Default game type
         }
         return sizeAduster;
     }
+async function inputTempName(): Promise<string> {
+    return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Enter your nickname';
 
-    function playerMoveCheck(player: pcInterface): void {
-        // Get the current position of the player
-        if (player.y < 0) {
-            player.y = 0; // Prevent moving above the top wall
-        } else if (player.y + player.height > gameWall.height) {
-            player.y = gameWall.height - player.height; // Prevent moving below the bottom wall
+        const button = document.createElement('button');
+        button.textContent = 'back';
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === 'Return') {
+                const value = input.value.trim();
+                if (value.length >= 4) {
+                    console.log('Submitted nickname:', value);
+                    input.disabled = true;
+                    cleanup();
+                    resolve(value);
+                } else {
+                    alert('Nickname must be at least 4 characters.');
+                }
+            }
+        });
+
+        button.onclick = () => {
+            cleanup();
+            resolve("");
+        };
+
+        function cleanup() {
+            if (input.parentNode) input.parentNode.removeChild(input);
+            if (button.parentNode) button.parentNode.removeChild(button);
         }
+
+        document.body.appendChild(input);
+        document.body.appendChild(button);
+    });
+}
+async function getUserNameData(){
+    const user = await fetch('/api/user/me', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    if (!user.ok) {
+        console.error('Failed to fetch user data:', user.statusText);
+        return inputTempName(); // Prompt the user for a nickname if the fetch fails
+        return null; // Return null if the fetch fails
     }
-function getplayerData(){
+    const userData = await user.json() as userInfo; // Parse the user data
+    if (!userData || !userData.username) {
+        console.error('Invalid user data:', userData);
+        return null; // Return null if the user data is not valid
+    }
+    return userData.username; // Return the username
     
 }
 export async function startGame(gametype :string) : Promise<scoreInterface> {
+    const playername = await getUserNameData();
+    if (!playername) {
+        console.error('Failed to get player name, cannot start game');
+        return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the player name is not available
+    }
     console.log('Starting game with AI:', gametype);
     const gameinfo = await fetch('/api/game/start', {
         method: 'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ type: gametype, playername: 'name' }) // your data here
+        body: JSON.stringify({ type: gametype, playername: playername }) // your data here
     });
     g_gametype = gametype; // Store the game type for later use
-    const { gameid: gameid } = await gameinfo.json() as { gameid: string, status: string };
-    gameID = gameid; // Store the game ID for later use
-    // const gameID = await gameinfo.json() as string; // Get the game ID from the server response
-    console.log('Game started with ID:', gameID, 'outher data:', gameinfo);
+    console.log('Game started with ID:',  'outher data:', gameinfo);
     if (!gameinfo.ok) {
         console.error('Failed to start game:', gameinfo.statusText);
         return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the fetch fails
@@ -75,7 +120,13 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
 	enableKeyListener(); // Enable key listener for player controls
     console.log('Game started with AI:', gametype, 'Delay:', delay);
     while (true) {
-        const state = await fetch('/api/game/state?gameid='+gameID); // Fetch the game state from the server
+        const state = await fetch('/api/game/state', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }); // Fetch the game state from the server
         if (!state.ok) {
             console.error('Failed to state:', state.statusText);
             return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the fetch fails
@@ -278,60 +329,52 @@ async function leaveGame() {
     //         'Content-Type': 'application/json'
     //     },
     //     body: JSON.stringify({ gameid: gameID })}); // Send the game ID in the request body;
-    console.log('Leaving game with ID:', gameID);
-    navigator.sendBeacon('/api/game/leave?gameid='+gameID, JSON.stringify({ gameid: "bob" }));
+    console.log('Leaving game with ID:');
+    // navigator.sendBeacon('/api/game/leave?gameid='+gameID, JSON.stringify({ gameid: "bob" }));
+    navigator.sendBeacon('/api/game/leave');
+}
+
+async function sendMove(direction: 'up' | 'down', player: 1 | 2) {
+    if (g_gametype === 'local') {
+        await fetch('/api/game/move?player='+player, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ direction }) // Send the direction in the request body
+        });
+        return;
+    }
+    await fetch('/api/game/move' ,{
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ direction}) // Send the direction and player in the request body
+    });
 }
 async function keyHandler(event: KeyboardEvent) {
-    if (!gameID) {
-        console.error('Game ID is not set. Cannot handle key events.');
-        return; // Exit if gameID is not set
-    }
-    if (g_gametype === 'local') {
-        var gameID2 = gameID.split('-')[0]; // Extract the game ID
-        gameID2 += '-2'; // Append '-2' for player 2
-    } else {
-        var gameID2 = gameID; // Use the original game ID for AI or other game types
-    }
+    if (!event.key) return; // Ignore if no key is pressed
     switch (event.key) {
         case 'p':
-            await fetch('/api/game/pause?gameid='+gameID, {
+            await fetch('/api/game/pause', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ direction: !pauze })}); // Toggle the pause state;
+                credentials: 'include', // Include credentials for session management
+                }); // Pause the game
             break;
         case 'w':
-            await fetch('/api/game/move?gameid='+gameID, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ direction: 'up' })}); // Move player 1 up
+            sendMove('up', 1); // Move player 1 up
             break;
         case 's':
-            await fetch('/api/game/move?gameid='+gameID, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ direction: 'down' })}); // Move player 1 down
+            sendMove('down', 1); // Move player 1 down
             break;
         case 'ArrowUp':
-            await fetch('/api/game/move?gameid='+gameID2, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ direction: 'up' })}); // Move player 2 up
+            sendMove('up', 2); // Move player 2 up
             break;
         case 'ArrowDown':
-            await fetch('/api/game/move?gameid='+gameID2, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ direction: 'down' })}); // Move player 2 down
+            sendMove('down', 2); // Move player 2 down
             break;
     }
 }

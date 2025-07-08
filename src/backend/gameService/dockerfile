@@ -10,6 +10,9 @@ COPY package*.json ./
 
 # Install dependencies inside the container
 RUN npm install
+# # Install cookie and session middleware
+# RUN npm install cookie-parser express-session --save
+RUN npm i @fastify/session
 # npm install concurrently --save
 # "scripts": {
 #   "start": "concurrently \"node dist/game.js\" \"node dist/other.js\""

@@ -10,7 +10,11 @@
         "skipLibCheck": true,
         "typeRoots": ["./types", "node_modules/@types"],
         "noImplicitAny": true,
-        "noImplicitReturns": true
+        "noImplicitReturns": true,
+        "baseUrl": "./",
+        "paths": {
+            "@transcendanse/shared-types": ["./shared/types"]
+        }
     },
-    "include": ["./types", "./*.ts", "./db"]
+    "include": ["./*.ts", "./db", "./shared/types/**/*.d.ts"]
 }

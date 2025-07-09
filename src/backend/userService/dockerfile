@@ -1,17 +1,20 @@
 # Use an official Node.js image as the base image
-FROM node:18
+FROM node:20
 
 # Set the working directory inside the container
 WORKDIR /app
 
 # Copy package.json and package-lock.json (if available)
-COPY package*.json ./
+COPY userService/package*.json ./
 # COPY pong.html ./
 
 # Install dependencies inside the container
 RUN npm install
 
-COPY . .
+COPY userService/ ./
+RUN mkdir -p /app/shared
+RUN mkdir -p /app/shared/types
+COPY shared/types /app/shared/types
 
 # Compile TypeScript to JavaScript
 RUN npm run build

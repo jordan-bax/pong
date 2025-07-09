@@ -478,11 +478,11 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
 export async function renderContent (route: string): Promise<void> {
     const content = document.getElementById('content');
     if (!content) return;
-    content.innerHTML = '';
     const child = content.querySelector('#secureUpdate');
     if (child) {
         content.removeChild(child);
     }
+    content.innerHTML = '';
     content.style.display = 'flex';
     content.style.margin = '1em 0em';
     content.style.justifyContent = 'center';

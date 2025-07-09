@@ -4,3 +4,4 @@ dist
 .git
 .env
 package-lock.json
+Dockerfile

@@ -6,7 +6,8 @@ declare module 'fastify' {
             email: string;
             userId: number;
             loginMethod: string;
-        }
+        },
+        language?: string;
     }
 
     interface FastifyRequest {

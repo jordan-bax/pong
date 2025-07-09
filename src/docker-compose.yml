@@ -1,4 +1,13 @@
 services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "3010:6379"
+    networks:
+      - transcendanse
+    restart: unless-stopped
+
   nginx:
     build: 
       context: ./
@@ -19,7 +28,8 @@ services:
 
   user:
     build: 
-      context: ./backend/userService
+      context: ./backend
+      dockerfile: userService/Dockerfile
     container_name: user
     expose:
       - "3001"
@@ -28,6 +38,8 @@ services:
       - user-profilePicture:/app/uploads/profile_pictures
     env_file:
       - .env
+    depends_on:
+      - redis
     networks:
       - transcendanse
     restart: unless-stopped
@@ -62,7 +74,8 @@ services:
 
   page_content:
     build:
-      context: ./backend/pageContent
+      context: ./backend
+      dockerfile: pageContent/dockerfile
     container_name: page_content
     expose:
       - '3004'
@@ -70,6 +83,8 @@ services:
       - page_content-db:/app/db
     env_file:
       - .env
+    depends_on:
+      - redis
     networks:
       - transcendanse
     restart: unless-stopped

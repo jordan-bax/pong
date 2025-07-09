@@ -3,6 +3,9 @@ import fastifyCookie from "@fastify/cookie";
 import fastifySession from '@fastify/session';
 import { getAllContentOfPage, seedContentDb } from "./contentDB";
 import { getContentSchema } from "./schemas/contentSchemas";
+import Redis from 'ioredis';
+import connectRedis  from 'connect-redis';
+import session from 'express-session'
 
 interface GetContentBody {
     language: string;
@@ -12,6 +15,19 @@ interface GetContentBody {
 const fastify = Fastify({ logger: true });
 const sessionSecret = process.env.SESSION_SECRET;
 const cookieSecret = process.env.COOKIE_SECRET;
+const redisClient = new Redis({
+    host: 'redis',
+    port: 6379,
+    retryStrategy: (times) => {
+        console.log(`Redis retry attempt #${times}`);
+        return Math.min(times * 100, 2000);
+    }
+});
+
+redisClient.on('connect', () => console.log('Regis connected'));
+redisClient.on('error', (err) => console.error('Redis error', err));
+
+const store = connectRedis(session);
 
 if (!sessionSecret || !cookieSecret) {
     throw new Error('MISSING ENV VARIABLES');
@@ -24,7 +40,10 @@ fastify.register(fastifyCookie, {
 });
 fastify.register(fastifySession, {
     secret: sessionSecret,
-    cookieName: 'pageContent',
+    store: new store({
+        client: redisClient,
+        ttl: 86400
+    }),
     cookie: {
         secure: false, // Set true when uing HTTPS
         path: '/',

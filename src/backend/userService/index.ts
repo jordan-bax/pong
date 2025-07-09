@@ -12,6 +12,9 @@ import { googleLogiSchema } from './schemas/userSchemas';
 import { db, findUserByEmail, findUserByGoogleEmail, insertGoogleUser, insertUserIntoDatabase, seedDatabase, updateUserInfo, updateUserInfoGoogle } from './userDb';
 import { validateLoginData, validateRegisterData, validateUserUpdateData, verifyPassword, validateFile } from './validation';
 import mime from 'mime-types';
+import Redis from 'ioredis';
+import connectRedis from 'connect-redis';
+import session from 'express-session';
 
 export interface loginBody {
     email: string;
@@ -49,6 +52,15 @@ const fastify = Fastify({ logger: true });
 const client = new OAuth2Client();
 const sessionSecret = process.env.SESSION_SECRET;
 const cookieSecret = process.env.COOKIE_SECRET;
+const redisClient = new Redis({
+    host: 'redis',
+    port: 6379
+});
+
+redisClient.on('connect', () => console.log('Regis connected'));
+redisClient.on('error', (err) => console.error('Redis error', err));
+
+const redisStore = connectRedis(session);
 
 if (!sessionSecret || !cookieSecret) {
     throw new Error('MISSING ENV VARIABLES');
@@ -61,7 +73,10 @@ fastify.register(fastifyCookie, {
 });
 fastify.register(fastifySession, {
     secret: sessionSecret,
-    cookieName: 'UserInfo',
+    store: new redisStore({
+        client: redisClient,
+        ttl: 86400
+    }),
     cookie: {
         secure: false, // Set true when uing HTTPS
         maxAge: 1000 * 60 * 60 * 24, // 1 day 
@@ -81,7 +96,7 @@ fastify.register(fastifyStatic, {
 
 fastify.get('/csrf-token', async (req, reply) => {
     const token = reply.generateCsrf();
-    reply.send({csrfToken: token});
+    return reply.send({csrfToken: token});
 });
 
 // Register user

@@ -115,7 +115,7 @@ export async function insertGoogleUser(email:string): Promise<void> {
     const database = await db;
     await database.run(`
         INSERT INTO users (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture) 
-        VALUES (?, ?, ?, ?, ?, ?)`, [null, null, null, email, 1, '']);
+        VALUES (?, ?, ?, ?, ?, ?)`, [null, null, null, email, 1, null]);
 }
 
 export async function updateUserInfo(
@@ -132,14 +132,13 @@ export async function updateUserInfo(
     if (newEmail === null) {
         newEmail = oldEmail;
     }
-    if (newPassword === null) {
+    if (newPassword !== null) {
+        newPassword = await bcrypt.hash(newPassword, 10);
+    } else if (newPassword === null) {
         newPassword = oldPassword
     }
     if (newUsername === null) {
         newUsername = oldUsername;
-    }
-    if (newPassword !== null) {
-        newPassword = await bcrypt.hash(newPassword, 10);
     }
     const database = await db;
     const row = await database.run(`

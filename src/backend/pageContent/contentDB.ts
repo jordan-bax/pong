@@ -154,6 +154,8 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('nl', 'errorUsernameNoString', 'Gebruikesnaam mag niet leeg zijn');
         await statement.run('en', 'errorNoPath', 'Path does not exist');
         await statement.run('nl', 'errorNoPath', 'Het pad bestaad niet');
+        await statement.run('en', 'fileEmpty', 'The given file is empty');
+        await statement.run('nl', 'fileEmpty', 'Het gegeven bestand is leeg');
         await statement.finalize();
 
     } catch (error: any) {

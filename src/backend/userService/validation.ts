@@ -223,7 +223,7 @@ export function validateLoginData(data: loginBody): string[] {
     return errors;
 }
 
-export async function validateFile(part: MultipartFile): Promise<string | 'TOO LARGE' | 'MIMETYPE INCORRECT'> {
+export async function validateFile(part: MultipartFile): Promise<string | 'TOO LARGE' | 'MIMETYPE INCORRECT' | 'FILE EMPTY'> {
     let size = 0;
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     const chunks = [];
@@ -233,6 +233,9 @@ export async function validateFile(part: MultipartFile): Promise<string | 'TOO L
             return 'TOO LARGE';
         }
         chunks.push(chunk);
+    }
+    if (size === 0) {
+        return 'FILE EMPTY'
     }
     const fileBuffer = Buffer.concat(chunks);
     const ext = path.extname(part.filename);

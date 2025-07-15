@@ -269,7 +269,9 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
         const password = (document.getElementById('oldPassword') as HTMLInputElement).value;
         if (!password) {
             const error = document.getElementById('error');
-            if (!error) return;
+            if (!error) {
+                return;
+            }
             const text = document.createTextNode('password is required');
             const errorParagraph = document.createElement('p');
             errorParagraph.appendChild(text);
@@ -458,6 +460,9 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
             credentials: 'include'
         });
         if (!respone.ok) {
+            if (respone.status == 404) {
+                return null;
+            }
             throw new Error(`Failed to load image:${respone.statusText}`);
         }
         const blob = await respone.blob();

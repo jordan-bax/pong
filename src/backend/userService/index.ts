@@ -57,6 +57,12 @@ const redisClient = new Redis({
     port: 6379
 });
 
+const errorkeyToMessage: Map<string, string>  = new Map([
+    ['TOO LARGE', 'fileTooLarge'],
+    ['MIMETYPE INCORRECT', 'fileIncorrectMime'],
+    ['FILE EMPTY', 'fileEmpty']
+]);
+
 redisClient.on('connect', () => console.log('Regis connected'));
 redisClient.on('error', (err) => console.error('Redis error', err));
 
@@ -112,11 +118,12 @@ fastify.post(
                 console.log("part is:", part);
                 if (part.filename && part.filename !== '') {
                     const fileHandler = await validateFile(part);
-                    if (fileHandler === 'TOO LARGE') {
-                        return reply.code (400).send({ error: 'fileTooLarge' });
-                    } if (fileHandler === 'MIMETYPE INCORRECT') {
-                        return reply.code(400).send({error: 'fileIncorrectMime'});
-                    } if (userData['pathToProfileP'] !== '') {
+                    for (const [key, value] of errorkeyToMessage) {
+                        if (fileHandler === key) {
+                            return reply.code(400).send({ error: value });
+                        }
+                    }
+                    if (userData['pathToProfileP'] !== '') {
                         userData['pathToProfileP'] = fileHandler;
                     }
                 } else {
@@ -180,7 +187,7 @@ fastify.post(
                 userId: user.id,
                 loginMethod: 'normal',
             };
-            reply.send({ success: true });
+            return reply.send({ success: true });
         } catch (err) {
             req.log.error('login error', err);
             return reply.code(500).send({ error: 'serverError' });
@@ -284,13 +291,15 @@ async (req, reply) => {
             audience: process.env.GOOGLE_CLIENT_ID,
         });
         const payload = ticket.getPayload();
-        if (!payload || !payload.email) return reply.code(400).send({ error: 'googleToken' });
+        if (!payload || !payload.email) {
+            return reply.code(400).send({ error: 'googleToken' });
+        }
         
         const user = await findUserByGoogleEmail(payload.email);
         if (!user) {
             return reply.code(404).send({ error: 'noUser' });
         }
-        reply.send({ success: true });
+        return reply.send({ success: true });
     } catch (err) {
         console.log('Google login update check error:', err);
         return reply.code(500).send({ error: 'serverError' });
@@ -315,12 +324,16 @@ fastify.patch(
         
         const parts = req.parts();
         for await (const part of parts) {
+            // console.log('part: ', part);
+            if (!part.fieldname) {
+                continue;
+            }
             if (part.type === 'file') {
                 const fileHandler = await validateFile(part);
-                if (fileHandler === 'TOO LARGE') {
-                    return reply.code(400).send({ error: 'fileTooLarge' });
-                } else if (fileHandler === 'MIMETYPE INCORRECT') {
-                    return reply.code(400).send({error: 'fileIncorrectMime'});
+                for (const [key, value] of errorkeyToMessage) {
+                    if (fileHandler === key) {
+                        return reply.code(400).send({ error: value });
+                    }
                 }
                 userData['pathToProfileP'] = fileHandler;
             } else if (part.type === 'field' && typeof part.value === 'string') {
@@ -354,7 +367,7 @@ fastify.patch(
                 return reply.code(404).send({ error: 'noUser' });
             }
             
-            reply.send({ success: true });
+            return reply.send({ success: true });
         } catch (err) {
             req.log.error('error updating user');
             return reply.code(500).send({ error: 'serverError' });
@@ -371,14 +384,12 @@ fastify.patch(
             if (part.type === 'file') {
                 if (!part.filename && part.filename !== '') {
                     const fileHandler = await validateFile(part);
-                    if (fileHandler === 'TOO LARGE') {
-                        console.log('file too large')
-                        return reply.code(400).send('fileTooLarge');
-                    } else if (fileHandler === 'MIMETYPE INCORRECT') {
-                        return reply.code(400).send({error: 'fileIncorrectMime'});
-                    } else {
-                        userData['pathToProfileP'] = fileHandler;
+                    for (const [key, value] of errorkeyToMessage) {
+                        if (fileHandler === key) {
+                            return reply.code(400).send({ error: value });
+                        }
                     }
+                    userData['pathToProfileP'] = fileHandler;
                 } else {
                     userData['pathToProfileP'] = null;
                 }

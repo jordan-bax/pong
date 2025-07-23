@@ -7,9 +7,9 @@ declare module 'fastify' {
     interface Session {
         player?: {
             username: string;
-            // id: number | undefined;
+            id: number | undefined;
             player: 1 | 2;
-            // loggedin: boolean;
+            loggedin: boolean;
             gameid: string;
         }
         //     user?: {

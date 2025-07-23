@@ -218,15 +218,32 @@ fastify.register(fastifySession, {
 
 // Start the game loop
 fastify.post('/start', async (req, reply) => {
-    // const playid = req.session.user?.userId;
-    // var online : boolean = true;
-    // if (playid == undefined)
-    //     online = false;
+    const user = await fetch('http://user:3001/me', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            Cookie: req.headers.cookie || '',
+            'Content-Type': 'application/json',
+            'x-session-id': req.cookies['sessionId'] || ''
+        }
+    });
+    var playid :Number | undefined = undefined;
+    var online: boolean = false;
+    if (user.ok) {
+        await user.json().then(data => {
+            console.log('User data:', data);
+            playid = data.user.userId; // Assuming the user object has an 'id' property
+            online = true; // User is logged in
+        });
+    }
+    console.log('User is logged in, starting game...', user);
+
+
     
-    const { type, playername, playerid } = req.body as { type: string; playername: string , playerid: string};
+    const { type, playername, playerid } = req.body as { type: string; playername: string , playerid: number| undefined};
     
     console.log('Starting game with AI:', type, 'Player Name:', playername);
-    const gameid = addGameLoop(type , playername, playerid);
+    const gameid = addGameLoop(type , playername, "playerid");
     if (!gameid) {
         reply.status(400).send({ error: 'Failed to start game' });
         return;
@@ -239,10 +256,10 @@ fastify.post('/start', async (req, reply) => {
         num = 2;
     req.session.player = {
         username : playername,
-        // id: playid,
+        id: playid,
         player: num,
         gameid:splitted[0],
-        // loggedin: online
+        loggedin: online
     };
     console.log('Player session:', req.session.player);
 

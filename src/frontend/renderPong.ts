@@ -73,7 +73,7 @@ async function inputTempName(): Promise<string> {
     });
 }
 async function getUserNameData(){
-    const user = await fetch('/api/user/me', {
+    const user = await fetch('/api/user/me/data', {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -85,7 +85,8 @@ async function getUserNameData(){
         return inputTempName(); // Prompt the user for a nickname if the fetch fails
         return null; // Return null if the fetch fails
     }
-    const userData = await user.json() as userInfo; // Parse the user data
+    const data = await user.json(); // Parse the user data
+    const userData: userInfo = data.user as userInfo; // Cast to userInfo type
     if (!userData || !userData.username) {
         console.error('Invalid user data:', userData);
         return null; // Return null if the user data is not valid

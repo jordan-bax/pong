@@ -1,0 +1,62 @@
+to get redisStore working
+// in docker-compose.yml
+change the context to "./backend"
+and add on the same indentation "dockerfile: backend/NameOfBackendServiceFolder/Dockerfile"
+
+// in Dockerfile
+change 'FROM node:18' to 'FROM node:20'
+// to copy the package.json change the line to this
+COPY NameOfBackendServiceFolder/package*.json ./
+//for the command to copy the rest into the container change it from  "COPY . ." to
+COPY NameOfBackendServiceFolder/ ./
+// after that change but before the build command add the following lines
+RUN mkdir -p /app/shared/types
+COPY shared/types /app/shared/types
+
+// in package.json add the following
+// in "dependencies" add
+"@types/express-session": "1.18.2"
+"connect-redis": "5.2.0"
+"exoress-session": "1.18.1"
+"ioredis": "5.6.1"
+//in "devDependencies" add
+"@types/connect-redis": "^0.0.23"
+
+// in tsconfig.json add
+// to "compilerOptions"
+"baseUrl": "./"
+"paths": {
+	"@transencdanse/shared-types": ["./shared/types"]
+}
+// add this string to the include array 
+"./shared/types/**/*.d.ts"
+
+// in the starting typescript page add/modify the following
+import Redis from 'ioredis';
+import connectReddis from 'connect-redis';
+import session from 'express-session';
+
+const redisClient = new Redis ({
+	host: 'redis'
+	port: 6379, // default redis port
+	retryStrategy: (times) => {
+		console.log(`Redis retry attempt #$(times)`);
+		return Math.min(times * 100, 2000); // max 2 seconds
+	}
+});
+
+redisClient.on('connect', () => console.log('Redis connected');
+redisClient.on('error', (err) => console.log('Redis error', err);
+
+const store = connectRedis(session);
+
+fastify.register(fastifySession, { // don't add cookieName as it will then be seen as different Redis
+	secret: sessionSecret,
+	store: new store({
+		client: redisClient,
+		ttl: 86400 // 1 day
+	});,
+	saveUninitialized: false
+)};
+
+// add your data to ./src/backend/shared/types/*.d.ts so all the services have access to it

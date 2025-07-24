@@ -17,7 +17,7 @@ server.post('/join', { schema: joinSchema }, async (request, reply) => {
 
     switch (result) {
         case 0:
-            reply.status(201).send({'tournamentID': tournamentID})
+            reply.status(201).send({ 'tournamentID': tournamentID })
             break
         case 1:
             reply.status(400).send({ 'error': `No tournament with ID: ${tournamentID}` })
@@ -37,7 +37,7 @@ server.post('/leave', { schema: leaveSchema }, async (request, reply) => {
 
     switch (result) {
         case 0:
-            reply.status(201).send({'tournamentID': tournamentID})
+            reply.status(201).send({ 'tournamentID': tournamentID })
             break
         case 1:
             reply.status(400).send({ 'error': `No tournament with ID: ${tournamentID}` })
@@ -48,11 +48,13 @@ server.post('/leave', { schema: leaveSchema }, async (request, reply) => {
     }
 })
 
-
-server.listen({ port: 3003 }, (err, address) => {
-    if (err) {
+const start = async () => {
+    try {
+        await server.listen({ port: 3003 });
+        console.log(`Server listening at ${server.server.address()}`)
+    } catch (err) {
         console.error(err)
         process.exit(1)
     }
-    console.log(`Server listening at ${address}`)
-})
+}
+start();

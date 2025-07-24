@@ -1,4 +1,3 @@
-import { resolve } from "dns"
 import { Tournament } from "./schemas/tournamentInterface"
 
 class TournamentService {
@@ -6,6 +5,7 @@ class TournamentService {
     private runningTournaments: Tournament[] = []
     private nextID: number = 1
     private checkInterval: NodeJS.Timeout | null = null
+    private isChecking: boolean = false
 
     async create(name: string, description: string, playerCount: number, userID: number, lockTime: number | undefined): Promise<Tournament> {
         if (lockTime === undefined || lockTime < 1 || lockTime > 3600) {
@@ -27,32 +27,38 @@ class TournamentService {
         return Promise.resolve(newTournament)
     }
 
-    private startChecker() {
+    private startChecker(): void {
         if (!this.checkInterval && this.tournaments.length > 0) {
             this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
         }
     }
 
-    private stopChecker() {
+    private stopChecker(): void {
         if (this.checkInterval) {
             clearInterval(this.checkInterval)
             this.checkInterval = null
         }
     }
 
-    private checkTournaments() {
+    private async checkTournaments(): Promise<void> {
+        if (this.isChecking) {
+            return
+        }
+
+        this.isChecking = true
         const now = Date.now()
 
         for (const tournament of this.tournaments) {
             if (now >= tournament.lockTime) {
                 this.runningTournaments.push(tournament)
-                this.start(tournament)
+                await this.start(tournament)
             }
         }
 
         if (this.tournaments.length === 0) {
             this.stopChecker()
         }
+        this.isChecking = false
     }
 
     async getByID(id: number): Promise<Tournament | undefined> {

@@ -10,5 +10,5 @@
         "skipLibCheck": true,
         "typeRoots": ["node_modules/@types"]
     },
-    "include": ["./*.ts"]
+    "include": ["./*.ts", "./db", "./schemas/"]
 }

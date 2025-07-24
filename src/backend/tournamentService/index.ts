@@ -7,13 +7,13 @@ const tournamentObj = TournamentService
 
 server.post('/create', { schema: createSchema }, async (request, reply) => {
     const { name, description, playerCount, userID, lockTime } = request.body as { name: string, description: string, playerCount: number, userID: number, lockTime: number | undefined }
-    const tournament = tournamentObj.create(name, description, playerCount, userID, lockTime)
+    const tournament = await tournamentObj.create(name, description, playerCount, userID, lockTime)
     reply.status(201).send(tournament)
 })
 
 server.post('/join', { schema: joinSchema }, async (request, reply) => {
     const { tournamentID, userID } = request.body as { tournamentID: number, userID: number }
-    const result = tournamentObj.join(tournamentID, userID)
+    const result = await tournamentObj.join(tournamentID, userID)
 
     switch (result) {
         case 0:
@@ -33,7 +33,7 @@ server.post('/join', { schema: joinSchema }, async (request, reply) => {
 
 server.post('/leave', { schema: leaveSchema }, async (request, reply) => {
     const { tournamentID, userID } = request.body as { tournamentID: number, userID: number }
-    const result = tournamentObj.leave(tournamentID, userID)
+    const result = await tournamentObj.leave(tournamentID, userID)
 
     switch (result) {
         case 0:

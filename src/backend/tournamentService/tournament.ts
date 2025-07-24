@@ -1,3 +1,4 @@
+import { resolve } from "dns"
 import { Tournament } from "./schemas/tournamentInterface"
 
 class TournamentService {
@@ -6,7 +7,7 @@ class TournamentService {
     private nextID: number = 1
     private checkInterval: NodeJS.Timeout | null = null
 
-    create(name: string, description: string, playerCount: number, userID: number, lockTime: number | undefined): Tournament {
+    async create(name: string, description: string, playerCount: number, userID: number, lockTime: number | undefined): Promise<Tournament> {
         if (lockTime === undefined || lockTime < 1 || lockTime > 3600) {
             lockTime = 60
         }
@@ -23,7 +24,7 @@ class TournamentService {
 
         this.tournaments.push(newTournament)
         this.startChecker()
-        return newTournament
+        return Promise.resolve(newTournament)
     }
 
     private startChecker() {
@@ -54,37 +55,37 @@ class TournamentService {
         }
     }
 
-    getByID(id: number): Tournament | undefined {
-        return this.tournaments.find(tournaments => tournaments.id === id)
+    async getByID(id: number): Promise<Tournament | undefined> {
+        return Promise.resolve(this.tournaments.find(tournaments => tournaments.id === id))
     }
 
-    join(tournamentID: number, playerID: number): number {
+    async join(tournamentID: number, playerID: number): Promise<number> {
         const tournament = this.tournaments.find(tournaments => tournaments.id === tournamentID)
         if (tournament === undefined) {
-            return 1
+            return Promise.resolve(1)
         }
 
         if (tournament.players.length === tournament.playerCount) {
-            return 2
+            return Promise.resolve(2)
         }
 
         if (tournament.players.includes(playerID)) {
-            return 3
+            return Promise.resolve(3)
         }
 
         tournament.players.push(playerID)
-        return 0
+        return Promise.resolve(0)
     }
 
-    leave(tournamentID: number, playerID: number): number {
+    async leave(tournamentID: number, playerID: number): Promise<number> {
         const tournament = this.tournaments.find(tournaments => tournaments.id === tournamentID)
         if (tournament === undefined) {
-            return 1
+            return Promise.resolve(1)
         }
 
         const index = tournament.players.indexOf(playerID, 0)
         if (index === -1) {
-            return 2
+            return Promise.resolve(2)
         }
 
         tournament.players.splice(index, 1)
@@ -93,13 +94,13 @@ class TournamentService {
             this.tournaments.splice(index, 1)
         }
 
-        return 0
+        return Promise.resolve(0)
     }
 
-    start(tournament: Tournament): number[] {
+    async start(tournament: Tournament): Promise<number[]> {
         const index = this.tournaments.findIndex(t => t.id === tournament.id)
         if (index === -1) {
-            return []
+            return Promise.resolve([])
         }
 
         this.tournaments.splice(index, 1);
@@ -107,7 +108,7 @@ class TournamentService {
         this.runningTournaments.push(tournament);
 
         console.log(`Starting tournament ${tournament.id}`);
-        return tournament.players;
+        return Promise.resolve(tournament.players);
     }
 }
 

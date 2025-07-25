@@ -18,10 +18,9 @@ export const createSchema = {
                 name: { type: 'string' },
                 playerCount: { type: 'number' },
                 description: { type: 'string' },
-                isLocked: { type: 'boolean' },
                 lockTime: { type: 'number' }
             },
-            required: ['id', 'name', 'playerCount', 'description', 'isLocked']
+            required: ['id', 'name', 'playerCount', 'description', 'lockTime']
         }
     }
 }

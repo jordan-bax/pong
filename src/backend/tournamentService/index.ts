@@ -28,6 +28,10 @@ server.post('/join', { schema: joinSchema }, async (request, reply) => {
         case 3:
             reply.status(400).send({ 'error': 'You already joined the tournament' })
             break
+        case 4:
+            reply.status(400).send({ 'error': 'Tournament is already started' })
+            break
+
     }
 })
 

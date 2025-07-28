@@ -2,7 +2,7 @@ import requests
 
 def main():
     url = 'http://127.0.0.1:3003/create'
-    resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'playerCount': '8', 'userID': 1, 'lockTime': 10})
+    resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'playerCount': '8', 'userID': 1, 'lockTime': 2})
     assert resp.status_code == 201
 
     data = resp.json()

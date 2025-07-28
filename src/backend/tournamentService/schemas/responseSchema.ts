@@ -21,7 +21,14 @@ export const createSchema = {
                 lockTime: { type: 'number' }
             },
             required: ['id', 'name', 'playerCount', 'description', 'lockTime']
-        }
+        },
+        400: {
+            type: 'object',
+            properties: {
+                error: { type: 'string' }
+            },
+            required: ['error']
+        },
     }
 }
 
@@ -65,6 +72,34 @@ export const leaveSchema = {
             type: 'object',
             properties: {
                 tournamnetID: { type: 'number' },
+            }
+        },
+        400: {
+            type: 'object',
+            properties: {
+                error: { type: 'string' }
+            },
+            required: ['error']
+        },
+    }
+}
+
+export const gameDoneSchema = {
+    body: {
+        type: 'object',
+        properties: {
+            tournamentID: { type: 'number' },
+            playerID1: { type: 'number' },
+            playerID2: { type: 'number' },
+            winnerID: { type: 'number' }
+        },
+        required: ['playerID1', 'playerID2', 'winnerID']
+    },
+    response: {
+        201: {
+            type: 'object',
+            properties: {
+                message: { type: 'string' }
             }
         },
         400: {

@@ -37,7 +37,7 @@ class TournamentService {
                 id: dbObj['id'],
                 name: dbObj['name'],
                 description: dbObj['description'],
-                playerCount,
+                playerCount: dbObj['maxPlayers'],
                 players: [userID],
                 lockTime: dbObj['lockTime']
             }

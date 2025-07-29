@@ -1,6 +1,6 @@
 import fastify from 'fastify'
 import TournamentService from "./tournament"
-import { createSchema, gameDoneSchema, joinSchema, leaveSchema } from './schemas/responseSchema'
+import { createSchema, gameDoneSchema, joinSchema, leaveSchema } from "./schemas/responseSchema"
 
 const server = fastify()
 const tournamentObj = TournamentService

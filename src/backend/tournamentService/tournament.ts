@@ -1,41 +1,45 @@
 import { log } from "console"
 import { Tournament, TournamentObj } from "./schemas/tournamentInterface"
+import tournamentDB from "./tournamentDB"
+
+const db = new tournamentDB
+db.initDB('./db/tournament.sqlite')
 
 class TournamentService {
     private tournaments: TournamentObj[] = []
     private runningTournaments: TournamentObj[] = []
-    private nextID: number = 1
     private checkInterval: NodeJS.Timeout | null = null
     private isChecking: boolean = false
 
-    async create(name: string, description: string, playerCount: number, userID: number, lockTime: number | undefined): Promise<Tournament | undefined> {
-        if (lockTime === undefined || lockTime < 1) {
-            lockTime = 60
+    async create(name: string, description: string, playerCount: number, userID: number, duration: number | undefined): Promise<Tournament | undefined> {
+        if (duration === undefined || duration < 1) {
+            duration = 60
         }
 
-        if (lockTime > 3600) {
-            lockTime = 3600
+        if (duration > 3600) {
+            duration = 3600
         }
 
-        if (playerCount % 2 !== 0) {
+        if (playerCount < 1 || playerCount % 2 !== 0) {
             return undefined
         }
 
+        const dbObj = await db.addTournament(name, description, 1, playerCount, false, Math.round(Date.now() + (duration * 1000)))
         const newTournament: TournamentObj = {
             rounds: 0,
-            currentRound: 0,
+            currentRound: dbObj['curRound'],
             nextMatchs: [],
-            winner: -1,
-            isRunning: false,
-            lockTime: Math.round(Date.now() + (lockTime * 1000)),
+            winner: dbObj['winner'],
+            isRunning: dbObj['running'],
+            lockTime: dbObj['lockTime'],
             currentPlayers: [],
             tournament: {
-                id: this.nextID++,
-                name,
-                description,
+                id: dbObj['id'],
+                name: dbObj['name'],
+                description: dbObj['description'],
                 playerCount,
                 players: [userID],
-                lockTime: Math.round(Date.now() + (lockTime * 1000))
+                lockTime: dbObj['lockTime']
             }
         }
 

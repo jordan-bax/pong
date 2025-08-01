@@ -1,13 +1,11 @@
 import { log } from "console"
-import { Tournament, TournamentObj } from "./schemas/tournamentInterface"
+import { Tournament } from "./schemas/tournamentInterface"
 import tournamentDB from "./tournamentDB"
 
 const db = new tournamentDB
 db.initDB('./db/tournament.sqlite')
 
 class TournamentService {
-    private tournaments: TournamentObj[] = []
-    private runningTournaments: TournamentObj[] = []
     private checkInterval: NodeJS.Timeout | null = null
     private isChecking: boolean = false
 
@@ -24,102 +22,68 @@ class TournamentService {
             return undefined
         }
 
-        const dbObj = await db.addTournament(name, description, 1, playerCount, false, Math.round(Date.now() + (duration * 1000)))
-        const newTournament: TournamentObj = {
-            rounds: 0,
-            currentRound: dbObj['curRound'],
-            nextMatchs: [],
-            winner: dbObj['winner'],
-            isRunning: dbObj['running'],
-            lockTime: dbObj['lockTime'],
-            currentPlayers: [],
-            tournament: {
-                id: dbObj['id'],
-                name: dbObj['name'],
-                description: dbObj['description'],
-                playerCount: dbObj['maxPlayers'],
-                players: [userID],
-                lockTime: dbObj['lockTime']
-            }
-        }
-
-        this.tournaments.push(newTournament)
-        this.startChecker()
-        return newTournament.tournament
+        const dbObj = await db.addTournament(name, description, playerCount, Math.round(Date.now() + (duration * 1000)), userID)
+        return dbObj
     }
 
-    async getByID(id: number): Promise<Tournament | undefined> {
-        const tournament = this.tournaments.find(t => t.tournament.id === id)
-        if (tournament === undefined) {
-            return tournament
+    // async getByID(id: number): Promise<Tournament | undefined> {
+    //     // const tournament = this.tournaments.find(t => t.tournament.id === id)
+    //     // if (tournament === undefined) {
+    //     //     return tournament
+    //     // }
+    //
+    //
+    //     // return tournament.tournament
+    // }
+
+    async join(tournamentID: number, playerID: number): Promise<void> {
+        try {
+            await db.addPlayer(playerID, tournamentID)
+        } catch (error) {
+            throw error
         }
-
-        return tournament.tournament
-    }
-
-    async join(tournamentID: number, playerID: number): Promise<number> {
-        const tournament = this.tournaments.find(t => t.tournament.id === tournamentID)
-        if (tournament === undefined) {
-            return 1
-        }
-
-        if (tournament.tournament.players.length === tournament.tournament.playerCount) {
-            return 2
-        }
-
-        if (tournament.tournament.players.includes(playerID)) {
-            return 3
-        }
-
-        if (tournament.isRunning) {
-            return 4
-        }
-
-        tournament.tournament.players.push(playerID)
-        return 0
     }
 
     async leave(tournamentID: number, playerID: number): Promise<number> {
-        const tournament = this.tournaments.find(t => t.tournament.id === tournamentID)
-        if (tournament === undefined) {
-            return 1
-        }
-
-        const index = tournament.tournament.players.indexOf(playerID, 0)
-        if (index === -1) {
-            return 2
-        }
-
-        tournament.tournament.players.splice(index, 1)
-        if (tournament.tournament.players.length === 0) {
-            const index = this.tournaments.indexOf(tournament, 0)
-            this.tournaments.splice(index, 1)
-        }
+        // const tournament = this.tournaments.find(t => t.tournament.id === tournamentID)
+        // if (tournament === undefined) {
+        //     return 1
+        // }
+        //
+        // const index = tournament.tournament.players.indexOf(playerID, 0)
+        // if (index === -1) {
+        //     return 2
+        // }
+        //
+        // tournament.tournament.players.splice(index, 1)
+        // if (tournament.tournament.players.length === 0) {
+        //     const index = this.tournaments.indexOf(tournament, 0)
+        //     this.tournaments.splice(index, 1)
+        // }
 
         return 0
     }
 
-    async start(t: TournamentObj): Promise<void> {
-        // think this make no sense
-        const index = this.tournaments.findIndex(t => t.tournament.id === t.tournament.id)
-        if (index === -1) {
-            return
-        }
-
-        this.tournaments.splice(index, 1);
-        t.isRunning = true;
-        this.runningTournaments.push(t);
+    async start(t: Tournament): Promise<void> {
+        // TODO: think this make no sense
+        // const index = this.tournaments.findIndex(t => t.tournament.id === t.tournament.id)
+        // if (index === -1) {
+        //     return
+        // }
+        //
+        // this.tournaments.splice(index, 1);
+        // t.isRunning = true;
+        // this.runningTournaments.push(t);
 
         let aiID = -1
-        for (let index = t.tournament.players.length; index < t.tournament.playerCount; index++) {
-            t.tournament.players.push(aiID)
-            aiID--;
-        }
-
-        t.rounds = Math.ceil(t.tournament.playerCount / 2)
-        t.currentRound = 1
-        t.currentPlayers = [...t.tournament.players]
-        t.nextMatchs = await this.initMatches(t.currentPlayers, t.currentPlayers.length)
+        // for (let index = t.tournament.players.length; index < t.tournament.playerCount; index++) {
+        //     t.tournament.players.push(aiID)
+        //     aiID--;
+        // }
+        //
+        // t.rounds = Math.ceil(t.tournament.playerCount / 2)
+        // t.currentRound = 1
+        // t.nextMatchs = await this.initMatches(t.tournament.players, t.tournament.players.length)
 
         // notify game backend api call per game
         for (let index = 0; index < t.nextMatchs.length; index++) {
@@ -132,17 +96,17 @@ class TournamentService {
             // send game to backend
         }
 
-        console.log(`Starting tournament ${t.tournament.id}`)
+        // console.log(`Starting tournament ${t.tournament.id}`)
         return
     }
 
     async matchDone(tournamentID: number, playerID1: number, playerID2: number, winnerID: number): Promise<number> {
-        const index = this.runningTournaments.findIndex(t => t.tournament.id === tournamentID)
-        if (index === -1) {
-            return 1
-        }
+        // const index = this.runningTournaments.findIndex(t => t.tournament.id === tournamentID)
+        // if (index === -1) {
+        //     return 1
+        // }
 
-        const t = this.runningTournaments[index]
+        // const t = this.runningTournaments[index]
 
         const lossersID = playerID2 === winnerID ? playerID1 : playerID2
 
@@ -153,10 +117,10 @@ class TournamentService {
         // const removeMatchIndex = t.nextMatchs.indexOf([playerID1, playerID2], 0)
         // t.nextMatchs.splice(removeMatchIndex, 0)
 
-        if (t.nextMatchs.length === 0) {
-            this.nextMatch(t.currentPlayers, t.currentPlayers.length)
-        }
-
+        // if (t.nextMatchs.length === 0) {
+        //     this.nextMatch(t.tournament.players, t.tournament.players.length)
+        // }
+        //
         return 0
     }
 
@@ -189,9 +153,9 @@ class TournamentService {
     }
 
     private startChecker(): void {
-        if (!this.checkInterval && this.tournaments.length > 0) {
-            this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
-        }
+        // if (!this.checkInterval && this.tournaments.length > 0) {
+        //     this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
+        // }
     }
 
     private stopChecker(): void {
@@ -209,16 +173,16 @@ class TournamentService {
         this.isChecking = true
         const now = Date.now()
 
-        for (const tournament of this.tournaments) {
-            if (now >= tournament.lockTime) {
-                this.runningTournaments.push(tournament)
-                await this.start(tournament)
-            }
-        }
-
-        if (this.tournaments.length === 0) {
-            this.stopChecker()
-        }
+        // for (const tournament of this.tournaments) {
+        //     if (now >= tournament.lockTime) {
+        //         this.runningTournaments.push(tournament)
+        //         await this.start(tournament)
+        //     }
+        // }
+        //
+        // if (this.tournaments.length === 0) {
+        //     this.stopChecker()
+        // }
         this.isChecking = false
     }
 }

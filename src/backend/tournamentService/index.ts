@@ -17,25 +17,11 @@ server.post('/create', { schema: createSchema }, async (request, reply) => {
 
 server.post('/join', { schema: joinSchema }, async (request, reply) => {
     const { tournamentID, userID } = request.body as { tournamentID: number, userID: number }
-    const result = await tournamentObj.join(tournamentID, userID)
-
-    switch (result) {
-        case 0:
-            reply.status(201).send({ 'tournamentID': tournamentID })
-            break
-        case 1:
-            reply.status(400).send({ 'error': `No tournament with ID: ${tournamentID}` })
-            break
-        case 2:
-            reply.status(400).send({ 'error': 'Tournament is full' })
-            break
-        case 3:
-            reply.status(400).send({ 'error': 'You already joined the tournament' })
-            break
-        case 4:
-            reply.status(400).send({ 'error': 'Tournament is already started' })
-            break
-
+    try {
+        await tournamentObj.join(tournamentID, userID)
+        reply.status(201).send({ 'tournamentID': tournamentID })
+    } catch (error) {
+        reply.status(400).send({ 'error': error })
     }
 })
 

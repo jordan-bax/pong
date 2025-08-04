@@ -1,10 +1,16 @@
-import assert from 'assert';
-import { open, Database } from 'sqlite'
-import sqlite3 from 'sqlite3';
-import { Tournament } from './schemas/tournamentInterface';
+const console = require("console")
 
-class TournamentDB {
-    private db: Database | null = null
+const { open: dbOpen, Database } = require('sqlite')
+const sqlite3 = require('sqlite3')
+const { Tournament } = require('./schemas/tournamentInterface')
+
+module.exports = class TournamentDB {
+    private db: typeof Database | null
+
+    constructor() {
+        this.db = null
+
+    }
 
     async initDB(path: string): Promise<void> {
         if (this.db !== null) {
@@ -12,10 +18,12 @@ class TournamentDB {
         }
 
         await this.openDB(path)
-        assert(this.db !== null, "DB must not be null after open it in the init")
+        if (this.db === null) {
+            throw new Error('adadasd')
+        }
 
         // nextMatchs is a table
-        await (this.db as Database).run(
+        await this.db.run(
             `
             CREATE TABLE if not EXISTS tournament (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +39,7 @@ class TournamentDB {
             )`
         )
 
-        await (this.db as Database).run(
+        await this.db.run(
             `
             CREATE TABLE if not EXISTS players (
                 userID INTEGER NOT NULL,
@@ -45,7 +53,7 @@ class TournamentDB {
 
     async openDB(path: string): Promise<void> {
         if (this.db === null) {
-            this.db = await open({ filename: path, driver: sqlite3.Database })
+            this.db = await dbOpen({ filename: path, driver: sqlite3.Database })
         }
     }
 
@@ -54,23 +62,21 @@ class TournamentDB {
         description: string,
         maxPlayers: number,
         lockTime: number,
-        userID: number): Promise<Tournament | undefined> {
+        userID: number): Promise<typeof Tournament | undefined> {
         if (!this.db) {
             throw new Error('DB is not open')
         }
 
-        await (this.db as Database).run(
+        await this.db.run(
             `
             INSERT INTO tournament (name, description, rounds, currentRound, winner, isRunning, lockTime, playerCount, maxPlayers)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [name, description, 1 ? maxPlayers < 4 : maxPlayers / 2, 1, -1, false, lockTime, 1, maxPlayers]
         )
 
-        // HACK: need to return undefined to make ts happy
         const id = await this.getLastID()
         if (id === undefined) {
             new Error('Could not get the last ID in the DB')
-            return undefined
         }
 
         await this.addPlayer(userID, id)
@@ -84,25 +90,38 @@ class TournamentDB {
             throw new Error('DB is not open')
         }
 
-        const result = await (this.db as Database).run(
-            `
-            INSERT INTO players (userID, round, tableID)
-            SELECT ?, ?, ?
-            WHERE (
-                SELECT NOT isRunning AND playerCount < maxPlayers
-                FROM tournament
-                WHERE id = ?
-            ) = 1
-            AND NOT EXISTS (
-                SELECT 1
-                FROM players
-                WHERE userID = ? AND tableID = ?
-            )`,
-            [userID, 1, tournamentID, tournamentID, userID, tournamentID]
-        )
+        await this.db.run("BEGIN TRANSACTION")
+        try {
+            const result = await this.db.run(`
+                INSERT INTO players (userID, round, tableID)
+                SELECT ?, ?, ?
+                    WHERE (
+                        SELECT NOT isRunning AND playerCount <= maxPlayers
+                        FROM tournament
+                        WHERE id = ?
+                ) = 1
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM players
+                            WHERE userID = ? AND tableID = ?
+                        )`,
+                [userID, 1, tournamentID, tournamentID, userID, tournamentID]
+            )
 
-        if (result.changes === 0) {
-            throw new Error("Cannot join tournament")
+            if (result.changes > 0) {
+                await this.db.run(`
+                    UPDATE tournament
+                    SET playerCount = playerCount + 1
+                    WHERE id = ? AND NOT isRunning`,
+                    [tournamentID]
+                )
+                await this.db.run("COMMIT");
+            } else {
+                throw new Error("Cannot join tournament")
+            }
+        } catch (error) {
+            await this.db.run("ROLLBACK");
+            throw error;
         }
     }
 
@@ -111,8 +130,7 @@ class TournamentDB {
             throw new Error('DB is not open')
         }
 
-        const players: number[] | undefined = await (this.db as Database).get(
-            `
+        const players: number[] | undefined = await this.db.get(`
             SELECT userID FROM players WHERE tableID = ?`,
             [tournamentID]
         )
@@ -120,20 +138,20 @@ class TournamentDB {
         return players
     }
 
-    async getTournament(tournamentID: number): Promise<Tournament> {
+    async getTournament(tournamentID: number): Promise<typeof Tournament> {
         if (!this.db) {
             throw new Error('DB is not open')
         }
 
         let tourObj = undefined
         if (tournamentID < 0) {
-            tourObj = await (this.db as Database).get(`
+            tourObj = await this.db.get(`
             SELECT id, name, description, rounds, currentRound, winner, isRunning, lockTime, playerCount, maxPlayers
             FROM tournament
             WHERE id = (SELECT MAX(id) FROM tournament)`
             )
         } else {
-            tourObj = await (this.db as Database).get(`
+            tourObj = await this.db.get(`
             SELECT id, name, description, rounds, currentRound, winner, isRunning, lockTime, playerCount, maxPlayers
             FROM tournament
             WHERE id = ?`,
@@ -179,7 +197,7 @@ class TournamentDB {
             throw new Error('DB is not open')
         }
 
-        const id = await (this.db as Database).get(`SELECT MAX(id) FROM tournament`)
+        const id = await this.db.get(`SELECT MAX(id) FROM tournament`)
         if (id === undefined) {
             return id
         }
@@ -187,5 +205,3 @@ class TournamentDB {
         return id['MAX(id)']
     }
 }
-
-export default TournamentDB

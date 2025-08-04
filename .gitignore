@@ -36,6 +36,7 @@ simple*
 
 # extras
 .vscode
+test-grid
 node_modules
 dist
 package-lock.json

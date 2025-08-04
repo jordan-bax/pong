@@ -1,25 +1,10 @@
 import {startGame} from './renderPong.js';
+import { createGameHistoryTable } from './gameHistoryTable.js';
 // import {  } from './sharedValuesPong.js';
 var fps: number = 10; // Default frames per second
 
 export async function pongbutton(): Promise<void> {
 	createCenterButtons();
-	// const button = document.createElement('button');
-	// button.id = 'pongButton';
-	// button.textContent = 'Play Pong';
-	// button.style.position = 'absolute';
-	// button.style.top = '50%';
-	// button.style.left = '50%';
-	// button.style.transform = 'translate(-50%, -50%)';
-	// button.style.zIndex = '1000'; // Ensure the button is on top of other elements
-	
-
-	// button.addEventListener('click', async () => {
-	// 	button.remove(); // Remove the button after clicking
-	// 	await test();
-	// 	console.log('Pong button clicked');
-	// 	// window.location.href = '/game/pong';
-	// });
 }
 
 async function testaddPlayerButton(frame: HTMLIFrameElement): Promise<void> {
@@ -43,6 +28,9 @@ async function testaddPlayerButton(frame: HTMLIFrameElement): Promise<void> {
 	}
 }
 
+// make a function that takes a game interface array an display on the page from top to down sorted by newest to oldest the games and from left to right. the game info in there seperated boxes player1 username and score in same box than the same for player2 than winner type and date in there own boxes. then a row below the same for the next game in the array and so on til all are placed
+
+
 async function testData(frame: HTMLIFrameElement): Promise<void> {
 	// This function is just a placeholder for testing purposes
 	console.log('test function called');
@@ -64,14 +52,28 @@ async function testData(frame: HTMLIFrameElement): Promise<void> {
 	};
 	container.appendChild(backbutton);
 
+	const gamehistory = document.createElement('button');
+	// gamehistory.href = '/gameHistory';
+	gamehistory.textContent = 'game history';
+	gamehistory.style.fontSize = '1.2em';
+	gamehistory.style.padding = '10px 20px';
+	gamehistory.onclick = () => {
+		frame?.removeChild(container); // Remove the container before showing game history
+		console.log('Game history button clicked');
+		createGameHistoryTable(frame);
+		return;
+	};
+	container.appendChild(gamehistory);
+
+
 	const addPlayerButton = document.createElement('button');
 	addPlayerButton.textContent = 'add player';
 	addPlayerButton.style.fontSize = '1.2em';
 	addPlayerButton.style.padding = '10px 20px';
 	addPlayerButton.onclick = () => {
 		frame?.removeChild(container); // Remove the container before adding a player
-		testaddPlayerButton(frame);
 		console.log('Add player button clicked');
+		return;
 	};
 	container.appendChild(addPlayerButton);
 

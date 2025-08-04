@@ -7,10 +7,10 @@ declare module 'fastify' {
     interface Session {
         player?: {
             username: string;
-            id: number | undefined;
+            id: number | null;
             player: 1 | 2;
             loggedin: boolean;
-            gameid: string;
+            gameid: number;
         }
         //     user?: {
             //         email: string;
@@ -21,6 +21,6 @@ declare module 'fastify' {
             
     interface FastifyRequest {
         session: Session;
-        // isAuthenticated: () => boolean;
+        isAuthenticated: () => boolean;
     }
 }

@@ -7,9 +7,9 @@ export interface player {
 	username: string;
 	// gameRef: Game[]; // Reference to games played by the player
 }
-
+// game id is string == game 
 export interface Game {
-	id: number | undefined; // Game ID, can be null for new games
+	id: number | null; // Game ID, can be null for new games
 	type?: string; // Optional type field for future use
 	player1: player;
 	player2: player;
@@ -26,6 +26,7 @@ export interface GameStats {
 	gamesLost: number;
 }
 
+
 sqlite3.verbose();
 
 const dbFile = process.env.GAME_DATABASE_PATH;
@@ -38,7 +39,7 @@ const dbPromise = open({
 	driver: sqlite3.Database
 });
 
-async function initializeDatabase() {
+export async function initializeDatabase() {
 	const db = await dbPromise;
 
 	// Create player table
@@ -53,8 +54,8 @@ async function initializeDatabase() {
 	await db.run(`
 		CREATE TABLE IF NOT EXISTS game (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			player1_id INTEGER NOT NULL,
-			player2_id INTEGER NOT NULL,
+			player1_id INTEGER,
+			player2_id INTEGER,
 			player1Score INTEGER NOT NULL,
 			player2Score INTEGER NOT NULL,
 			winner TEXT NOT NULL,
@@ -63,6 +64,7 @@ async function initializeDatabase() {
 			FOREIGN KEY (player2_id) REFERENCES player(id)
 		)
 	`);
+
 }
 
 export async function getGamesForPlayer(playerId: number): Promise<Game[]> {
@@ -113,10 +115,29 @@ export async function createPlayer(id: number, username: string): Promise<player
 	);
 	return { id, username };
 }
+// export 
 export async function createGame(game: Game): Promise<Game> {
 	const db = await dbPromise;
 	const { player1, player2, player1Score, player2Score, winner } = game;
-	const result = await db.run(
+	if (player1.id === player2.id && player2.id == 2) {
+		throw new Error("Players must be different");
+	}
+	if (!player1) {
+		throw new Error("Both players must be specified to create a game");
+	}
+	var result : any;
+	if (!player2) {
+		result = await db.run(
+			`INSERT INTO game (player1_id, player1Score, player2Score, winner) 
+			 VALUES (?, ?, ?, ?)`,
+			player1.id,
+			player1Score,
+			player2Score,
+			winner
+		);
+	}
+	else {
+	result = await db.run(
 		`INSERT INTO game (player1_id, player2_id, player1Score, player2Score, winner) 
 		 VALUES (?, ?, ?, ?, ?)`,
 		player1.id,
@@ -125,8 +146,30 @@ export async function createGame(game: Game): Promise<Game> {
 		player2Score,
 		winner
 	);
+	}
+	if (!result.lastID) {
+		throw new Error("Failed to create game");
+	}
 	game.id = result.lastID;
 	game.createdAt = new Date();
+	return game;
+}
+export async function updateGame(game: Game): Promise<Game> {
+	const db = await dbPromise;
+	const { id, player1, player2, player1Score, player2Score, winner } = game;
+	if (!id) {
+		throw new Error("Game ID is required for update");
+	}
+	await db.run(
+		`UPDATE game SET player1_id = ?, player2_id = ?, player1Score = ?, player2Score = ?, winner = ? 
+		 WHERE id = ?`,
+		player1.id,
+		player2.id,
+		player1Score,
+		player2Score,
+		winner,
+		id
+	);
 	return game;
 }
 export async function getGameById(id: number): Promise<Game | null> {
@@ -173,6 +216,18 @@ export async function getGameStatsByPlayerId(playerId: number): Promise<GameStat
 		gamesLost
 	};
 }
+export async function getLastPlayerId(): Promise<number | null> {
+    const db = await dbPromise;
+    const row = await db.get(`SELECT MAX(id) as lastId FROM player`);
+    return row?.lastId ?? null;
+}
+export async function getLastGameId(): Promise<number | null> {
+    const db = await dbPromise;
+    const row = await db.get(`SELECT MAX(id) as lastId FROM game`);
+    return row?.lastId ?? null;
+}
+// initializeDatabase().catch(console.error);
 
-initializeDatabase().catch(console.error);
-
+// createPlayer(0, 'ai').catch(console.error);
+// createPlayer(1, 'unknown').catch(console.error);
+// createPlayer(2, 'local').catch(console.error);

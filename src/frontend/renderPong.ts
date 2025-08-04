@@ -130,11 +130,23 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
         }); // Fetch the game state from the server
         if (!state.ok) {
             console.error('Failed to state:', state.statusText);
+            console.log('Game Over! Final Score:', player1.score, '-', player2.score);
+            if (lastFrame) {
+                document.body.removeChild(lastFrame);
+            }
+            disableKeyListener(); // Disable key listener when the game ends
+            leaveGame();
             return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the fetch fails
         }
         const gameState = await state.json() as gamestateinterface; // Parse the game state
         if (!gameState) {
             console.error('Failed to fetch game state' , gameState);
+            console.log('Game Over! Final Score:', player1.score, '-', player2.score);
+            if (lastFrame) {
+                document.body.removeChild(lastFrame);
+            }
+            disableKeyListener(); // Disable key listener when the game ends
+            leaveGame();
             return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the game state is not available
         }
         player1 = gameState.player1;
@@ -158,7 +170,14 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
 			return { player1Score: player1.score, player2Score: player2.score,player1Name : '', player2Name: '' }; // Return the final scores
 		}
     }
-
+    // console.log('Game Over! Final Score:', player1.score, '-', player2.score);
+    // if (lastFrame) {
+    //     document.body.removeChild(lastFrame);
+    // }
+    // disableKeyListener(); // Disable key listener when the game ends
+    // leaveGame();
+    
+    // return { player1Score: player1.score, player2Score: player2.score,player1Name : '', player2Name: '' }; // Return the final scores
 }
 
 function WaitForASecond() {
@@ -312,13 +331,43 @@ function addMiddleStripes(gameWalls: HTMLDivElement): HTMLElement {
 async function enableKeyListener() {
     document.addEventListener('keydown', keyHandler);
     window.addEventListener('beforeunload', leaveGame);
+    window.addEventListener('popstate', popstateHandler);
+    // test visability changer of the key listener
+//    window.addEventListener('')
+    console.log('Key listener enabled and popstate handler added.');
 }
 
 function disableKeyListener() {
     document.removeEventListener('keydown', keyHandler);
     window.removeEventListener('beforeunload', leaveGame);
-}
 
+}
+async function popstateHandler(event: PopStateEvent) {
+    // Handle the popstate event here
+    console.log('Popstate event triggered:', event);
+     // The popstate event is fired each time when the current history entry changes.
+    event.preventDefault(); // Prevent the default behavior of the popstate event
+    // event.
+    await leaveGame(); // Call leaveGame to handle the game state
+    // window.removeEventListener('popstate', popstateHandler);
+    // history.back(); // Go back to the previous page in the history stack
+    // var r = confirm("You pressed a Back button! Are you sure?!");
+
+    // if (r == true) {
+    //     // Call Back button programmatically as per user confirmation.
+    //     leaveGame();
+    //     history.back();
+
+    //     // Uncomment below line to redirect to the previous page instead.
+    //     // window.location = document.referrer // Note: IE11 is not supporting this.
+    // } else {
+    //     // Stay on the current page.
+    //     history.pushState(null, "", window.location.pathname);
+    // }
+
+    // history.pushState(null,"", window.location.pathname);
+
+}
 // This runs when the user reloads or leaves the page
 // You can send a message to the server here if needed
 // Example: notify backend the player left
@@ -332,7 +381,12 @@ async function leaveGame() {
     //     body: JSON.stringify({ gameid: gameID })}); // Send the game ID in the request body;
     console.log('Leaving game with ID:');
     // navigator.sendBeacon('/api/game/leave?gameid='+gameID, JSON.stringify({ gameid: "bob" }));
-    navigator.sendBeacon('/api/game/leave');
+    await fetch('/api/game/leave', {
+        method: 'POST',
+        credentials: 'include', // Include credentials for session management
+        keepalive: true, // Ensure the request is sent even if the page is unloading
+    });
+    // navigator.sendBeacon('/api/game/leave');
 }
 
 async function sendMove(direction: 'up' | 'down', player: 1 | 2) {

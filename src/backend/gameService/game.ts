@@ -6,16 +6,25 @@ import path from 'path';
 import '@fastify/session';
 
 import * as dbfunc from './game_db.js';
+import { Game, player, GameStats } from './game_db.js';
 // import { getGamesForPlayer } from './game_db.js';
 import {player1Template, player2Template, ballvarTemplate, gamestateinterface,gameWall, pcInterface, ballInterface, aiInterface, gameWallsInterface } from './sharedValuesPong.js';
 // import {player1Template, player2Template, ballvarTemplate, gamestateinterface,gameWall, pcInterface, ballInterface, aiInterface, gameWallsInterface } from '../../frontend/sharedValuesPong';
 import { str } from 'ajv';
 import { get } from 'http';
 import { error } from 'console';
+enum GameTypeId {
+    AI = 0,
+    UNKNOWN = 1,
+    LOCAL = 2
+}
 
+interface idandplayerposition {
+    id: number | null; // Use string or null for player ID
+    player: 1 | 2; // Player number
+}
 
-
-
+player2Template.x -= player2Template.width; // Adjust player 1 position to the left edge
 var ai_var: aiInterface = {
     //The average (median) reaction time is 273 milliseconds
 	reactionTime: 100 // Default reaction time in milliseconds
@@ -48,29 +57,111 @@ async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
     }
 }
 
-function generateUniqueGameId(): string {
-    let id: string;
-    do {
-        id = Math.random().toString(36).substr(2, 9);
-    } while (games.some(game => game && game.gameID === id));
-    return id;
+// function generateUniqueGameId(): string {
+//     let id: string;
+//     do {
+//         id = Math.random().toString(36).substr(2, 9);
+//     } while (games.some(game => game && game.gameID === id));
+//     return id;
+// }
+function lastId(): number {
+    if (games.length === 0 && matching.length === 0) {
+        return 2;
+    }
+    // Find the highest game ID in the games array
+    const maxId = games.reduce((max, game) => {
+        if (game && game.gameID > max) {
+            return game.gameID;
+        }
+        return max;
+    }, 0);
+    const maxMatchingId = matching.reduce((max, game) => {
+        if (game && game.gameID > max) {
+            return game.gameID;
+        }
+        return max;
+    }, 0);
+
+    return Math.max(maxId, maxMatchingId);
 }
 
-function makeNewGame(type: string, playername: string, playerid: string): gamestateinterface {
+async function makeNewGame(type: string, playername: string, playerid: number): Promise<gamestateinterface > {
     // Create a new game state
-    const gameid = generateUniqueGameId(); // Generate a unique game ID
+    // const gameid = generateUniqueGameId(); // Generate a unique game ID
+    
+    // const gameid = await dbfunc.createGame({
+    //     id: 1, // Assuming ID is auto-incremented in the database
+    //     type: type,
+    //     player1: { id: playerid, username: playername },
+    //     player2: { id: null, username: 'Player 2' }, // Placeholder for player 2
+    //     player1Score: 0,
+    //     player2Score: 0,
+    //     winner: 'temp',
+    //     createdAt: null});
+    var gameid = await dbfunc.getLastGameId();
+    if (!gameid) {
+        gameid = lastId();
+        // throw new Error('Failed to retrieve game ID');
+    }
+    var player2Id: number | null = null;
+    switch (type) {
+        case 'ai':
+            player2Id = GameTypeId.AI; // AI player ID
+            break;
+        case 'local':
+            player2Id = GameTypeId.LOCAL; // Local player ID
+            break;
+        case 'online':
+            player2Id = GameTypeId.UNKNOWN; // Online player ID
+            break;
+        case 'ranking':
+            player2Id = GameTypeId.UNKNOWN; // Ranking player ID
+            break;
+        default:
+            throw new Error('Invalid game type');
+    }
+    gameid++;
     var newGame: gamestateinterface = {
         player1: {...player1Template, id: playerid, name: playername},
-        player2: {...player2Template, id: 'player2', name: 'Player 2', x : player2Template.x - player2Template.width},
+        player2: {...player2Template, id: player2Id, name: 'Player 2'},
         ball: {...ballvarTemplate, speed: ballSpeed},
         gameActive: true,
         gamePause: false,
-        gameID: gameid,
+        gameID: gameid, // Use the ID from the database
         gametype: type,
     };
+    console.log('New game created:', newGame);
     return newGame;
 }
-function addGameLoop(type : string, playername: string, playerid: string): string|null {
+async function updateGameInDB(game: gamestateinterface): Promise<void> {
+    // Update the game in the database
+    var winner: string = '';
+    if (game.player1.score > game.player2.score) {
+        winner = game.player1.name;
+    }
+    else if (game.player1.score == game.player2.score) {
+        winner = 'Draw';
+    }
+    else {
+        winner = game.player2.name;
+    }
+    const db = await dbfunc.createGame({
+        id: game.gameID,
+        type: game.gametype,
+        player1: { id: game.player1.id, username: game.player1.name },
+        player2: { id: game.player2.id, username: game.player2.name },
+        player1Score: game.player1.score,
+        player2Score: game.player2.score,
+        winner: winner,
+        createdAt: null
+    });
+    if (!db) {
+        throw new Error('Failed to update game in database');
+    }
+    console.log('Game updated in database:', game.gameID);
+
+}
+async function addGameLoop(type : string, playername: string, playerid: number): Promise< idandplayerposition | null >{
     // Add a new game to the games array
     // if (matching.length > 0) {}
     if (!type || !playername) {
@@ -78,10 +169,15 @@ function addGameLoop(type : string, playername: string, playerid: string): strin
         return null; // Return null if type or playername is not provided
     }
     if (type === 'ai' || type === 'local') {
-        var newGame = makeNewGame(type, playername, playerid);
+        var newGame = await makeNewGame(type, playername, playerid);
+        if (!newGame) {
+            console.error('Failed to create a new game');
+            return null; // Return null if the new game could not be created
+        }
+        const ng = newGame.gameID as number; // Assign the new game to the variable
         games.push(newGame);
-        
-        return newGame.gameID + '-1';
+    
+        return {id :ng,player: 1};
     }
     if (type !== 'online' && type !== 'ranking') {
         console.error('Invalid game type:', type);
@@ -95,20 +191,22 @@ function addGameLoop(type : string, playername: string, playerid: string): strin
             existingGame.gameActive = true; // Set the game to active
             existingGame.gamePause = false; // Ensure the game is not paused
             games.push(existingGame);
+            // await updateGameInDB(existingGame); // Update the game in the database
+            console.log('Game updated in database:', existingGame.gameID);
             console.log('Matched with existing game:', existingGame.gameID);
-            return existingGame.gameID + '-2';
+            return {id: existingGame.gameID,player: 2};
         }
         return null; // No matching game found
     }
     // Create a new game if no matching game is found
-    var newGame = makeNewGame(type, playername, playerid);
+    var newGame = await makeNewGame(type, playername, playerid);
     if (!newGame) {
         console.error('Failed to create a new game');
         return null; // Return null if the new game could not be created
     }
     matching.push(newGame); // Add the new game to the matching array
     console.log('Game added:', newGame, 'Total games:', games.length);
-    return newGame.gameID + '-1'; // Return the game ID with '-1' suffix for player 1
+    return {id: newGame.gameID,player :1}; // Return the game ID with '-1' suffix for player 1
 }
 async function startGame() {
     console.log('Starting game loop...');
@@ -147,29 +245,29 @@ function getGameID(gamePlayerId: string): string[] | null {
     }
     return null; // Return null if no valid game ID is found
 }
-function findGamebyplayerId(playerId: string): gamestateinterface | null {
-    // Find the game by player ID
-    if (!playerId) {
-        return null; // Return null if playerId is not provided
-    }
-    const gameid = getGameID(playerId);
-    if (!gameid) {
-        return null; // Return null if game ID is not valid
-    }
-    for (const game of games) {
-        if (game && game.gameID === gameid[0]) {
-            return game;
-        }
-    }
-    for (const game of matching) {
-        if (game && game.gameID === gameid[0]) {
-            return game;
-        }
-    }
-    console.log('Game not found for player ID:', playerId);
-    return null; // Return null if no game is found for the player ID
-}
-function findGamebyGameId(gameid: string | undefined): gamestateinterface | null {
+// function findGamebyplayerId(playerId: string): gamestateinterface | null {
+//     // Find the game by player ID
+//     if (!playerId) {
+//         return null; // Return null if playerId is not provided
+//     }
+//     const gameid = getGameID(playerId);
+//     if (!gameid) {
+//         return null; // Return null if game ID is not valid
+//     }
+//     for (const game of games) {
+//         if (game && game.gameID === gameid[0]) {
+//             return game;
+//         }
+//     }
+//     for (const game of matching) {
+//         if (game && game.gameID === gameid[0]) {
+//             return game;
+//         }
+//     }
+//     console.log('Game not found for player ID:', playerId);
+//     return null; // Return null if no game is found for the player ID
+// }
+function findGamebyGameId(gameid: number | null): gamestateinterface | null {
     // Find the game by player ID
     if (!gameid ) {
         console.error('Invalid game ID:', gameid);
@@ -215,9 +313,8 @@ fastify.register(fastifySession, {
     saveUninitialized: false,
     // resave: false,
 });
-
-// Start the game loop
-fastify.post('/start', async (req, reply) => {
+async function getUserIdFromSession(req: any): Promise<number | null> {
+    var userId: number | null = null;
     const user = await fetch('http://user:3001/me', {
         method: 'GET',
         credentials: 'include',
@@ -227,38 +324,67 @@ fastify.post('/start', async (req, reply) => {
             'x-session-id': req.cookies['sessionId'] || ''
         }
     });
-    var playid :Number | undefined = undefined;
-    var online: boolean = false;
     if (user.ok) {
         await user.json().then(data => {
             console.log('User data:', data);
-            playid = data.user.userId; // Assuming the user object has an 'id' property
-            online = true; // User is logged in
+            userId = data.user.userId; // Assuming the user object has an 'id' property
         });
     }
-    console.log('User is logged in, starting game...', user);
-
-
-    
-    const { type, playername, playerid } = req.body as { type: string; playername: string , playerid: number| undefined};
+    else {
+        console.error('Failed to fetch user data:', user.statusText);
+    }
+    return userId;
+}
+// Start the game loop
+fastify.post('/start', async (req, reply) => {
+    var playid :number | null = null;
+    var online: boolean = false;
+    const { type, playername } = req.body as { type: string; playername: string };
+    if (!req.session.player || !req.session.player.id) {
+        await getUserIdFromSession(req).then((userId) => {
+            if (userId) {
+                playid = userId; // Assign the user ID to playid
+                online = true; // Set online to true if user is logged in
+                console.log('User ID from usersession:', playid);
+            } else {
+                playid = GameTypeId.UNKNOWN; // Default player ID for non-logged-in users
+                online = false;
+                console.error('User ID not found in session', playid);
+            }
+    });
+    } else {
+        playid = req.session.player.id; // Use the player ID from the session
+        online = req.session.player.loggedin || false; // Check if the player is logged in
+    }
     
     console.log('Starting game with AI:', type, 'Player Name:', playername);
-    const gameid = addGameLoop(type , playername, "playerid");
+    if (!playid) {
+        console.error('Invalid player ID', playid);
+        reply.status(400).send({ error: 'Invalid player ID' });
+        return;
+    }
+    const gameid = await addGameLoop(type , playername, playid);
     if (!gameid) {
+        console.error('Failed to start game');
         reply.status(400).send({ error: 'Failed to start game' });
         return;
     }
-    const splitted = gameid.split('-');
-    var num : 1 | 2;
-    if (splitted[1] == '1')
-        num = 1;
-    else
-        num = 2;
+
+    // const splitted = gameid.split('-');
+    // var num : 1 | 2;
+    // if (splitted[1] == '1')
+    //     num = 1;
+    // else
+    //     num = 2;
+    if (gameid.id === null) {
+        reply.status(400).send({ error: 'Game ID is null' });
+        return;
+    }
     req.session.player = {
         username : playername,
         id: playid,
-        player: num,
-        gameid:splitted[0],
+        player: gameid.player, // Use the second part of the game ID as the player number
+        gameid: gameid?.id, // Use the game ID from the game loop
         loggedin: online
     };
     console.log('Player session:', req.session.player);
@@ -269,7 +395,7 @@ fastify.post('/start', async (req, reply) => {
 fastify.post('/leave', async (req, reply) => {
     if (!req.session.player) {
         reply.status(401).send({ status: 'Unauthorized' });
-        console.error('Unauthorized access: Player session not found');
+        console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
         return;
     }
     const gameid  = req.session.player?.gameid
@@ -280,6 +406,19 @@ fastify.post('/leave', async (req, reply) => {
     if (!game) {
         reply.status(404).send({ status: 'Game not found' });
         return;
+    }
+    if (game.gameActive) {
+        await updateGameInDB(game); // Update the game in the database before removing it
+        console.log('Game updated in database before leaving:', game.gameID);
+    }
+    if (req.session.player.id) {
+        const db = await dbfunc.getGamesForPlayer(req.session.player.id);
+        if (!db) {
+            console.error('Failed to retrieve game from database');
+            // reply.status(500).send({ status: 'Error retrieving game' });
+            // return;
+        }
+        console.log('Game retrieved from database:', db);
     }
     // Remove the game from the games array
     if (game.gameActive && game.gametype === 'online') {
@@ -327,7 +466,7 @@ fastify.post('/move', async (req, reply) => {
         return;
     }
     const { direction } = req.body as { direction: 'up' | 'down' };
-    var player: 1|2 | undefined = req.session.player?.player; // Default player is 1
+    var player: 1|2 | null = req.session.player?.player; // Default player is 1
     // const { gameid} = req.query as { gameid: string };
     // const player = gameid.split('-')[1]; // Extract player from gameid
     const game = findGamebyGameId(req.session.player?.gameid);
@@ -371,12 +510,12 @@ fastify.post('/move', async (req, reply) => {
 fastify.get('/state', async (req, reply) => {
     if (!req.session.player) {
         reply.status(401).send({ status: 'Unauthorized' });
-        console.error('Unauthorized access: Player session not found');
+        console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
         return;
     }
     // const playerId = req.query.gameId as string;
     console.log('Fetching game state...', games.length);
-    console.log('Player session:', req.session.player);
+    console.log('Player session:', req.session.player, 'session ID:', req.cookies.sessionId);
     // const {gameid:gamePlayerId} = req.query as  {gameid: string};
     // console.log('Game Player ID:', gamePlayerId);
     // const gameParts = getGameID(gamePlayerId);
@@ -517,10 +656,29 @@ fastify.post('/db/addPlayer', async (req, reply) => {
     }
 });
 fastify.get('/db/getGamesForPlayer', async (req, reply) => {
-    const { playerid } = req.query as { playerid: number };
+    var playerid = GameTypeId.UNKNOWN; // Default player ID for unknown players
+    if (req.session.player && req.session.player.id) {
+        playerid = req.session.player.id;
+    } else if (req.session) {
+        const userId = await getUserIdFromSession(req);
+        if (userId) {
+            playerid = userId; // Use the user ID from the session
+        } else {
+            console.error('User ID not found in session');
+        }
+    } else {
+        console.error('Player ID is missing in the query parameters');
+    }
+    
     console.log('Fetching games for player ID:', playerid);
     try {
         const games = await dbfunc.getGamesForPlayer(playerid);
+        if (!games || games.length === 0) {
+            reply.status(404).send({ error: 'No games found for player' });
+            return;
+        }
+        console.error('Games fetched for player ID:', playerid, 'Number of games:', games);
+        console.log('Games fetched for player ID:', playerid, 'Number of games:', games.length);
         reply.send(games);
     } catch (error) {
         console.error('Error fetching games for player:', error);
@@ -604,5 +762,10 @@ fastify.listen({host: "0.0.0.0", port: 3002 }, err => {
         fastify.log.error((err));
         process.exit(1);
     }
+    dbfunc.initializeDatabase().catch(console.error);
+
+    dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
+    dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
+    dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
 });
 

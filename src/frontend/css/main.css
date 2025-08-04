@@ -118,3 +118,27 @@
 
 /* tags 
 } */
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
+
+th, td {
+	border: 1px solid #ddd;
+	padding: 10px;
+	text-align: left;
+}
+
+th {
+	background-color: #f2f2f2;
+}
+td:hover {
+	/* opacity: 0.5; */
+	/* background-color: purple; */
+	background-color: color-mix(in srgb, purple 50%, transparent 50%);
+	/* cursor: pointer; */
+}
+th:hover {
+	background-color: blue;
+}

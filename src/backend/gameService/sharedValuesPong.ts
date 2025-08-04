@@ -1,5 +1,5 @@
 export interface gamestateinterface {
-	gameID: string;
+	gameID: number;
 	gameActive: boolean;
 	gamePause: boolean;
 	gametype: string;
@@ -22,7 +22,7 @@ export interface scoreInterface {
 	player2Name: string;
 }
 export interface pcInterface {
-	id: string | null; // Use string or null for player ID
+	id: number | null; // Use string or null for player ID
 	name: string;
 	x: number;
 	y: number;

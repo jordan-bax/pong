@@ -71,7 +71,7 @@ module.exports = class TournamentDB {
             `
             INSERT INTO tournament (name, description, rounds, currentRound, winner, isRunning, lockTime, playerCount, maxPlayers)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, description, 1 ? maxPlayers < 4 : maxPlayers / 2, 1, -1, false, lockTime, 1, maxPlayers]
+            [name, description, 1 ? maxPlayers < 4 : maxPlayers / 2, 1, -1, false, lockTime, 0, maxPlayers]
         )
 
         const id = await this.getLastID()
@@ -79,10 +79,14 @@ module.exports = class TournamentDB {
             new Error('Could not get the last ID in the DB')
         }
 
-        await this.addPlayer(userID, id)
-        const tournament = await this.getTournament(id)
+        try {
+            await this.addPlayer(userID, id)
+            const tournament = await this.getTournament(id)
 
-        return tournament
+            return tournament
+        } catch (error) {
+            throw error
+        }
     }
 
     async addPlayer(userID: number, tournamentID: number): Promise<void> {
@@ -125,17 +129,57 @@ module.exports = class TournamentDB {
         }
     }
 
+    async leaveTournament(tournamentID: number, userID: number) {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
+        await this.db.run("BEGIN TRANSACTION")
+        try {
+            const result = await this.db.run(`
+                DELETE FROM players
+                WHERE userID = ?
+                    AND tableID IN (
+                        SELECT id
+                        FROM tournament
+                        WHERE id = ?
+                )
+                AND EXISTS (
+                    SELECT id
+                    FROM tournament
+                    WHERE id = ?
+                        AND NOT isRunning)`,
+                [userID, tournamentID, tournamentID]
+            )
+
+            if (result.changes > 0) {
+                await this.db.run(`
+                    UPDATE tournament
+                    SET playerCount = playerCount - 1
+                    WHERE id = ? AND NOT isRunning`,
+                    [tournamentID]
+                )
+                await this.db.run("COMMIT")
+            } else {
+                throw new Error('Cannot leave the tournament')
+            }
+        } catch (error) {
+            await this.db.run("ROLLBACK")
+            throw error
+        }
+    }
+
     async getPlayers(tournamentID: number): Promise<number[] | undefined> {
         if (!this.db) {
             throw new Error('DB is not open')
         }
 
-        const players: number[] | undefined = await this.db.get(`
+        const players = await this.db.all(`
             SELECT userID FROM players WHERE tableID = ?`,
             [tournamentID]
         )
 
-        return players
+        return players.map(player => player.userID)
     }
 
     async getTournament(tournamentID: number): Promise<typeof Tournament> {
@@ -168,6 +212,7 @@ module.exports = class TournamentDB {
             throw new Error('Could not get players from DB')
         }
 
+        console.log(players, typeof players)
         // TODO: query nextMatchs
         return {
             id: tourObj['id'],

@@ -1,15 +1,20 @@
-import { log } from "console"
-import { Tournament } from "./schemas/tournamentInterface"
-import tournamentDB from "./tournamentDB"
+const { log } = require("console")
+const { Tournament: Tour } = require("./schemas/tournamentInterface")
+const tournamentDB = require("./tournamentDB")
 
 const db = new tournamentDB
 db.initDB('./db/tournament.sqlite')
 
-class TournamentService {
-    private checkInterval: NodeJS.Timeout | null = null
-    private isChecking: boolean = false
+module.exports = class TournamentService {
+    private checkInterval: NodeJS.Timeout | null
+    private isChecking: boolean
 
-    async create(name: string, description: string, playerCount: number, userID: number, duration: number | undefined): Promise<Tournament | undefined> {
+    constructor() {
+        this.checkInterval = null
+        this.isChecking = false
+    }
+
+    async create(name: string, description: string, maxPlayers: number, userID: number, duration: number | undefined): Promise<typeof Tour | undefined> {
         if (duration === undefined || duration < 1) {
             duration = 60
         }
@@ -18,53 +23,71 @@ class TournamentService {
             duration = 3600
         }
 
-        if (playerCount < 1 || playerCount % 2 !== 0) {
-            return undefined
+        if (maxPlayers < 2) {
+            throw new Error('Maxplayers must be more then 1')
         }
 
-        const dbObj = await db.addTournament(name, description, playerCount, Math.round(Date.now() + (duration * 1000)), userID)
-        return dbObj
+        if (maxPlayers % 2 !== 0) {
+            throw new Error('maxPlayers must be a even number')
+        }
+
+        if (userID < 1) {
+            throw new Error('userID must be more then 0')
+        }
+
+        try {
+            const dbObj = await db.addTournament(name, description, maxPlayers, Math.round(Date.now() + (duration * 1000)), userID)
+            return dbObj
+        } catch (error) {
+           throw error
+        }
     }
 
-    // async getByID(id: number): Promise<Tournament | undefined> {
-    //     // const tournament = this.tournaments.find(t => t.tournament.id === id)
-    //     // if (tournament === undefined) {
-    //     //     return tournament
-    //     // }
-    //
-    //
-    //     // return tournament.tournament
-    // }
+    async getByID(tournamentID: number): Promise<typeof Tour> {
+        if (tournamentID  < 0) {
+            throw new Error('Tournament can not be negative')
+        }
 
-    async join(tournamentID: number, playerID: number): Promise<void> {
         try {
-            await db.addPlayer(playerID, tournamentID)
+           return await db.getTournament(tournamentID)
+        } catch (error) {
+           throw error
+        }
+    }
+
+    async join(tournamentID: number, userID: number): Promise<void> {
+        if (tournamentID < 0) {
+            throw new Error('Tournament can not be negative')
+        }
+
+        if (userID < 1) {
+            throw new Error('userID can not be negative')
+        }
+
+        try {
+            await db.addPlayer(userID, tournamentID)
         } catch (error) {
             throw error
         }
     }
 
-    async leave(tournamentID: number, playerID: number): Promise<number> {
-        // const tournament = this.tournaments.find(t => t.tournament.id === tournamentID)
-        // if (tournament === undefined) {
-        //     return 1
-        // }
-        //
-        // const index = tournament.tournament.players.indexOf(playerID, 0)
-        // if (index === -1) {
-        //     return 2
-        // }
-        //
-        // tournament.tournament.players.splice(index, 1)
-        // if (tournament.tournament.players.length === 0) {
-        //     const index = this.tournaments.indexOf(tournament, 0)
-        //     this.tournaments.splice(index, 1)
-        // }
+    async leave(tournamentID: number, userID: number): Promise<void> {
+        if (tournamentID < 1) {
+            throw new Error('Tournament must be more then 0')
+        }
 
-        return 0
+        if (userID < 1) {
+            throw new Error('userID must be more then 0')
+        }
+
+        try {
+            await db.leaveTournament(tournamentID, userID)
+        } catch (error) {
+            throw error
+        }
     }
 
-    async start(t: Tournament): Promise<void> {
+    async start(t: typeof Tour): Promise<void> {
         // TODO: think this make no sense
         // const index = this.tournaments.findIndex(t => t.tournament.id === t.tournament.id)
         // if (index === -1) {
@@ -146,7 +169,7 @@ class TournamentService {
             players.splice(index, 1)
             playerCount--
 
-            matches.push(subMatch)
+            // matches.push(subMatch)
         }
 
         return matches
@@ -186,5 +209,3 @@ class TournamentService {
         this.isChecking = false
     }
 }
-
-export default new TournamentService()

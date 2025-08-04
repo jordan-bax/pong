@@ -1,14 +1,14 @@
-export const createSchema = {
+exports.createSchema = {
     body: {
         type: 'object',
         properties: {
             name: { type: 'string' },
             description: { type: 'string' },
-            playerCount: { type: 'number' },
+            maxPlayers: { type: 'number' },
             userID: { type: 'number' },
             lockTime: { type: 'number' }
         },
-        required: ['name', 'description', 'playerCount', 'userID']
+        required: ['name', 'description', 'maxPlayers', 'userID']
     },
     response: {
         201: {
@@ -16,11 +16,11 @@ export const createSchema = {
             properties: {
                 id: { type: 'number' },
                 name: { type: 'string' },
-                playerCount: { type: 'number' },
+                maxPlayers: { type: 'number' },
                 description: { type: 'string' },
                 lockTime: { type: 'number' }
             },
-            required: ['id', 'name', 'playerCount', 'description', 'lockTime']
+            required: ['id', 'name', 'maxPlayers', 'description', 'lockTime']
         },
         400: {
             type: 'object',
@@ -32,7 +32,7 @@ export const createSchema = {
     }
 }
 
-export const joinSchema = {
+exports.joinSchema = {
     body: {
         type: 'object',
         properties: {
@@ -58,7 +58,7 @@ export const joinSchema = {
     }
 }
 
-export const leaveSchema = {
+exports.leaveSchema = {
     body: {
         type: 'object',
         properties: {
@@ -84,7 +84,7 @@ export const leaveSchema = {
     }
 }
 
-export const gameDoneSchema = {
+exports.gameDoneSchema = {
     body: {
         type: 'object',
         properties: {
@@ -111,3 +111,54 @@ export const gameDoneSchema = {
         },
     }
 }
+
+exports.getTourSchema = {
+    querystring: {
+        type: 'object',
+        properties: {
+            id: {
+                type: 'string',
+                pattern: '^\\d+$'
+            }
+        },
+        required: ['id']
+    },
+    response: {
+        200: {
+            type: 'object',
+            properties: {
+                id: { type: 'number' },
+                name: { type: 'string' },
+                description: { type: 'string' },
+                rounds: { type: 'number' },
+                currentRound: { type: 'number' },
+                winner: { type: 'number' },
+                isRunning: { type: 'boolean' },
+                lockTime: { type: 'number' },
+                playerCount: { type: 'number' },
+                maxPlayers: { type: 'number' },
+                players: {
+                    type: 'array',
+                    items: { type: 'number' }
+                },
+                nextMatchs: {
+                    type: 'array',
+                    items: {
+                        type: 'array',
+                        items: { type: 'number' }
+                    }
+                }
+            },
+            required: ['id', 'name', 'description', 'rounds', 'currentRound', 'winner', 'isRunning', 'lockTime', 'playerCount', 'maxPlayers', 'players'],
+            additionalProperties: true
+        },
+        400: {
+            type: 'object',
+            properties: {
+                error: { type: 'string' }
+            },
+            required: ['error']
+        }
+    }
+}
+

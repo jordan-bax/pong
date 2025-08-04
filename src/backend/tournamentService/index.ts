@@ -1,23 +1,39 @@
-import fastify from 'fastify'
-import TournamentService from "./tournament"
-import { createSchema, gameDoneSchema, joinSchema, leaveSchema } from "./schemas/responseSchema"
+const console = require("console")
+
+const { fastify, FastifyRequest, FastifyReply } = require('fastify')
+const TourService = require("./tournament")
+const { createSchema, gameDoneSchema, joinSchema, leaveSchema, getTourSchema } = require("./schemas/responseSchema")
 
 const server = fastify()
-const tournamentObj = TournamentService
+const tournamentObj = new TourService
 
-server.post('/create', { schema: createSchema }, async (request, reply) => {
-    const { name, description, playerCount, userID, lockTime } = request.body as { name: string, description: string, playerCount: number, userID: number, lockTime: number | undefined }
-    const tournament = await tournamentObj.create(name, description, playerCount, userID, lockTime)
-    if (tournament === undefined) {
-        reply.status(400).send({ 'error': 'playerCount must be even number' })
-    } else {
-        reply.status(201).send(tournament)
+
+server.get('/id/:id', { schema: getTourSchema }, async (request: typeof FastifyRequest, reply: typeof FastifyReply) => {
+    try {
+        const { id } = request.params as { id: string }
+        console.log(id)
+        const tournament = await tournamentObj.getByID(Number(id))
+        reply.status(200).send(tournament)
+    } catch (error) {
+        console.log("een error??")
+        reply.status(400).send({ error: error instanceof Error ? error.message : String(error) })
     }
 })
 
-server.post('/join', { schema: joinSchema }, async (request, reply) => {
+server.post('/create', { schema: createSchema }, async (request: typeof FastifyRequest, reply: typeof FastifyReply) => {
+    const { name, description, maxPlayers, userID, lockTime } = request.body as { name: string, description: string, maxPlayers: number, userID: number, lockTime: number | undefined }
+    try {
+        const tournament = await tournamentObj.create(name, description, maxPlayers, userID, lockTime)
+        reply.status(201).send(tournament)
+    } catch (error) {
+        reply.status(400).send({ error: error instanceof Error ? error.message : String(error) })
+    }
+})
+
+server.post('/join', { schema: joinSchema }, async (request: typeof FastifyRequest, reply: typeof FastifyReply) => {
     const { tournamentID, userID } = request.body as { tournamentID: number, userID: number }
     try {
+        console.log("join it", userID)
         await tournamentObj.join(tournamentID, userID)
         reply.status(201).send({ 'tournamentID': tournamentID })
     } catch (error) {
@@ -25,7 +41,7 @@ server.post('/join', { schema: joinSchema }, async (request, reply) => {
     }
 })
 
-server.post('/leave', { schema: leaveSchema }, async (request, reply) => {
+server.post('/leave', { schema: leaveSchema }, async (request: typeof FastifyRequest, reply: typeof FastifyReply) => {
     const { tournamentID, userID } = request.body as { tournamentID: number, userID: number }
     const result = await tournamentObj.leave(tournamentID, userID)
 
@@ -42,7 +58,7 @@ server.post('/leave', { schema: leaveSchema }, async (request, reply) => {
     }
 })
 
-server.post('/done', { schema: gameDoneSchema }, async (request, reply) => {
+server.post('/done', { schema: gameDoneSchema }, async (request: typeof FastifyRequest, reply: typeof FastifyReply) => {
     const { tournamentID, playerID1, playerID2, winnerID } = request.body as { tournamentID: number, playerID1: number, playerID2: number, winnerID: number }
     const result = await tournamentObj.matchDone(tournamentID, playerID1, playerID2, winnerID)
     switch (result) {

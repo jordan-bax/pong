@@ -36,12 +36,31 @@ module.exports = class TournamentDB {
         )
 
         await this.db.run(`
-            CREATE TABLE if not EXISTS players (
+            CREATE TABLE IF NOT EXISTS players (
                 userID INTEGER NOT NULL,
+                tournament_id INTEGER NOT NULL,
+                eliminated INTEGER DEFAULT 0,
+                seed INTEGER,
+                PRIMARY KEY(userID, tournament_id),
+                FOREIGN KEY(tournament_id) REFERENCES tournament(id) ON DELETE CASCADE)`)
+
+        await this.db.run(`
+            CREATE TABLE IF NOT EXISTS match (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tournament_id INTEGER NOT NULL,
                 round INTEGER NOT NULL,
-                tableID INTEGER,
-                FOREIGN KEY(tableID) REFERENCES tournament(id) ON DELETE CASCADE)`
-        )
+                position INTEGER NOT NULL,
+                player1_id INTEGER,
+                player2_id INTEGER,
+                winner_id INTEGER,
+                parent_match1_id INTEGER,
+                parent_match2_id INTEGER,
+                FOREIGN KEY(tournament_id) REFERENCES tournament(id) ON DELETE CASCADE,
+                FOREIGN KEY(player1_id) REFERENCES players(userID),
+                FOREIGN KEY(player2_id) REFERENCES players(userID),
+                FOREIGN KEY(winner_id) REFERENCES players(userID),
+                FOREIGN KEY(parent_match1_id) REFERENCES match(id),
+                FOREIGN KEY(parent_match2_id) REFERENCES match(id))`)
     }
 
     async openDB(path: string): Promise<void> {
@@ -90,19 +109,19 @@ module.exports = class TournamentDB {
         await this.db.run("BEGIN TRANSACTION")
         try {
             const result = await this.db.run(`
-                INSERT INTO players (userID, round, tableID)
-                SELECT ?, ?, ?
+                INSERT INTO players (userID, tournament_id)
+                SELECT ?, ?
                     WHERE (
                         SELECT NOT isRunning AND playerCount < maxPlayers
                         FROM tournament
                         WHERE id = ?
                 ) = 1
-                        AND NOT EXISTS (
-                            SELECT 1
-                            FROM players
-                            WHERE userID = ? AND tableID = ?
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM players
+                    WHERE userID = ? AND tournament_id = ?
                         )`,
-                [userID, 1, tournamentID, tournamentID, userID, tournamentID]
+                [userID, tournamentID, tournamentID, userID, tournamentID]
             )
 
             if (result.changes > 0) {
@@ -132,7 +151,7 @@ module.exports = class TournamentDB {
             const result = await this.db.run(`
                 DELETE FROM players
                 WHERE userID = ?
-                    AND tableID IN (
+                    AND tournament_id IN (
                         SELECT id
                         FROM tournament
                         WHERE id = ?
@@ -249,7 +268,7 @@ module.exports = class TournamentDB {
                 t.winner, t.isRunning, t.lockTime, t.playerCount, t.maxPlayers,
                 GROUP_CONCAT(p.userID) AS players
             FROM tournament t
-            LEFT JOIN players p ON t.id = p.tableID
+            LEFT JOIN players p ON t.id = p.tournament_id
             WHERE t.id = ?
             GROUP BY t.id`,
             [tournamentID])
@@ -273,6 +292,15 @@ module.exports = class TournamentDB {
             players: tourObj['players'] ? tourObj['players'].split(',').map(Number) : [],
             nextMatchs: [[]]
         }
+    }
+
+    async init_matches(userID: number, tournamentID: number, seed: number): Promise<void> {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
+        await this.db.run("TRANSACTION")
+        await this.db.run("COMMIT")
     }
 
     async closeDB(): Promise<void> {

@@ -1,11 +1,9 @@
 import Fastify from "fastify";
+import type { FastifyRequest } from 'fastify';
 import fastifyCookie from "@fastify/cookie";
 import fastifySession from '@fastify/session';
-import { getAllContentOfPage, seedContentDb } from "./contentDB";
-import { getContentSchema } from "./schemas/contentSchemas";
-import Redis from 'ioredis';
-import connectRedis  from 'connect-redis';
-import session from 'express-session'
+import { getAllContentOfPage, seedContentDb } from "./contentDB.js";
+import { getContentSchema } from "./schemas/contentSchemas.js";
 
 interface GetContentBody {
     language: string;
@@ -75,7 +73,7 @@ fastify.get<{ Querystring: GetContentBody }>(
     }
 });
 
-fastify.get('/language', async (req, reply) => {
+fastify.get('/language', async (req: FastifyRequest, reply) => {
     let lang = req.session.language;
     if (typeof lang === 'undefined') {
         req.session.language = 'EN';
@@ -84,7 +82,7 @@ fastify.get('/language', async (req, reply) => {
     return reply.send(lang);
 });
 
-fastify.post('/language', async (req, reply) => {
+fastify.post('/language', async (req: FastifyRequest, reply) => {
     const lang = req.body as string;
     req.session.language = lang;
     return reply.send({ success: true });

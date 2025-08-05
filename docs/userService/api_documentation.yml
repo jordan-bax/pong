@@ -1,4 +1,60 @@
 paths:
+  /friends:
+    get:
+      summary: Retrieves the friends list of the logged in user;
+      Parameters:
+      Responses:
+        200:
+          description: user has friends
+          content:
+            string:
+              type: string
+              items:
+                string: string with emails of friends as string like "email,email2,email3,..."
+        401:
+          description: no user is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        404:
+          description: user has no friends
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+  /pending:
+    get:
+      summary: Retrieves the users incoming friend requests
+      Parameters:
+      Responses:
+        200:
+          description: the user has incoming friend requests
+          content:
+            string:
+              type: string
+              items:
+                string: the string with emails of incoming friend requests like "email,email2,email3,..."
+        401:
+          description: no user is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        404:
+          description: user has no pending friend requests
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
   /me:
     get:
       summary: Retrieves data if the current user is logged in and known server side

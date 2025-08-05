@@ -5,4 +5,5 @@ if [[ ! -d venv ]]; then
     venv/bin/pip3 install requests
 fi
 
+clear
 venv/bin/python3 main.py

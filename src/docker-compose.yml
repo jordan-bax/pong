@@ -1,13 +1,4 @@
 services:
-  redis:
-    image: redis:7
-    container_name: redis
-    ports:
-      - "3010:6379"
-    networks:
-      - transcendanse
-    restart: unless-stopped
-
   nginx:
     build: 
       context: ./
@@ -38,8 +29,6 @@ services:
       - user-profilePicture:/app/uploads/profile_pictures
     env_file:
       - .env
-    depends_on:
-      - redis
     networks:
       - transcendanse
     restart: unless-stopped
@@ -83,8 +72,6 @@ services:
       - page_content-db:/app/db
     env_file:
       - .env
-    depends_on:
-      - redis
     networks:
       - transcendanse
     restart: unless-stopped

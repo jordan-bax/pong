@@ -415,15 +415,15 @@ class UserDatabase {
         await this.db.run(`INSERT INTO meta (seeded) VALUES ('true');`)
         const statement = await this.db.prepare(`
             INSERT INTO users 
-            (username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)`
+            (id, username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
         );
 
         let password = await bcrypt.hash('admin', 10);
-        await statement.run('Alice', password, 'aa@mail.com', null, null, 'bt@mail.com', null);
+        await statement.run(3, 'Alice', password, 'aa@mail.com', null, null, 'bt@mail.com', null);
 
         password = await bcrypt.hash('test', 10);
-        await statement.run('bob', password, 'bt@mail.com', null, null, 'aa@mail.com', null);
+        await statement.run(4, 'bob', password, 'bt@mail.com', null, null, 'aa@mail.com', null);
 
         await statement.finalize();
 

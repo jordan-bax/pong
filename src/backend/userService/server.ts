@@ -283,9 +283,7 @@ class server {
             }
         });
 
-        this.fastify.post('/logout',
-            { preHandler: this.fastify.csrfProtection },
-             (req, reply) => {
+        this.fastify.post('/logout', (req, reply) => {
             if (!req.session.user) {
                 return reply.code(400).send({ error: 'noLogin' });
             }

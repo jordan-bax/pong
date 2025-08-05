@@ -162,3 +162,46 @@ exports.getTourSchema = {
     }
 }
 
+exports.getToursSchema = {
+    response: {
+        200: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    id: { type: 'number' },
+                    name: { type: 'string' },
+                    description: { type: 'string' },
+                    rounds: { type: 'number' },
+                    currentRound: { type: 'number' },
+                    winner: { type: 'number' },
+                    isRunning: { type: 'boolean' },
+                    lockTime: { type: 'number' },
+                    playerCount: { type: 'number' },
+                    maxPlayers: { type: 'number' },
+                    players: {
+                        type: 'array',
+                        items: { type: 'number' }
+                    },
+                    nextMatchs: {
+                        type: 'array',
+                        items: {
+                            type: 'array',
+                            items: { type: 'number' }
+                        }
+                    }
+                },
+                required: ['id', 'name', 'description', 'rounds', 'currentRound', 'winner', 'isRunning', 'lockTime', 'playerCount', 'maxPlayers', 'players'],
+                additionalProperties: true
+            }
+        },
+        400: {
+            type: 'object',
+            properties: {
+                error: { type: 'string' }
+            },
+            required: ['error']
+        }
+    }
+}
+

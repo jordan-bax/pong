@@ -1,3 +1,4 @@
+
 const { log } = require("console")
 const { Tournament: Tour } = require("./schemas/tournamentInterface")
 const tournamentDB = require("./tournamentDB")
@@ -36,7 +37,7 @@ module.exports = class TournamentService {
         }
 
         try {
-            const dbObj = await db.addTournament(name, description, maxPlayers, Math.round(Date.now() + (duration * 1000)), userID)
+            const dbObj = await db.create(name, description, maxPlayers, Math.round(Date.now() + (duration * 1000)), userID)
             return dbObj
         } catch (error) {
            throw error
@@ -65,7 +66,7 @@ module.exports = class TournamentService {
         }
 
         try {
-            await db.addPlayer(userID, tournamentID)
+            await db.join(userID, tournamentID)
         } catch (error) {
             throw error
         }
@@ -81,7 +82,58 @@ module.exports = class TournamentService {
         }
 
         try {
-            await db.leaveTournament(tournamentID, userID)
+            await db.leave(tournamentID, userID)
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async idle(): Promise<typeof Tour[]> {
+        try {
+            // HACK: for now still need to impl players
+            let tours = await db.idle()
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = []
+            }
+            return tours
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async running(): Promise<typeof Tour[]> {
+        try {
+            // HACK: for now still need to impl players
+            let tours = await db.running()
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = []
+            }
+            return tours
+        } catch (error) {
+            throw error
+        }
+    }
+    async finished(): Promise<typeof Tour[]> {
+        try {
+            // HACK: for now still need to impl players
+            let tours = await db.finished()
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = []
+            }
+            return tours
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async allTournaments(): Promise<typeof Tour[]> {
+        try {
+            // HACK: for now still need to impl players
+            let tours = await db.allTournaments()
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = []
+            }
+            return tours
         } catch (error) {
             throw error
         }
@@ -110,7 +162,6 @@ module.exports = class TournamentService {
 
         // notify game backend api call per game
         for (let index = 0; index < t.nextMatchs.length; index++) {
-            log(t.nextMatchs[index])
             if (t.nextMatchs[index][0] < 0 && t.nextMatchs[index][1] < 0) {
                 // ai game random choice winner
                 continue
@@ -119,7 +170,6 @@ module.exports = class TournamentService {
             // send game to backend
         }
 
-        // console.log(`Starting tournament ${t.tournament.id}`)
         return
     }
 

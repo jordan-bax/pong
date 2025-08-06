@@ -38,6 +38,9 @@ module.exports = class TournamentService {
 
         try {
             const dbObj = await db.create(name, description, maxPlayers, Math.round(Date.now() + (duration * 1000)), userID)
+            if (this.checkInterval === null) {
+                this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
+            }
             return dbObj
         } catch (error) {
            throw error
@@ -66,7 +69,7 @@ module.exports = class TournamentService {
         }
 
         try {
-            await db.join(userID, tournamentID)
+            await db.join(tournamentID, userID)
         } catch (error) {
             throw error
         }
@@ -90,11 +93,7 @@ module.exports = class TournamentService {
 
     async idle(): Promise<typeof Tour[]> {
         try {
-            // HACK: for now still need to impl players
             let tours = await db.idle()
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = []
-            }
             return tours
         } catch (error) {
             throw error
@@ -103,11 +102,7 @@ module.exports = class TournamentService {
 
     async running(): Promise<typeof Tour[]> {
         try {
-            // HACK: for now still need to impl players
             let tours = await db.running()
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = []
-            }
             return tours
         } catch (error) {
             throw error
@@ -115,11 +110,7 @@ module.exports = class TournamentService {
     }
     async finished(): Promise<typeof Tour[]> {
         try {
-            // HACK: for now still need to impl players
             let tours = await db.finished()
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = []
-            }
             return tours
         } catch (error) {
             throw error
@@ -128,32 +119,17 @@ module.exports = class TournamentService {
 
     async allTournaments(): Promise<typeof Tour[]> {
         try {
-            // HACK: for now still need to impl players
             let tours = await db.allTournaments()
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = []
-            }
             return tours
         } catch (error) {
             throw error
         }
     }
 
-    async start(t: typeof Tour): Promise<void> {
-        // TODO: think this make no sense
-        // const index = this.tournaments.findIndex(t => t.tournament.id === t.tournament.id)
-        // if (index === -1) {
-        //     return
-        // }
-        //
-        // this.tournaments.splice(index, 1);
-        // t.isRunning = true;
-        // this.runningTournaments.push(t);
+    async start(tournamentID: number, players: number[], playerCount: number): Promise<void> {
 
-        let aiID = -1
         // for (let index = t.tournament.players.length; index < t.tournament.playerCount; index++) {
         //     t.tournament.players.push(aiID)
-        //     aiID--;
         // }
         //
         // t.rounds = Math.ceil(t.tournament.playerCount / 2)
@@ -161,14 +137,6 @@ module.exports = class TournamentService {
         // t.nextMatchs = await this.initMatches(t.tournament.players, t.tournament.players.length)
 
         // notify game backend api call per game
-        for (let index = 0; index < t.nextMatchs.length; index++) {
-            if (t.nextMatchs[index][0] < 0 && t.nextMatchs[index][1] < 0) {
-                // ai game random choice winner
-                continue
-            }
-
-            // send game to backend
-        }
 
         return
     }
@@ -201,9 +169,18 @@ module.exports = class TournamentService {
         return [[]]
     }
 
-    private async initMatches(players: number[], playerCount: number): Promise<number[][]> {
-        let matches = []
+    private async initMatches(tournamentID: number, players: number[], playerCount: number, maxPlayers: number): Promise<void> {
+        let aiID = 100000
+        const len = maxPlayers - playerCount
+        for (let index = 0; index < len; index++) {
+            await db.join(tournamentID, aiID)
+            playerCount++
+            aiID++;
+        }
 
+        players = await db.getPlayers(tournamentID)
+
+        let matches = []
         while (playerCount > 0) {
             let subMatch: number[] = []
 
@@ -219,23 +196,10 @@ module.exports = class TournamentService {
             players.splice(index, 1)
             playerCount--
 
-            // matches.push(subMatch)
+            matches.push(subMatch)
         }
 
-        return matches
-    }
-
-    private startChecker(): void {
-        // if (!this.checkInterval && this.tournaments.length > 0) {
-        //     this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
-        // }
-    }
-
-    private stopChecker(): void {
-        if (this.checkInterval) {
-            clearInterval(this.checkInterval)
-            this.checkInterval = null
-        }
+        await db.initMatches(tournamentID, matches)
     }
 
     private async checkTournaments(): Promise<void> {
@@ -246,16 +210,15 @@ module.exports = class TournamentService {
         this.isChecking = true
         const now = Date.now()
 
-        // for (const tournament of this.tournaments) {
-        //     if (now >= tournament.lockTime) {
-        //         this.runningTournaments.push(tournament)
-        //         await this.start(tournament)
-        //     }
-        // }
-        //
-        // if (this.tournaments.length === 0) {
-        //     this.stopChecker()
-        // }
+        const idleTours = await db.idle()
+        for (let index = 0; index < idleTours.length; index++) {
+            if (now >= idleTours[index]['lockTime']) {
+                console.log(idleTours[index])
+                await this.initMatches(idleTours[index]['id'], idleTours[index]['players'], idleTours[index]['playerCount'], idleTours[index]['maxPlayers'])
+                await db.lock(idleTours[index]['id'])
+            }
+        }
+
         this.isChecking = false
     }
 }

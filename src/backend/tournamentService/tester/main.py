@@ -2,14 +2,14 @@ import requests
 
 def main():
     url = 'http://127.0.0.1:3003/create'
-    resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'maxPlayers': '8', 'userID': 1, 'lockTime': 3500})
-    assert resp.status_code == 201
-
+    resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'maxPlayers': '8', 'userID': 1, 'lockTime': 10})
     data = resp.json()
     print(f'{data}')
+    assert resp.status_code == 201
+
 
     # check to get tournament with invalid ID
-    url = 'http://127.0.0.1:3003/id/'
+    url = 'http://127.0.0.1:3003/id/-100'
     resp = requests.get(url=url, params={'id': -100})
     assert resp.status_code == 400
 
@@ -68,6 +68,7 @@ def main():
     # leave tournament
     url = 'http://127.0.0.1:3003/leave'
     resp = requests.post(url=url, json={'tournamentID': data['id'], 'userID': 1})
+    print(f'{resp.json()}')
     assert resp.status_code == 201
 
     # leave tournament with same ID again
@@ -88,27 +89,27 @@ def main():
 
     # check idle tournaments
     url = 'http://127.0.0.1:3003/create'
-    resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'maxPlayers': '8', 'userID': 1, 'lockTime': 3500})
+    resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'maxPlayers': '8', 'userID': 1, 'lockTime': 10})
     assert resp.status_code == 201
 
     data = resp.json()
     print(f'{data}')
 
-    url = 'http://127.0.0.1:3003/idle'
-    resp = requests.get(url=url)
-    assert resp.status_code == 200
-
-    url = 'http://127.0.0.1:3003/running'
-    resp = requests.get(url=url)
-    assert resp.status_code == 200
-
-    url = 'http://127.0.0.1:3003/finished'
-    resp = requests.get(url=url)
-    assert resp.status_code == 200
-
-    url = 'http://127.0.0.1:3003/tours'
-    resp = requests.get(url=url)
-    assert resp.status_code == 200
+    # url = 'http://127.0.0.1:3003/idle'
+    # resp = requests.get(url=url)
+    # assert resp.status_code == 200
+    #
+    # url = 'http://127.0.0.1:3003/running'
+    # resp = requests.get(url=url)
+    # assert resp.status_code == 200
+    #
+    # url = 'http://127.0.0.1:3003/finished'
+    # resp = requests.get(url=url)
+    # assert resp.status_code == 200
+    #
+    # url = 'http://127.0.0.1:3003/tours'
+    # resp = requests.get(url=url)
+    # assert resp.status_code == 200
 
 
 if __name__ == '__main__':

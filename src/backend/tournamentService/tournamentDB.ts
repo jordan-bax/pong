@@ -92,7 +92,7 @@ module.exports = class TournamentDB {
         }
 
         try {
-            await this.join(userID, id)
+            await this.join(id, userID)
             const tournament = await this.getTournament(id)
 
             return tournament
@@ -101,7 +101,7 @@ module.exports = class TournamentDB {
         }
     }
 
-    async join(userID: number, tournamentID: number): Promise<void> {
+    async join(tournamentID: number, userID: number): Promise<void> {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -109,7 +109,7 @@ module.exports = class TournamentDB {
         await this.db.run("BEGIN TRANSACTION")
         try {
             const result = await this.db.run(`
-                INSERT INTO players (userID, tournament_id)
+                INSERT INTO players (tournament_id, userID)
                 SELECT ?, ?
                     WHERE (
                         SELECT NOT isRunning AND playerCount < maxPlayers
@@ -121,9 +121,10 @@ module.exports = class TournamentDB {
                     FROM players
                     WHERE userID = ? AND tournament_id = ?
                         )`,
-                [userID, tournamentID, tournamentID, userID, tournamentID]
+                [tournamentID, userID, tournamentID, userID, tournamentID]
             )
 
+            console.log(result)
             if (result.changes > 0) {
                 await this.db.run(`
                     UPDATE tournament
@@ -207,6 +208,10 @@ module.exports = class TournamentDB {
             const tours = await this.db.all(`
                 SELECT * FROM tournament WHERE isRunning = ? AND winner < ?`,
                 [1, 1])
+            // TODO: make query with join
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
+            }
             return tours
         } catch (error) {
             throw new Error('Failed to get all running tournaments')
@@ -222,6 +227,11 @@ module.exports = class TournamentDB {
             const tours = await this.db.all(`
                 SELECT * FROM tournament WHERE isRunning = ?`,
                 [0])
+
+            // TODO: make query with join
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
+            }
             return tours
         } catch (error) {
             throw new Error('Failed to get all running tournaments')
@@ -237,6 +247,11 @@ module.exports = class TournamentDB {
             const tours = await this.db.all(`
                 SELECT * FROM tournament WHERE winner > ?`,
                 [0])
+
+            // TODO: make query with join
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
+            }
             return tours
         } catch (error) {
             throw new Error('Failed to get all running tournaments')
@@ -251,6 +266,11 @@ module.exports = class TournamentDB {
         try {
             const tours = await this.db.all(`
                 SELECT * FROM tournament`)
+
+            // TODO: make query with join
+            for (let index = 0; index < tours.length; index++) {
+                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
+            }
             return tours
         } catch (error) {
             throw new Error('Failed to get all running tournaments')
@@ -294,13 +314,55 @@ module.exports = class TournamentDB {
         }
     }
 
-    async init_matches(userID: number, tournamentID: number, seed: number): Promise<void> {
+    async getPlayers(tournamentID: number): Promise<number[]> {
+        try {
+            const players = await this.db.all(`
+                SELECT userID FROM players WHERE tournament_id = ?`,
+                [tournamentID])
+            return players.map(players => players.userID)
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async initMatches(tournamentID: number, players: number[][]): Promise<void> {
         if (!this.db) {
             throw new Error('DB is not open')
         }
 
-        await this.db.run("TRANSACTION")
+        await this.db.run("BEGIN TRANSACTION")
+        for (let index = 0; index < players.length; index++) {
+            try {
+                await this.db.run(`
+                    INSERT INTO match ( tournament_id, round, position, player1_id, player2_id )
+                    VALUES (?, ?, ?, ?, ?)`,
+                    [tournamentID, 1, index + 1, players[index][0], players[index][1]])
+            } catch (error) {
+                await this.db.run('ROLLBACK')
+                throw error
+            }
+
+        }
         await this.db.run("COMMIT")
+    }
+
+    async lock(tournamentID: number): Promise<void> {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
+        try {
+            await this.db.run("BEGIN TRANSACTION")
+            await this.db.run(`
+                UPDATE tournament
+                SET isRunning = 1
+                WHERE id = ? AND NOT isRunning`,
+                [tournamentID])
+            await this.db.run("COMMIT")
+        } catch (error) {
+            await this.db.run('ROLLBACK')
+            throw error
+        }
     }
 
     async closeDB(): Promise<void> {

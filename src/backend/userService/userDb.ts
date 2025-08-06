@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open, Database} from 'sqlite';
 import bcrypt from 'bcryptjs';
+import type { TokenPayload } from 'google-auth-library';
 
 sqlite3.verbose();
 
@@ -31,6 +32,24 @@ class UserDatabase {
         return user;
     }
 
+    async getUsers(data: string): Promise<any> {
+        if(!this.db) {
+            throw new Error('database is null');
+        }
+        const query = `%${data}%`;
+        const users = await this.db.all(`
+            SELECT username, email, googleEmail FROM users
+            WHERE LOWER(username) LIKE ? OR LOWER(email) LIKE ? OR LOWER(googleEmail) LIKE ?`,
+            [query, query, query]
+        );
+        if (!users) {
+            console.error('no return value on database');
+            return null;
+        }
+        console.log(users);
+        return users;
+    }
+
     async insertUserIntoDatabase(
         username:string | null, 
         password:string | null, 
@@ -48,13 +67,25 @@ class UserDatabase {
             [username, password, email, googleEmail, pathToPP, null, null, null, null]);
     }
 
-    async insertGoogleUser(email:string): Promise<void> {
+    async insertGoogleUser(payload: TokenPayload, picture: string | null): Promise<void> {
         if (!this.db) {
-            return;
+            throw new Error('database is null');
         }
+
         await this.db.run(`
-            INSERT INTO users (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ? , ?)`, [null, null, null, email, 1, null, null, null, null]);
+            INSERT INTO users
+            (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ? , ?)`,
+            [
+                typeof payload.given_name !== 'undefined' ? payload.given_name : null, 
+                null, 
+                null, 
+                payload.email, 
+                1, 
+                picture, 
+                null, 
+                null, 
+                null])
     }
 
     async  updateUserInfo(

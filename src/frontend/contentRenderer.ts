@@ -1,7 +1,7 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser } from "./routing.js";
 
 declare global {
     interface Window {
@@ -59,6 +59,79 @@ function createRow(leftContent: any, rightContent: any): HTMLTableRowElement {
     row.appendChild(leftCell);
     row.appendChild(rightCell);
     return row;
+}
+
+function setupSearchUsers(): HTMLDivElement {
+    const searchDiv = document.createElement('div');
+    searchDiv.id = 'searchDiv';
+    searchDiv.style.display = 'grid';
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'userSearch';
+    input.id = 'searchInput';
+    input.placeholder = 'Search for user by username or email';
+    searchDiv.appendChild(input);
+
+    const button = document.createElement('button');
+    button.id = 'searchButton';
+    button.textContent = 'seach users';
+    button.addEventListener('click', async () => {
+        const query = input.value.trim();
+        if (!query) {
+            return;
+        }
+        
+        try {
+            const users = await searchUsers(query);
+            renderResult(users);
+        } catch (err) {
+            console.error(err);
+        }
+    });
+    searchDiv.appendChild(button);
+    return searchDiv;
+}
+
+function renderResult(users: searchUser[] | searchUser | null): void {
+    const searchDiv = document.getElementById('searchDiv');
+    if (!searchDiv) {
+        console.error('no searchDiv');
+        return;
+    }
+    let resultList = document.getElementById('searchList');
+    if (resultList) {
+        resultList.innerHTML = '';
+    } else {
+        resultList = document.createElement('ul');
+        resultList.id = 'searchList';
+        resultList.style.listStyleType = 'none';
+    }
+    const listItem = document.createElement('li');
+    if (!users) {
+        listItem.textContent = 'No Users found.'
+        resultList.appendChild(listItem);
+        searchDiv.appendChild(resultList);
+        return;
+    }
+    if (Array.isArray(users))
+    {
+        if (users.length === 0) {
+            listItem.textContent = 'No Users found.'
+            resultList.appendChild(listItem);
+            searchDiv.appendChild(resultList);
+        return;
+        }
+        users.forEach(user => {
+            const item = document.createElement('li');
+            item.textContent = `${user.username || ''} (${user.email || ''}${typeof user.googleEmail === 'string' ? '/' + user.googleEmail : ''})`;
+            resultList.appendChild(item);
+        });
+    } else {
+        listItem.textContent = `${users.username} (${users.email}/${users.googleEmail})`;
+        resultList.appendChild(listItem);
+    }
+    searchDiv.appendChild(resultList);
 }
 
 function renderGoogle(): HTMLDivElement {
@@ -320,12 +393,8 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
 }
 
 async function handleGoogleCheck(request:{ idToken: string, user: userInfo}) {
-    console.log('in google callback function');
-    console.log('credentials is:',request.idToken);
-    console.log('user is', request.user);
     const formInfo = document.getElementById('profileForm') as HTMLFormElement;
     const formData = new FormData(formInfo);
-    console.log('formData in callback:', formData)
     const response = await fetch('api/user/csrf-token', {credentials: 'include'});
     const data = await response.json();
     const csrf = data.csrfToken;
@@ -349,7 +418,7 @@ async function handleGoogleCheck(request:{ idToken: string, user: userInfo}) {
             const text = await cloned.text();
             errorMessage = { error: text };
         }
-        console.log('google login failed:', errorMessage);
+        console.error('google login failed:', errorMessage);
     }
 }
 
@@ -443,11 +512,10 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
         e.preventDefault();
         const confirm = document.getElementById('secureUpdate');
         if (!confirm) {
-            console.log('secureUpdate not found');
+            console.error('secureUpdate not found');
             return;
         }
         confirm.style.display = 'flex';
-        console.log('submit button clicked');
         // updateUserInfo(user.email, user.username, user.password, formData);
     };
 
@@ -500,9 +568,14 @@ export async function renderContent (route: string): Promise<void> {
             content.textContent = textData.homePageText;
             break;
         case 'profile':
+            content.style.display = 'grid';
             const profilePicture = await renderProfilePicture();
             if (profilePicture !== null) {
                 content.appendChild(profilePicture);
+            }
+            const searchUser = setupSearchUsers();
+            if (searchUser !== null) {
+                content.appendChild(searchUser);
             }
             const profileData = await renderProfileData(textData);
             if (profileData !== null) {

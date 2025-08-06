@@ -43,6 +43,12 @@ interface ierrors {
     errorNoPath: string;
 }
 
+export interface searchUser {
+    username: string | null;
+    email: string | null;
+    googleEmail: string | null;
+}
+
 let isLoggedIn = false;
 let currentUser: string | null = null;
 const errorMessages = [
@@ -81,6 +87,17 @@ async function getErrorMessages(): Promise<ierrors> {
     const errors = await getPageContent(language.toLowerCase(), errorMessages);
     const output = errors.get('row') as ierrors;
     return output;
+}
+
+export async function searchUsers(query: string): Promise<searchUser[] | searchUser | null> {
+    const response = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`);
+
+    if (!response.ok) {
+        console.error('failed to fetch users');
+        return null;
+    }
+    const data = await response.json();
+    return data as searchUser[];
 }
 
 export function getLoggin(): boolean {
@@ -126,11 +143,9 @@ export async function updateUserInfo(
     oldPassword:string, 
     formData: FormData
 ): Promise<void> {
-    console.log('in UpdateUserInfo');
     formData.append('oldEmail', oldEmail);
     formData.append('oldUsername', oldUsername);
     formData.append('oldPassword', oldPassword);
-    console.log('userUpdate formdata:', formData);
     const response = await fetch('api/user/update', {
         credentials: 'include',
         method: 'PATCH',
@@ -334,6 +349,6 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
             const text  = await cloned.text();
             errorMessage = { error: text };
         }
-        console.log('google login failed:', errorMessage);
+        console.error('google login failed:', errorMessage);
     }
 }

@@ -7,11 +7,13 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
-import path from 'path';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { googleLogiSchema } from './schemas/userSchemas.js';
 import UserDatabase from './userDb.js';
 import Validator from './validation.js';
 import mime from 'mime-types';
+import * as https from 'https'
 
 export interface loginBody {
     email: string;
@@ -44,6 +46,9 @@ export interface patchBody {
     googleEmail:string | null;
     pathToProfileP: string | null;
 }
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class server {
     private fastify: FastifyInstance;
@@ -104,7 +109,49 @@ class server {
         });
     }
 
+    private async downloadGooglePicure(url:string | undefined, userId: string): Promise<string | null> {
+        return new Promise((resolve, rejects) => {
+            if (typeof url === 'undefined') {
+                resolve(null);
+                return;
+            }
+            const filePath = path.join(__dirname, '..', 'uploads', 'profile_pictures', `${userId}.jpg`)
+            const file = fs.createWriteStream(filePath);
+
+            https.get(url, (response) => {
+                if (response.statusCode !== 200) {
+                    console.error('fetching  profile picture for google user failed');
+                    resolve(null);
+                    return;
+                }
+                response.pipe(file);
+
+                file.on('finish', () => {
+                    file.close();
+                    resolve(filePath);
+                });
+
+                file.on('error', (err) => {
+                    fs.unlink(filePath, () => rejects(err));
+                });
+            }).on('error', (err) => {
+                rejects(err);
+            });
+        });
+    }
+
     private async registerRoutes() {
+        this.fastify.get('/search', async (req, reply) => {
+            const query = (req.query as {q?: string}).q?.toLocaleLowerCase();
+            if (typeof query === 'undefined' || query === '') {
+                return reply.code(400).send({ error: 'Missing query' });
+            }
+
+            const users = await this.db.getUsers(query);
+
+            return reply.send(users);
+        })
+
         this.fastify.get('/csrf-token', async (req, reply) => {
             const token = reply.generateCsrf();
             reply.send({csrfToken: token});
@@ -306,7 +353,8 @@ class server {
                 console.log('finding user');
                 let user = await this.db.findUserByEmail(payload.email)
                 if (!user) {
-                    await this.db.insertGoogleUser(payload.email);
+                    const googlePicture = await this.downloadGooglePicure(payload.picture, payload.sub)
+                    await this.db.insertGoogleUser(payload, googlePicture);
                 }
                 user = await this.db.findUserByEmail(payload.email);
                 let email: string;

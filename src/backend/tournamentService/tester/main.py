@@ -1,4 +1,5 @@
 import requests
+from pprint import pprint
 
 def main():
     url = 'http://127.0.0.1:3003/create'
@@ -113,9 +114,10 @@ def main():
     # # resp = requests.get(url=url)
     # # assert resp.status_code == 200
     # #
-    # # url = 'http://127.0.0.1:3003/tours'
-    # # resp = requests.get(url=url)
-    # # assert resp.status_code == 200
+    url = 'http://127.0.0.1:3003/tours'
+    resp = requests.get(url=url)
+    pprint(resp.json())
+    assert resp.status_code == 200
 
 
 if __name__ == '__main__':

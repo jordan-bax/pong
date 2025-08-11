@@ -1,4 +1,4 @@
-import { open, Database } from  'sqlite'
+import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
 class TournamentDB {
@@ -81,7 +81,8 @@ class TournamentDB {
             this.db = await open({
                 filename: path,
                 driver: sqlite3.Database,
-                mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE | sqlite3.OPEN_FULLMUTEX})
+                mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE | sqlite3.OPEN_FULLMUTEX
+            })
         }
     }
 
@@ -176,9 +177,9 @@ class TournamentDB {
 
             // check for missing row
             if (row && row.playerCount === 0) {
-              await this.db.run(`
+                await this.db.run(`
                 DELETE FROM tournament where id = ?`,
-                [tournamentID])
+                    [tournamentID])
             }
         } catch (error) {
             throw error
@@ -250,15 +251,25 @@ class TournamentDB {
         }
 
         try {
-            const tours = await this.db.all(`
-                SELECT * FROM tournament`)
+            const result = await this.db.all(`
+                SELECT
+                    t.*,
+                    COALESCE((
+                        SELECT GROUP_CONCAT(p.userID)
+                        FROM players p
+                        WHERE p.tournamentID = t.id
+                    ), '') AS player_ids
+                FROM tournament t`)
 
-            // TODO: make query with join
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
-            }
-            return tours
+            console.log(result)
+            return result.map(row => ({
+                ...row,
+                players: row.player_ids
+                    ? row.player_ids.split(',').map(Number)
+                    : []
+            }))
         } catch (error) {
+            console.log(error)
             throw new Error('Failed to get all running tournaments')
         }
     }
@@ -352,19 +363,6 @@ class TournamentDB {
             await this.db.close()
             this.db = null
         }
-    }
-
-    private async getLastID() {
-        if (!this.db) {
-            throw new Error('DB is not open')
-        }
-
-        const id = await this.db.get(`SELECT MAX(id) FROM tournament`)
-        if (id === undefined) {
-            return id
-        }
-
-        return id['MAX(id)']
     }
 }
 

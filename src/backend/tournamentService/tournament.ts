@@ -1,11 +1,10 @@
-const { log } = require("console")
-const { Tournament: Tour } = require("./schemas/tournamentInterface")
-const tournamentDB = require("./tournamentDB")
+import { log } from "console"
+import { Tournament } from "./schemas/tournamentInterface.ts"
+import TournementDB from "./tournamentDB"
 
-const db = new tournamentDB
-db.initDB('./db/tournament.sqlite')
+const db = new TournementDB
 
-module.exports = class TournamentService {
+class TournamentService {
     private checkInterval: NodeJS.Timeout | null
     private isChecking: boolean
 
@@ -14,7 +13,11 @@ module.exports = class TournamentService {
         this.isChecking = false
     }
 
-    async create(name: string, maxPlayers: number, userID: number, duration: number | undefined): Promise<typeof Tour | undefined> {
+    async init() {
+        await db.initDB('./db/tournament.sqlite')
+    }
+
+    async create(name: string, maxPlayers: number, userID: number, duration: number | undefined) {
         if (duration === undefined || duration < 1) {
             duration = 60
         }
@@ -46,8 +49,8 @@ module.exports = class TournamentService {
         }
     }
 
-    async getByID(tournamentID: number): Promise<typeof Tour> {
-        if (tournamentID  < 0) {
+    async getByID(tournamentID: number) {
+        if (tournamentID  < 1) {
             throw new Error('Tournament can not be negative')
         }
 
@@ -58,7 +61,7 @@ module.exports = class TournamentService {
         }
     }
 
-    async join(tournamentID: number, userID: number): Promise<void> {
+    async join(tournamentID: number, userID: number) {
         if (tournamentID < 0) {
             throw new Error('Tournament can not be negative')
         }
@@ -74,7 +77,7 @@ module.exports = class TournamentService {
         }
     }
 
-    async leave(tournamentID: number, userID: number): Promise<void> {
+    async leave(tournamentID: number, userID: number) {
         if (tournamentID < 1) {
             throw new Error('Tournament must be more then 0')
         }
@@ -90,7 +93,7 @@ module.exports = class TournamentService {
         }
     }
 
-    async idle(): Promise<typeof Tour[]> {
+    async idle() {
         try {
             let tours = await db.idle()
             return tours
@@ -99,7 +102,7 @@ module.exports = class TournamentService {
         }
     }
 
-    async running(): Promise<typeof Tour[]> {
+    async running() {
         try {
             let tours = await db.running()
             return tours
@@ -107,7 +110,7 @@ module.exports = class TournamentService {
             throw error
         }
     }
-    async finished(): Promise<typeof Tour[]> {
+    async finished() {
         try {
             let tours = await db.finished()
             return tours
@@ -116,7 +119,7 @@ module.exports = class TournamentService {
         }
     }
 
-    async allTournaments(): Promise<typeof Tour[]> {
+    async allTournaments() {
         try {
             let tours = await db.allTournaments()
             return tours
@@ -125,7 +128,7 @@ module.exports = class TournamentService {
         }
     }
 
-    async start(tournament: typeof Tour): Promise<void> {
+    async start(tournament: Tournament[]) {
         // const games = await db.games(tournament.id)
 
         // check if thre are ai only games
@@ -138,7 +141,7 @@ module.exports = class TournamentService {
         return
     }
 
-    async matchDone(tournamentID: number, playerID1: number, playerID2: number, winnerID: number): Promise<number> {
+    async matchDone(tournamentID: number, playerID1: number, playerID2: number, winnerID: number) {
         // const index = this.runningTournaments.findIndex(t => t.tournament.id === tournamentID)
         // if (index === -1) {
         //     return 1
@@ -162,11 +165,11 @@ module.exports = class TournamentService {
         return 0
     }
 
-    private async nextMatch(players: number[], playerCount: number): Promise<number[][]> {
+    private async nextMatch(players: number[], playerCount: number) {
         return [[]]
     }
 
-    private async initMatches(tournamentID: number, players: number[], playerCount: number, maxPlayers: number): Promise<void> {
+    private async initMatches(tournamentID: number, players: number[], playerCount: number, maxPlayers: number) {
         let aiID = -1
         const len = maxPlayers - playerCount
         for (let index = 0; index < len; index++) {
@@ -199,7 +202,7 @@ module.exports = class TournamentService {
         await db.initMatches(tournamentID, matches)
     }
 
-    private async checkTournaments(): Promise<void> {
+    private async checkTournaments() {
         if (this.isChecking) {
             return
         }
@@ -220,3 +223,5 @@ module.exports = class TournamentService {
         this.isChecking = false
     }
 }
+
+export default TournamentService

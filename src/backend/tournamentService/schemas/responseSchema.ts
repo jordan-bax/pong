@@ -1,4 +1,4 @@
-exports.createSchema = {
+export const createSchema = {
     body: {
         type: 'object',
         properties: {
@@ -30,7 +30,7 @@ exports.createSchema = {
     }
 }
 
-exports.joinSchema = {
+export const joinSchema = {
     body: {
         type: 'object',
         properties: {
@@ -56,7 +56,7 @@ exports.joinSchema = {
     }
 }
 
-exports.leaveSchema = {
+export const leaveSchema = {
     body: {
         type: 'object',
         properties: {
@@ -82,7 +82,7 @@ exports.leaveSchema = {
     }
 }
 
-exports.gameDoneSchema = {
+export const gameDoneSchema = {
     body: {
         type: 'object',
         properties: {
@@ -110,7 +110,7 @@ exports.gameDoneSchema = {
     }
 }
 
-exports.getTourSchema = {
+export const getTourSchema = {
     querystring: {
         type: 'object',
         properties: {
@@ -157,7 +157,7 @@ exports.getTourSchema = {
     }
 }
 
-exports.getToursSchema = {
+export const getToursSchema = {
     response: {
         200: {
             type: 'array',
@@ -199,4 +199,3 @@ exports.getToursSchema = {
         }
     }
 }
-

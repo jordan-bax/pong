@@ -22,7 +22,7 @@
     "rootDir": "./",
      "rewriteRelativeImportExtensions": true,
      "erasableSyntaxOnly": true,
-     "verbatimModuleSyntax": true,
+     // "verbatimModuleSyntax": true,
         "typeRoots": ["node_modules/@types"],
         "moduleResolution": "NodeNext",
   },

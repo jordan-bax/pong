@@ -20,15 +20,11 @@ module.exports = class TournamentDB {
             throw new Error('adadasd')
         }
 
-        // nextMatchs is a table
         await this.db.run(`
             CREATE TABLE if not EXISTS tournament (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
-                description TEXT NOT NULL,
                 rounds INTEGER NOT NULL,
-                currentRound INTEGER NOT NULL,
-                winner INTEGER,
                 isRunning INTEGER NOT NULL,
                 lockTime REAL NOT NULL,
                 playerCount INTEGER NOT NULL,
@@ -38,16 +34,15 @@ module.exports = class TournamentDB {
         await this.db.run(`
             CREATE TABLE IF NOT EXISTS players (
                 userID INTEGER NOT NULL,
-                tournament_id INTEGER NOT NULL,
+                tournamentID INTEGER NOT NULL,
                 eliminated INTEGER DEFAULT 0,
-                seed INTEGER,
-                PRIMARY KEY(userID, tournament_id),
-                FOREIGN KEY(tournament_id) REFERENCES tournament(id) ON DELETE CASCADE)`)
+                PRIMARY KEY(userID, tournamentID),
+                FOREIGN KEY(tournamentID) REFERENCES tournament(id) ON DELETE CASCADE)`)
 
         await this.db.run(`
             CREATE TABLE IF NOT EXISTS match (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tournament_id INTEGER NOT NULL,
+                tournamentID INTEGER NOT NULL,
                 round INTEGER NOT NULL,
                 position INTEGER NOT NULL,
                 player1_id INTEGER,
@@ -55,7 +50,7 @@ module.exports = class TournamentDB {
                 winner_id INTEGER,
                 parent_match1_id INTEGER,
                 parent_match2_id INTEGER,
-                FOREIGN KEY(tournament_id) REFERENCES tournament(id) ON DELETE CASCADE,
+                FOREIGN KEY(tournamentID) REFERENCES tournament(id) ON DELETE CASCADE,
                 FOREIGN KEY(player1_id) REFERENCES players(userID),
                 FOREIGN KEY(player2_id) REFERENCES players(userID),
                 FOREIGN KEY(winner_id) REFERENCES players(userID),
@@ -66,12 +61,12 @@ module.exports = class TournamentDB {
     async openDB(path: string): Promise<void> {
         if (this.db === null) {
             this.db = await dbOpen({ filename: path, driver: sqlite3.Database })
+            this.db.getDatabaseInstance().serialize()
         }
     }
 
     async create(
         name: string,
-        description: string,
         maxPlayers: number,
         lockTime: number,
         userID: number): Promise<typeof Tournament | undefined> {
@@ -79,12 +74,15 @@ module.exports = class TournamentDB {
             throw new Error('DB is not open')
         }
 
-        await this.db.run(
-            `
-            INSERT INTO tournament (name, description, rounds, currentRound, winner, isRunning, lockTime, playerCount, maxPlayers)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, description, 1 ? maxPlayers < 4 : maxPlayers / 2, 1, -1, false, lockTime, 0, maxPlayers]
+        const result = await this.db.run(`
+            INSERT INTO tournament (name, rounds, isRunning, lockTime, playerCount, maxPlayers)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, 1 ? maxPlayers < 4 : maxPlayers / 2, false, lockTime, 0, maxPlayers]
         )
+
+        if (result.changes === 0) {
+            new Error('Could not insert in database')
+        }
 
         const id = await this.getLastID()
         if (id === undefined) {
@@ -109,7 +107,7 @@ module.exports = class TournamentDB {
         await this.db.run("BEGIN TRANSACTION")
         try {
             const result = await this.db.run(`
-                INSERT INTO players (tournament_id, userID)
+                INSERT INTO players (tournamentID, userID)
                 SELECT ?, ?
                     WHERE (
                         SELECT NOT isRunning AND playerCount < maxPlayers
@@ -119,7 +117,7 @@ module.exports = class TournamentDB {
                 AND NOT EXISTS (
                     SELECT 1
                     FROM players
-                    WHERE userID = ? AND tournament_id = ?
+                    WHERE userID = ? AND tournamentID = ?
                         )`,
                 [tournamentID, userID, tournamentID, userID, tournamentID]
             )
@@ -152,7 +150,7 @@ module.exports = class TournamentDB {
             const result = await this.db.run(`
                 DELETE FROM players
                 WHERE userID = ?
-                    AND tournament_id IN (
+                    AND tournamentID IN (
                         SELECT id
                         FROM tournament
                         WHERE id = ?
@@ -277,6 +275,11 @@ module.exports = class TournamentDB {
         }
     }
 
+    async matches(tournamentID: number): Promise<number[][]> {
+
+        return []
+    }
+
     async getTournament(tournamentID: number): Promise<typeof Tournament> {
         if (!this.db) {
             throw new Error('DB is not open')
@@ -284,11 +287,11 @@ module.exports = class TournamentDB {
 
         const tourObj = await this.db.get(`
             SELECT
-                t.id, t.name, t.description, t.rounds, t.currentRound,
-                t.winner, t.isRunning, t.lockTime, t.playerCount, t.maxPlayers,
+                t.id, t.name, t.rounds,
+                t.isRunning, t.lockTime, t.playerCount, t.maxPlayers,
                 GROUP_CONCAT(p.userID) AS players
             FROM tournament t
-            LEFT JOIN players p ON t.id = p.tournament_id
+            LEFT JOIN players p ON t.id = p.tournamentID
             WHERE t.id = ?
             GROUP BY t.id`,
             [tournamentID])
@@ -301,10 +304,7 @@ module.exports = class TournamentDB {
         return {
             id: tourObj['id'],
             name: tourObj['name'],
-            description: tourObj['description'],
             rounds: tourObj['rounds'],
-            currentRound: tourObj['currentRound'],
-            winner: tourObj['winner'],
             isRunning: tourObj['isRunning'],
             lockTime: tourObj['lockTime'],
             playerCount: tourObj['playerCount'],
@@ -317,7 +317,7 @@ module.exports = class TournamentDB {
     async getPlayers(tournamentID: number): Promise<number[]> {
         try {
             const players = await this.db.all(`
-                SELECT userID FROM players WHERE tournament_id = ?`,
+                SELECT userID FROM players WHERE tournamentID = ?`,
                 [tournamentID])
             return players.map(players => players.userID)
         } catch (error) {
@@ -334,7 +334,7 @@ module.exports = class TournamentDB {
         for (let index = 0; index < players.length; index++) {
             try {
                 await this.db.run(`
-                    INSERT INTO match ( tournament_id, round, position, player1_id, player2_id )
+                    INSERT INTO match ( tournamentID, round, position, player1_id, player2_id )
                     VALUES (?, ?, ?, ?, ?)`,
                     [tournamentID, 1, index + 1, players[index][0], players[index][1]])
             } catch (error) {

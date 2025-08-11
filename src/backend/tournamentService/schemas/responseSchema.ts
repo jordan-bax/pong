@@ -3,12 +3,11 @@ exports.createSchema = {
         type: 'object',
         properties: {
             name: { type: 'string' },
-            description: { type: 'string' },
             maxPlayers: { type: 'number' },
             userID: { type: 'number' },
             lockTime: { type: 'number' }
         },
-        required: ['name', 'description', 'maxPlayers', 'userID']
+        required: ['name', 'maxPlayers', 'userID']
     },
     response: {
         201: {
@@ -17,10 +16,9 @@ exports.createSchema = {
                 id: { type: 'number' },
                 name: { type: 'string' },
                 maxPlayers: { type: 'number' },
-                description: { type: 'string' },
                 lockTime: { type: 'number' }
             },
-            required: ['id', 'name', 'maxPlayers', 'description', 'lockTime']
+            required: ['id', 'name', 'maxPlayers', 'lockTime']
         },
         400: {
             type: 'object',
@@ -129,10 +127,7 @@ exports.getTourSchema = {
             properties: {
                 id: { type: 'number' },
                 name: { type: 'string' },
-                description: { type: 'string' },
                 rounds: { type: 'number' },
-                currentRound: { type: 'number' },
-                winner: { type: 'number' },
                 isRunning: { type: 'boolean' },
                 lockTime: { type: 'number' },
                 playerCount: { type: 'number' },
@@ -149,7 +144,7 @@ exports.getTourSchema = {
                     }
                 }
             },
-            required: ['id', 'name', 'description', 'rounds', 'currentRound', 'winner', 'isRunning', 'lockTime', 'playerCount', 'maxPlayers', 'players'],
+            required: ['id', 'name', 'rounds', 'isRunning', 'lockTime', 'playerCount', 'maxPlayers', 'players'],
             additionalProperties: true
         },
         400: {

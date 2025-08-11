@@ -1,4 +1,3 @@
-
 const { log } = require("console")
 const { Tournament: Tour } = require("./schemas/tournamentInterface")
 const tournamentDB = require("./tournamentDB")
@@ -15,7 +14,7 @@ module.exports = class TournamentService {
         this.isChecking = false
     }
 
-    async create(name: string, description: string, maxPlayers: number, userID: number, duration: number | undefined): Promise<typeof Tour | undefined> {
+    async create(name: string, maxPlayers: number, userID: number, duration: number | undefined): Promise<typeof Tour | undefined> {
         if (duration === undefined || duration < 1) {
             duration = 60
         }
@@ -37,7 +36,7 @@ module.exports = class TournamentService {
         }
 
         try {
-            const dbObj = await db.create(name, description, maxPlayers, Math.round(Date.now() + (duration * 1000)), userID)
+            const dbObj = await db.create(name, maxPlayers, Math.round(Date.now() + (duration * 1000)), userID)
             if (this.checkInterval === null) {
                 this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
             }
@@ -126,17 +125,15 @@ module.exports = class TournamentService {
         }
     }
 
-    async start(tournamentID: number, players: number[], playerCount: number): Promise<void> {
+    async start(tournament: typeof Tour): Promise<void> {
+        // const games = await db.games(tournament.id)
 
-        // for (let index = t.tournament.players.length; index < t.tournament.playerCount; index++) {
-        //     t.tournament.players.push(aiID)
-        // }
-        //
-        // t.rounds = Math.ceil(t.tournament.playerCount / 2)
-        // t.currentRound = 1
-        // t.nextMatchs = await this.initMatches(t.tournament.players, t.tournament.players.length)
+        // check if thre are ai only games
 
-        // notify game backend api call per game
+
+        // call game backend to set game
+
+        // set notification
 
         return
     }
@@ -170,12 +167,12 @@ module.exports = class TournamentService {
     }
 
     private async initMatches(tournamentID: number, players: number[], playerCount: number, maxPlayers: number): Promise<void> {
-        let aiID = 100000
+        let aiID = -1
         const len = maxPlayers - playerCount
         for (let index = 0; index < len; index++) {
             await db.join(tournamentID, aiID)
             playerCount++
-            aiID++;
+            aiID--;
         }
 
         players = await db.getPlayers(tournamentID)
@@ -216,6 +213,7 @@ module.exports = class TournamentService {
                 console.log(idleTours[index])
                 await this.initMatches(idleTours[index]['id'], idleTours[index]['players'], idleTours[index]['playerCount'], idleTours[index]['maxPlayers'])
                 await db.lock(idleTours[index]['id'])
+                this.start(idleTours)
             }
         }
 

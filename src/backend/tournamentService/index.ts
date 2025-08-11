@@ -55,8 +55,9 @@ server.get('/tours', { schema: getToursSchema }, async (request: typeof FastifyR
 
 server.post('/create', { schema: createSchema }, async (request: typeof FastifyRequest, reply: typeof FastifyReply) => {
     try {
-        const { name, description, maxPlayers, userID, lockTime } = request.body as { name: string, description: string, maxPlayers: number, userID: number, lockTime: number | undefined }
-        const tournament = await tournamentObj.create(name, description, maxPlayers, userID, lockTime)
+        const { name, maxPlayers, userID, lockTime } = request.body as { name: string, maxPlayers: number, userID: number, lockTime: number | undefined }
+        console.log(maxPlayers)
+        const tournament = await tournamentObj.create(name, maxPlayers, userID, lockTime)
         reply.status(201).send(tournament)
     } catch (error) {
         reply.status(400).send({ error: error instanceof Error ? error.message : String(error) })

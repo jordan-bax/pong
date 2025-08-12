@@ -1,4 +1,34 @@
 paths:
+  /search:
+    get:
+      summary: returns the user that have the given string somewhere in the username
+      Parameters:
+        description: the query string on what to look up for
+      Responses:
+        200:
+          description: return with all the users who have a username with the query string in it
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  users: an array of users who have a username whith the query string in it or empty array
+        401:
+          description: on user is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        400:
+          description: query string missing
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
   /friends:
     get:
       summary: Retrieves the friends list of the logged in user;
@@ -49,6 +79,78 @@ paths:
                   error: string with error message
         404:
           description: user has no pending friend requests
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+  /requested:
+    get:
+      summary: get the users current outgoing friend requests
+      Parameters:
+      Responses:
+        200:
+          description: the user has outgoing friend requests
+          content:
+            string:
+              schema:
+                type: string
+                items:
+                  string: string with all the outgoind friend requests
+        401:
+          description: no user is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        404:
+          description: no outgoing friend requests
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+    post:
+      summary: set friend request
+      Parameters: 
+        description: info of the user to add
+        content:
+          string:
+            schema:
+              type: string
+              items: 
+                email: email of user
+      Responses:
+        200:
+          description: user has been send a friend request
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  success: boolean
+        400:
+          description: perameter not given
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        401:
+          description: qurrent request has no logged in user
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  error: string with error message
+        500:
+          description: server error with database
           content:
             application/json:
               schema:

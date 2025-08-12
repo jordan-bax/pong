@@ -25,28 +25,27 @@ class UserDatabase {
         if (!this.db) {
             throw new Error('database is null');
         }
-        const user = await this.db.get(`SELECT * FROM users WHERE email IS ? OR googleEmail IS ?`, [email, email]);
+        const user = await this.db.get(`
+            SELECT * FROM users 
+            WHERE email IS ? OR googleEmail IS ?`, 
+            [email, email]);
         if (!user) {
             return null;
         }
         return user;
     }
 
-    async getUsers(data: string): Promise<any> {
+    async getUsers(data: string, email: string): Promise<any> {
         if(!this.db) {
             throw new Error('database is null');
         }
         const query = `%${data}%`;
         const users = await this.db.all(`
             SELECT username, email, googleEmail FROM users
-            WHERE LOWER(username) LIKE ? OR LOWER(email) LIKE ? OR LOWER(googleEmail) LIKE ?`,
-            [query, query, query]
+            WHERE (LOWER(username) LIKE ? OR LOWER(email) LIKE ? OR LOWER(googleEmail) LIKE ?)
+            AND (email != ? OR googleEmail != ?)`,
+            [query, query, query, email, email]
         );
-        if (!users) {
-            console.error('no return value on database');
-            return null;
-        }
-        console.log(users);
         return users;
     }
 
@@ -61,10 +60,17 @@ class UserDatabase {
         if (!this.db) {
             throw new Error('database is null');
         }
-        await this.db.run(`
-            INSERT INTO users (username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends, requestedFriends) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-            [username, password, email, googleEmail, pathToPP, null, null, null, null]);
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            await this.db.run(`
+                INSERT INTO users (username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends, requestedFriends) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                [username, password, email, googleEmail, pathToPP, null, null, null, null]);
+            await this.db.exec('COMMIT');
+        } catch (err) {
+            await this.db.exec('ROLLBACK');
+            console.error("transaction error in insert user:", err);
+        }
     }
 
     async insertGoogleUser(payload: TokenPayload, picture: string | null): Promise<void> {
@@ -72,20 +78,27 @@ class UserDatabase {
             throw new Error('database is null');
         }
 
-        await this.db.run(`
-            INSERT INTO users
-            (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ? , ?)`,
-            [
-                typeof payload.given_name !== 'undefined' ? payload.given_name : null, 
-                null, 
-                null, 
-                payload.email, 
-                1, 
-                picture, 
-                null, 
-                null, 
-                null])
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            await this.db.run(`
+                INSERT INTO users
+                (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ? , ?)`,
+                [
+                    typeof payload.given_name !== 'undefined' ? payload.given_name : null, 
+                    null, 
+                    null, 
+                    payload.email, 
+                    1, 
+                    picture, 
+                    null, 
+                    null, 
+                    null]);
+            await this.db.exec("COMMIT");
+        } catch (err) {
+            await this.db.exec('ROLLBACK');
+            console.error('error on insert google user', err);
+        }
     }
 
     async  updateUserInfo(
@@ -114,16 +127,27 @@ class UserDatabase {
         if (newPassword !== null) {
             newPassword = await bcrypt.hash(newPassword, 10);
         }
-        const row = await this.db.run(`
-            UPDATE users
-            SET username = ?, password = ?, email = ?, googleEmail = ?, pathToProfilePicture = ?
-            WHERE email = ?`, [newUsername, newPassword, newEmail, googleEmail, pathToPP, oldEmail]);
-        const change = row.changes || 0;
-        if (change === 1) {
-            return true;
-        } else if (change > 1) {
-            throw new Error('more than one row was effected');
-        } else {
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            const row = await this.db.run(`
+                UPDATE users
+                SET username = ?, password = ?, email = ?, googleEmail = ?, pathToProfilePicture = ?
+                WHERE email = ?`, [newUsername, newPassword, newEmail, googleEmail, pathToPP, oldEmail]);
+            const change = row.changes || 0;
+            if (change === 1) {
+                await this.db.exec('COMMIT');
+                return true;
+            } else if (change > 1) {
+                await this.db.exec('ROLLBACK');
+                console.error('more than one row was effected in updateUserInfo');
+                return false;
+            } else {
+                await this.db.exec('ROLLBACK');
+                return false;
+            }
+        } catch (err) {
+            console.error('error on updateUserInfo', err)
+            await this.db.exec('ROLLBACK');
             return false;
         }
     }
@@ -138,16 +162,27 @@ class UserDatabase {
         if (!this.db) {
             throw new Error("database is null");
         }
-        const row = await this.db.run(`
-            UPDATE users
-            SET username = ?, password = ?, email = ?, googleEmail = ?, pathToProfilePicture = ?
-            WHERE googleEmail = ?`, [newUsername, newPassword, newEmail, googleEmail, pathToPP, googleEmail]);
-        const change = row.changes || 0;
-        if (change === 1) {
-            return true;
-        } else if (change > 1) {
-            throw new Error('more than one row was effected');
-        } else {
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            const row = await this.db.run(`
+                UPDATE users
+                SET username = ?, password = ?, email = ?, googleEmail = ?, pathToProfilePicture = ?
+                WHERE googleEmail = ?`, [newUsername, newPassword, newEmail, googleEmail, pathToPP, googleEmail]);
+            const change = row.changes || 0;
+            if (change === 1) {
+                await this.db.exec('COMMIT');
+                return true;
+            } else if (change > 1) {
+                await this.db.exec('ROLLBACK');
+                console.error('more than one row was effected in updateUserInfoGoogle');
+                return false;
+            } else {
+                await this.db.exec('ROLLBACK');
+                return false;
+            }
+        } catch (err) {
+            await this.db.exec('ROLLBACK');
+            console.error('error on updateUserInfoGoogle', err);
             return false;
         }
     }
@@ -159,10 +194,11 @@ class UserDatabase {
         const friendsList = await this.db.get(`
             SELECT friends 
             FROM users 
-            WHERE email = ${email} OR googleEmail = ${email}`);
+            WHERE email = ? OR googleEmail = ?`,
+            [email, email]);
         if (!friendsList) {
             return null;
-        }
+        };
         return friendsList.friends as string;
     }
 
@@ -170,28 +206,51 @@ class UserDatabase {
         if (!this.db) {
             throw new Error('database is null');
         }
-        const pendingList = await this.db.get(`
+        const pendingList = await this.db.all(`
             SELECT pendingFriends 
             FROM users 
-            WHERE email = ${email} OR googleEmail = ${email}`);
+            WHERE email = ? OR googleEmail = ?`,
+            [email, email]);
+        console.log(pendingList);
         if (!pendingList) {
             return null;
         }
-        return pendingList.pendingFriends;
+        let list: string | null = null;
+        for (const pending of pendingList) {
+            if (!list) {
+                list = pending.pendingFriends;
+            } else {
+                list += ',' + pending.pendingFriends;
+            }
+        }
+        console.log('list is:', list);
+        return list;
     }
 
     async getRequestedFriends(email: string): Promise<string | null> {
         if (!this.db) {
             throw new Error('database is null');
         }
-        const requestList = await this.db.get(`
+        const requestList = await this.db.all(`
             SELECT requestedFriends 
             FROM users 
-            WHERE email = ${email} OR googleEmail = ${email}`);
+            WHERE email = ? OR googleEmail = ?`,
+            [email, email]);
+        console.log(requestList);
+        console.log('email is', email);
         if (!requestList) {
             return null;
         }
-        return requestList.requestedFriends;
+        let list: string | null = null;
+        for (const rq of requestList) {
+            if (!list) {
+                list = rq.requestedFriends;
+            } else {
+                list += ',' + rq.requestedFriends;
+            }
+        }
+        console.log('request list is:', list);
+        return list;
     }
 
     async setFriendRequestPending(fromEmail: string, toEmail: string): Promise<boolean> {
@@ -201,14 +260,12 @@ class UserDatabase {
         const userFriends = await this.getFriends(fromEmail);
         const friendFriends = await this.getFriends(toEmail);
 
-        if (!userFriends || !friendFriends) {
+        if(userFriends?.includes(toEmail) && friendFriends?.includes(fromEmail)){
+            console.log('already friends');
             return false;
-        }
-
-        if(userFriends.includes(toEmail) && friendFriends.includes(fromEmail)){
-            return false;
-        } else if (userFriends.includes(toEmail) && friendFriends.includes(fromEmail)) {
+        } else if (userFriends?.includes(toEmail) && friendFriends?.includes(fromEmail)) {
             if (! await this.acceptFriendRequest(fromEmail, toEmail)) {
+                console.log('already asked');
                 return false;
             }
             return true;
@@ -216,12 +273,12 @@ class UserDatabase {
 
         let pendingFrom = await this.getPendingFriends(fromEmail);
         let requestTo = await this.getRequestedFriends(toEmail);
-        if (!pendingFrom || !requestTo) {
+        if (pendingFrom?.includes(toEmail) && requestTo?.includes(fromEmail)) {
             return false;
         }
 
         let newPending = pendingFrom;
-        if (!newPending) {
+        if (!newPending || newPending === '0') {
             newPending = toEmail
         } else {
             newPending += ',' + toEmail
@@ -232,44 +289,45 @@ class UserDatabase {
         } else {
             newRequest += ',' + fromEmail;
         }
-
-        const updatedPending = await this.db.run(`
-            UPDATE users
-            SET pendingFriends = ?
-            WHERE email = ? OR googleEmail = ?`,
-        [newPending, fromEmail, fromEmail]);
-        let changes = updatedPending.changes || 0;
-        if (changes > 1) {
-            throw new Error("more then 1 row was effected when updating friend pending");
-        } else if (changes == 0) {
-            return false;
-        }
-
-        const updatedRequest = await this.db.run(`
-            UPDATE users
-            SET requestedFriends = ?
-            WHERE email = ? OR googleEmail = ?`,
-        [newRequest, toEmail, toEmail]);
-        changes = updatedRequest.changes || 0;
-        if (changes > 1) {
-            await this.db.run(`
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            const updatedPending = await this.db.run(`
                 UPDATE users
                 SET pendingFriends = ?
                 WHERE email = ? OR googleEmail = ?`,
-                [pendingFrom, fromEmail, fromEmail]
-            );
-            throw new Error("more then 1 row was effected when updating friend request");
-        } else if (changes == 0) {
-            await this.db.run(`
+            [newPending, fromEmail, fromEmail]);
+            let changes = updatedPending.changes || 0;
+            if (changes > 1) {
+                await this.db.exec('ROLLBACK');
+                console.error("more then 1 row was effected when updating friend pending");
+                return false;
+            } else if (changes == 0) {
+                await this.db.exec('ROLLBACK');
+                console.log('no changes in pending')
+                return false;
+            }
+
+            const updatedRequest = await this.db.run(`
                 UPDATE users
-                SET pendingFriends = ?
+                SET requestedFriends = ?
                 WHERE email = ? OR googleEmail = ?`,
-                [pendingFrom, fromEmail, fromEmail]
-            );
+            [newRequest, toEmail, toEmail]);
+            changes = updatedRequest.changes || 0;
+            if (changes > 1) {
+                await this.db.exec('ROLLBACK');
+                console.error("more then 1 row was effected when updating friend request");
+            } else if (changes == 0) {
+                console.log('no changes in requested');
+                await this.db.exec('ROLLBACK');
+                return false;
+            }
+            await this.db.exec('COMMIT');
+            return true;
+        } catch (err) {
+            await this.db.exec('ROLLBACK');
+            console.error('error in setFriendRequestPending', err);
             return false;
         }
-
-        return true;
     }
 
     async acceptFriendRequest(userEmail: string, fromEmail: string): Promise<boolean> {
@@ -320,59 +378,50 @@ class UserDatabase {
             }
         }
 
-        let row = await this.db.run(`
-            UPDATE users
-            SET friends = ?
-            WHERE email = ? OR googleEmail = ?`,
-            [userFriends, userEmail, userEmail]
-        );
-        let changes = row.changes || 0;
-        if (changes > 1) {
-            throw new Error('more then 1 row effected when updating user friends field');
-        } else if (changes == 0) {
-            return false;
-        }
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            let row = await this.db.run(`
+                UPDATE users
+                SET friends = ?
+                WHERE email = ? OR googleEmail = ?`,
+                [userFriends, userEmail, userEmail]
+            );
+            let changes = row.changes || 0;
+            if (changes > 1) {
+                await this.db.exec('ROLLBACK');
+               console.error('more then 1 row effected when updating user friends field');
+               return false;
+            } else if (changes == 0) {
+                await this.db.exec('ROLLBACK');
+                return false;
+            }
 
-        row = await this.db.run(`
-            UPDATE users
-            SET friends = ?
-            WHERE email = ? OR googleEmail = ?`,
-            [userFriends, fromEmail, fromEmail]
-        );
-        changes = row.changes || 0;
-        if (changes > 1) {
-            await this.db.run(`
+            row = await this.db.run(`
                 UPDATE users
                 SET friends = ?
                 WHERE email = ? OR googleEmail = ?`,
-                [user.friends, userEmail, userEmail]
+                [userFriends, fromEmail, fromEmail]
             );
-            throw new Error('more then 1 row efected when updating friend friends field');
-        } else if (changes == 0) {
-            await this.db.run(`
-                UPDATE users
-                SET friends = ?
-                WHERE email = ? OR googleEmail = ?`,
-                [user.friends, userEmail, userEmail]
-            );
+            changes = row.changes || 0;
+            if (changes > 1) {
+                await this.db.exec('ROLLBACK');
+                console.error('more then 1 row efected when updating friend friends field');
+                return false;
+            } else if (changes == 0) {
+                await this.db.exec('ROLLBACK');
+                return false;
+            }
+            if (! await this.removeRequestPending(userEmail, fromEmail)) {
+                await this.db.exec('ROLLBACK');
+                return false;
+            }
+            await this.db.exec('COMMIT');
+            return true;
+        } catch (err) {
+            await this.db.exec('ROLLBACK');
+            console.error('error in acceptFriendRequest', err);
             return false;
         }
-        if (! await this.removeRequestPending(userEmail, fromEmail)) {
-            await this.db.run(`
-                UPDATE users
-                SET friends = ?
-                WHERE email = ? OR googleEmail = ?`,
-                [user.friends, userEmail, userEmail]
-            );
-            await this.db.run(`
-                UPDATE users
-                SET friends = ?
-                WHERE email = ? OR googleEmail = ?`,
-                [friend.friends, fromEmail, fromEmail]
-            );
-            return false;
-        }
-        return true;
     }
 
     async removeRequestPending(userEmail: string, friendEmail: string): Promise<boolean> {
@@ -408,32 +457,40 @@ class UserDatabase {
         const newRequest = request.split(',')
             .map(email => email !== userEmail)
             .join(',');
-        
-        let row = await this.db.run(`
-            UPDATE users
-            SET friendsPending = ${newPending}
-            WHERE email = ${userEmail} OR googleEmail = ${userEmail}`
-        );
-        let changes = row.changes || 0;
-        if (changes > 1) {
-            throw new Error('error when removing pending friend');
-        }
-
-        row = await this.db.run(`
-            UPDATE users
-            SET requestedFriends = ${newRequest}
-            WHERE email = ${friendEmail} OR googleEmail = ${friendEmail}`
-        );
-        changes = row.changes || 0;
-        if (changes > 1) {
-            await this.db.run(`
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            let row = await this.db.run(`
                 UPDATE users
-                SET friendsPending = ${pending}
-                WHERE email = ${userEmail} OR googleEmail = ${userEmail}`
+                SET friendsPending = ?
+                WHERE email = ? OR googleEmail = ?`,
+                [newPending, userEmail, userEmail]
             );
-            throw new Error("error when removing request friend");
+            let changes = row.changes || 0;
+            if (changes > 1) {
+                await this.db.exec('ROLLBACK');
+                console.error('error when removing pending friend');
+                return false;
+            }
+
+            row = await this.db.run(`
+                UPDATE users
+                SET requestedFriends = ?}
+                WHERE email = ? OR googleEmail = ?`,
+                [newRequest, friendEmail, friendEmail]
+            );
+            changes = row.changes || 0;
+            if (changes > 1) {
+                await this.db.exec('ROLLBACK');
+                console.error("error when removing request friend");
+                return false;
+            }
+            await this.db.exec('COMMIT');
+            return true;
+        } catch (err) {
+            await this.db.exec('ROLLBACK');
+            console.error('error in removeRequestPending', err);
+            return false;
         }
-        return true;
     }
 
     async seedDatabase(): Promise<void> {
@@ -443,24 +500,34 @@ class UserDatabase {
         const isSeeded = await this.db.get('SELECT * from meta;');
         if (isSeeded)
             return;
-        await this.db.run(`INSERT INTO meta (seeded) VALUES ('true');`)
-        const statement = await this.db.prepare(`
-            INSERT INTO users 
-            (id, username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-        );
+        await this.db.exec('BEGIN TRANSACTION');
+        try {
+            await this.db.run(`INSERT INTO meta (seeded) VALUES ('true');`)
+            const statement = await this.db.prepare(`
+                INSERT INTO users 
+                (id, username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+            );
 
-        let password = await bcrypt.hash('admin', 10);
-        await statement.run(3, 'Alice', password, 'aa@mail.com', null, null, 'bt@mail.com', null);
+            let password = await bcrypt.hash('admin', 10);
+            await statement.run(3, 'Alice', password, 'aa@mail.com', null, null, 'bt@mail.com', null);
 
-        password = await bcrypt.hash('test', 10);
-        await statement.run(4, 'bob', password, 'bt@mail.com', null, null, 'aa@mail.com', null);
+            password = await bcrypt.hash('test', 10);
+            await statement.run(4, 'bob', password, 'bt@mail.com', null, null, 'aa@mail.com', null);
 
-        await statement.finalize();
+            await statement.finalize();
 
-        await this.db.each('SELECT * FROM users;', (err, row) => {
-            if (err) throw err;
-        });
+            await this.db.each('SELECT * FROM users;', async (err, row) => {
+                if (err)  {
+                    await this.db?.exec('ROLLBACK');
+                    throw err;
+                }
+            });
+            await this.db.exec('COMMIT');
+        } catch (err) {
+            this.db.exec('ROLLBACK');
+            console.error('error seeding database', err);
+        }
     }
     
     private async initdatabase(file: string):Promise<Database>  {

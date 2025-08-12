@@ -1,7 +1,7 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends } from "./routing.js";
 
 declare global {
     interface Window {
@@ -84,7 +84,7 @@ function setupSearchUsers(): HTMLDivElement {
         
         try {
             const users = await searchUsers(query);
-            renderResult(users);
+            await renderResult(users);
         } catch (err) {
             console.error(err);
         }
@@ -93,7 +93,7 @@ function setupSearchUsers(): HTMLDivElement {
     return searchDiv;
 }
 
-function renderResult(users: searchUser[] | searchUser | null): void {
+async function renderResult(users: searchUser[] | null): Promise<void> {
     const searchDiv = document.getElementById('searchDiv');
     if (!searchDiv) {
         console.error('no searchDiv');
@@ -108,30 +108,197 @@ function renderResult(users: searchUser[] | searchUser | null): void {
         resultList.style.listStyleType = 'none';
     }
     const listItem = document.createElement('li');
-    if (!users) {
-        listItem.textContent = 'No Users found.'
-        resultList.appendChild(listItem);
-        searchDiv.appendChild(resultList);
-        return;
-    }
     if (Array.isArray(users))
     {
         if (users.length === 0) {
             listItem.textContent = 'No Users found.'
             resultList.appendChild(listItem);
             searchDiv.appendChild(resultList);
-        return;
+            return;
         }
+        const friends = await getFriends() as string;
+        let friendArray: string[] = [];
+        if (friends !== null)
+        {
+            if (friends.includes(',')) {
+                friendArray = friends.split(',');
+            } else {
+                friendArray[0] = friends;
+            }
+        }
+        const requested = await getRequestedFriends() as string;
+        let requestedArray: string[] = [];
+        if (requested !== null) {
+            if (requested.includes(',')) {
+                requestedArray = requested.split(',');
+            } else {
+                requestedArray[0] = requested;
+            }
+        }
+        const pending = await getPendingFriends() as string;
+        let pendingArray: string[] = [];
+        if (pending !== null) {
+            if (pending.includes(',')) {
+                pendingArray = pending.split(',');
+            } else {
+                pendingArray[0] = pending;
+            }
+        }
+        let i = 0;
         users.forEach(user => {
             const item = document.createElement('li');
-            item.textContent = `${user.username || ''} (${user.email || ''}${typeof user.googleEmail === 'string' ? '/' + user.googleEmail : ''})`;
+            item.textContent = `${user.username || ''} (${user.email || ''}${typeof user.googleEmail === 'string' ? user.googleEmail : ''})`;
+            let email: string;
+            if (user.email) {
+                email = user.email;
+            } else  {
+                email = user.googleEmail as string
+            }
+            if (!friendArray.includes(email) && !requestedArray.includes(email) && !pendingArray.includes(email)) {
+                const addFriendButton = document.createElement('button');
+                addFriendButton.id = 'AddFriendbutton' + i;
+                addFriendButton.textContent = 'Add friend';
+                addFriendButton.addEventListener('click', async () => {
+                    await sendFriendRequest(user);
+                });
+                item.appendChild(addFriendButton);
+            } else {
+                const friendButton = document.getElementById('AddFriendButton' + i)
+                if (friendButton) {
+                    item.removeChild(friendButton);
+                }
+            }
+            ++i;
             resultList.appendChild(item);
         });
-    } else {
-        listItem.textContent = `${users.username} (${users.email}/${users.googleEmail})`;
-        resultList.appendChild(listItem);
+        searchDiv.appendChild(resultList);
     }
-    searchDiv.appendChild(resultList);
+}
+
+async function renderFriendLists(): Promise<HTMLTableElement> {
+    const friendLists = document.createElement('table');
+    friendLists.id = 'friendsLists';
+    const currentFriends = await friendsList();
+    friendLists.appendChild(currentFriends);
+    const currentOutgoing = await pendingList();
+    friendLists.appendChild(currentOutgoing);
+    const currentIncomming =  await requestedList();
+    friendLists.appendChild(currentIncomming);
+    return friendLists;
+}
+
+async function friendsList(): Promise<HTMLTableRowElement> {
+    const listRow = document.createElement('tr');
+    const title = document.createElement('td');
+    title.textContent = 'Friends';
+    listRow.appendChild(title);
+    const friends = await getFriends();
+    if (!friends) {
+        return listRow;
+    }
+    const data = document.createElement('td');
+    const list = document.createElement('ul');
+    list.style.listStyleType = 'none';
+    if (friends.includes(',')) {
+        const friendArray = friends.split(',');
+        friendArray.forEach(async fr => {
+            const user = await searchUsers(fr)
+            if (!user) {
+                return;
+            }
+            const listItem = document.createElement('li');
+            listItem.textContent = user[0].username;
+            // TODO add online status
+            list.appendChild(listItem);
+        });
+    } else {
+        const user = await searchUsers(friends);
+        if (!user) {
+            return listRow;
+        }
+        const listItem = document.createElement('li');
+        listItem.textContent = user[0].username;
+        list.appendChild(listItem);
+    }
+    data.appendChild(list);
+    listRow.appendChild(data);
+    return listRow;
+}
+
+async function pendingList(): Promise<HTMLTableRowElement> {
+    const listRow = document.createElement('tr');
+    const title = document.createElement('td');
+    title.textContent = 'outstanding friend requests';
+    listRow.appendChild(title);
+    const friends = await getPendingFriends();
+    if (!friends) {
+        return listRow;
+    }
+    const data = document.createElement('td');
+    const list = document.createElement('ul');
+    list.style.listStyleType = 'none';
+    if (friends.includes(',')) {
+        const friendArray = friends.split(',');
+        friendArray.forEach(async fr => {
+            const user = await searchUsers(fr)
+            if (!user) {
+                return;
+            }
+            const listItem = document.createElement('li');
+            listItem.textContent = user[0].username;
+            // TODO add online accept/reject buttons
+            list.appendChild(listItem);
+        });
+    } else {
+        const user = await searchUsers(friends);
+        if (!user) {
+            return listRow;
+        }
+        const listItem = document.createElement('li');
+        listItem.textContent = user[0].username;
+        list.appendChild(listItem);
+    }
+    data.appendChild(list);
+    listRow.appendChild(data);
+    return listRow;
+}
+
+async function requestedList(): Promise<HTMLTableRowElement> {
+    const listRow = document.createElement('tr');
+    const title = document.createElement('td');
+    title.textContent = 'incomming friend requests';
+    listRow.appendChild(title);
+    const friends = await getRequestedFriends();
+    if (!friends) {
+        return listRow;
+    }
+    const data = document.createElement('td');
+    const list = document.createElement('ul');
+    list.style.listStyleType = 'none';
+    if (friends.includes(',')) {
+        const friendArray = friends.split(',');
+        friendArray.forEach(async fr => {
+            const user = await searchUsers(fr)
+            if (!user) {
+                return;
+            }
+            const listItem = document.createElement('li');
+            listItem.textContent = user[0].username;
+            // TODO add online accept/reject buttons
+            list.appendChild(listItem);
+        });
+    } else {
+        const user = await searchUsers(friends);
+        if (!user) {
+            return listRow;
+        }
+        const listItem = document.createElement('li');
+        listItem.textContent = user[0].username;
+        list.appendChild(listItem);
+    }
+    data.appendChild(list);
+    listRow.appendChild(data);
+    return listRow;
 }
 
 function renderGoogle(): HTMLDivElement {
@@ -588,6 +755,8 @@ export async function renderContent (route: string): Promise<void> {
                 window.location.href = '/login';
                 return;
             }
+            const friends = await renderFriendLists();
+            content.appendChild(friends);
             break;
         case 'login':
             const googleLogin = renderGoogle();

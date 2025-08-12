@@ -142,15 +142,18 @@ class server {
 
     private async registerRoutes() {
         this.fastify.get('/search', async (req, reply) => {
+            if (!req.session.user) {
+                return reply.code(401).send({ error: 'unauthorized' });
+            }
             const query = (req.query as {q?: string}).q?.toLocaleLowerCase();
             if (typeof query === 'undefined' || query === '') {
                 return reply.code(400).send({ error: 'Missing query' });
             }
 
-            const users = await this.db.getUsers(query);
+            const users = await this.db.getUsers(query, req.session.user.email);
 
             return reply.send(users);
-        })
+        });
 
         this.fastify.get('/csrf-token', async (req, reply) => {
             const token = reply.generateCsrf();
@@ -249,6 +252,23 @@ class server {
             }
             return reply.send(requested);
         });
+
+        this.fastify.post('/requested', async (req: FastifyRequest, reply) => {
+            const user = req.session.user;
+            const toEmail = req.body as string | null;
+            if (!user) {
+                return reply.code(401).send({ error: 'unauthorized' });
+            }
+            if (!toEmail) {
+                return reply.code(400).send({ error: 'noBody' });
+            }
+
+            const setRequest = await this.db.setFriendRequestPending(user.email, toEmail);
+            if (!setRequest) {
+                return reply.code(500).send({ error: 'serverError' });
+            }
+            return reply.send({ success: true});
+        })
 
         this.fastify.post( '/register', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
             let userData = {} as registerBody;

@@ -89,8 +89,56 @@ async function getErrorMessages(): Promise<ierrors> {
     return output;
 }
 
-export async function searchUsers(query: string): Promise<searchUser[] | searchUser | null> {
-    const response = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`);
+export async function getFriends(): Promise<string | null> {
+    const response = await fetch('/api/user/friends', {
+        credentials: 'include'
+    });
+
+    if (!response.ok) {
+        return null;
+    }
+    const data = await response.text();
+    return data;
+}
+
+export async function getRequestedFriends(): Promise<string | null> {
+    const respone = await fetch('/api/user/requested', {
+        credentials: 'include'
+    });
+    if (!respone.ok) {
+        return null;
+    }
+    const data = await respone.text();
+    return data;
+}
+
+export async function getPendingFriends(): Promise<string | null> {
+    const response = await fetch('/api/user/pending', {
+        credentials: 'include'
+    });
+    if (!response.ok) {
+        return null;
+    }
+    const data = await response.text();
+    return data;
+}
+
+export async function sendFriendRequest(user: searchUser): Promise<void> {
+    const response = await fetch('/api/user/requested', {
+        credentials:'include',
+        method: 'POST',
+        body: user.email || user.googleEmail
+    });
+
+    if (!response.ok) {
+        console.error('failed to set friend request', response.statusText);
+    }
+}
+
+export async function searchUsers(query: string): Promise<searchUser[] | null> {
+    const response = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`, {
+        credentials: 'include'
+    });
 
     if (!response.ok) {
         console.error('failed to fetch users');

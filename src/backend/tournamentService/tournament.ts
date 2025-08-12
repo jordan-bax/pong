@@ -1,5 +1,4 @@
 import { log } from "console"
-import { Tournament } from "./schemas/tournamentInterface.ts"
 import TournementDB from "./tournamentDB"
 
 const db = new TournementDB
@@ -39,25 +38,29 @@ class TournamentService {
         }
 
         try {
-            const dbObj = await db.create(name, maxPlayers, Math.round(Date.now() + (duration * 1000)), userID)
+            const dbObj = await db.create(
+                name,
+                maxPlayers,
+                Math.round(Date.now() + (duration * 1000)),
+                userID)
             if (this.checkInterval === null) {
                 this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
             }
             return dbObj
         } catch (error) {
-           throw error
+            throw error
         }
     }
 
     async getByID(tournamentID: number) {
-        if (tournamentID  < 1) {
+        if (tournamentID < 1) {
             throw new Error('Tournament can not be negative')
         }
 
         try {
-           return await db.getTournament(tournamentID)
+            return await db.getTournament(tournamentID)
         } catch (error) {
-           throw error
+            throw error
         }
     }
 
@@ -128,8 +131,9 @@ class TournamentService {
         }
     }
 
-    async start(tournament: Tournament[]) {
-        // const games = await db.games(tournament.id)
+    async start(tournamentID: number) {
+        const tour = await db.getTournament(tournamentID)
+        console.log('start match: ', tour)
 
         // check if thre are ai only games
 
@@ -141,7 +145,11 @@ class TournamentService {
         return
     }
 
-    async matchDone(tournamentID: number, playerID1: number, playerID2: number, winnerID: number) {
+    async matchDone(
+        tournamentID: number,
+        playerID1: number,
+        playerID2: number,
+        winnerID: number) {
         // const index = this.runningTournaments.findIndex(t => t.tournament.id === tournamentID)
         // if (index === -1) {
         //     return 1
@@ -169,7 +177,11 @@ class TournamentService {
         return [[]]
     }
 
-    private async initMatches(tournamentID: number, players: number[], playerCount: number, maxPlayers: number) {
+    private async initMatches(
+        tournamentID: number,
+        players: number[],
+        playerCount: number,
+        maxPlayers: number) {
         let aiID = -1
         const len = maxPlayers - playerCount
         for (let index = 0; index < len; index++) {
@@ -212,11 +224,14 @@ class TournamentService {
 
         const idleTours = await db.idle()
         for (let index = 0; index < idleTours.length; index++) {
-            if (now >= idleTours[index]['lockTime']) {
-                console.log(idleTours[index])
-                await this.initMatches(idleTours[index]['id'], idleTours[index]['players'], idleTours[index]['playerCount'], idleTours[index]['maxPlayers'])
-                await db.lock(idleTours[index]['id'])
-                this.start(idleTours)
+            if (now >= idleTours[index].lockTime) {
+                await this.initMatches(
+                    idleTours[index].id,
+                    idleTours[index].players,
+                    idleTours[index].playerCount,
+                    idleTours[index].maxPlayers)
+                await db.lock(idleTours[index].id)
+                this.start(idleTours[index].id)
             }
         }
 

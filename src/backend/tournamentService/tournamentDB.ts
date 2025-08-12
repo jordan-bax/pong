@@ -24,6 +24,7 @@ class TournamentDB {
                 name TEXT NOT NULL,
                 rounds INTEGER NOT NULL,
                 isRunning INTEGER NOT NULL,
+                isFinished INTEGER NOT NULL,
                 lockTime REAL NOT NULL,
                 playerCount INTEGER NOT NULL,
                 maxPlayers INTEGER NOT NULL)`
@@ -96,9 +97,9 @@ class TournamentDB {
         }
 
         const result = await this.db.run(`
-            INSERT INTO tournament (name, rounds, isRunning, lockTime, playerCount, maxPlayers)
-            VALUES (?, ?, ?, ?, ?, ?)`,
-            [name, 1 ? maxPlayers < 4 : maxPlayers / 2, false, lockTime, 0, maxPlayers])
+            INSERT INTO tournament (name, rounds, isRunning, isFinished, lockTime, playerCount, maxPlayers)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [name, Math.ceil(Math.log2(maxPlayers)), false, false, lockTime, 0, maxPlayers])
         if (result.changes === 0) {
             new Error('Could not insert in database')
         }
@@ -128,17 +129,19 @@ class TournamentDB {
                 INSERT INTO players (tournamentID, userID)
                 SELECT ?, ?
                 WHERE (
-                    SELECT NOT isRunning AND playerCount < maxPlayers
+                    SELECT NOT isRunning
+                    AND playerCount < maxPlayers
                     FROM tournament
                     WHERE id = ?
                 ) = 1
                 AND NOT EXISTS (
                     SELECT 1
                     FROM players
-                    WHERE userID = ? AND tournamentID = ?
+                    WHERE userID = ?
+                    AND tournamentID = ?
                 )`,
                 [tournamentID, userID, tournamentID, userID, tournamentID])
-            console.log(result)
+
             if (result.changes === 0) {
                 throw new Error('Cannot join tournament with a invalid ID')
             }
@@ -165,20 +168,24 @@ class TournamentDB {
                     SELECT id
                     FROM tournament
                     WHERE id = ?
-                        AND NOT isRunning)`,
+                    AND NOT isRunning)`,
                 [userID, tournamentID, tournamentID])
 
             if (result.changes === 0) {
                 throw new Error('Can not leave tournament with invalid ID')
             }
+
             const row = await this.db.get(`
-                SELECT playerCount FROM tournament WHERE id = ?`,
+                SELECT playerCount
+                FROM tournament
+                WHERE id = ?`,
                 [tournamentID])
 
-            // check for missing row
             if (row && row.playerCount === 0) {
                 await this.db.run(`
-                DELETE FROM tournament where id = ?`,
+                DELETE
+                FROM tournament
+                WHERE id = ?`,
                     [tournamentID])
             }
         } catch (error) {
@@ -192,14 +199,25 @@ class TournamentDB {
         }
 
         try {
-            const tours = await this.db.all(`
-                SELECT * FROM tournament WHERE isRunning = ? AND winner < ?`,
-                [1, 1])
-            // TODO: make query with join
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
-            }
-            return tours
+            const result = await this.db.all(`
+                SELECT
+                    t.*,
+                    COALESCE((
+                        SELECT GROUP_CONCAT(p.userID)
+                        FROM players p
+                        WHERE p.tournamentID = t.id
+                    ), '') AS player_ids
+                FROM tournament t
+                WHERE isRunning = ?
+                AND isFinished = ?`,
+                [1, 0])
+
+            return result.map(({ player_ids, ...row }) => ({
+                ...row,
+                players: player_ids
+                    ? player_ids.split(',').map(Number)
+                    : []
+            }))
         } catch (error) {
             throw new Error('Failed to get all running tournaments')
         }
@@ -211,15 +229,24 @@ class TournamentDB {
         }
 
         try {
-            const tours = await this.db.all(`
-                SELECT * FROM tournament WHERE isRunning = ?`,
+            const result = await this.db.all(`
+                SELECT
+                    t.*,
+                    COALESCE((
+                        SELECT GROUP_CONCAT(p.userID)
+                        FROM players p
+                        WHERE p.tournamentID = t.id
+                    ), '') AS player_ids
+                FROM tournament t
+                WHERE isRunning = ?`,
                 [0])
 
-            // TODO: make query with join
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
-            }
-            return tours
+            return result.map(({ player_ids, ...row }) => ({
+                ...row,
+                players: player_ids
+                    ? player_ids.split(',').map(Number)
+                    : []
+            }))
         } catch (error) {
             throw new Error('Failed to get all running tournaments')
         }
@@ -231,15 +258,24 @@ class TournamentDB {
         }
 
         try {
-            const tours = await this.db.all(`
-                SELECT * FROM tournament WHERE winner > ?`,
-                [0])
+            const result = await this.db.all(`
+                SELECT
+                    t.*,
+                    COALESCE((
+                        SELECT GROUP_CONCAT(p.userID)
+                        FROM players p
+                        WHERE p.tournamentID = t.id
+                    ), '') AS player_ids
+                FROM tournament t
+                WHERE isFinished = ?`,
+                [1])
 
-            // TODO: make query with join
-            for (let index = 0; index < tours.length; index++) {
-                tours[index]['players'] = await this.getPlayers(tours[index]['id']);
-            }
-            return tours
+            return result.map(({ player_ids, ...row }) => ({
+                ...row,
+                players: player_ids
+                    ? player_ids.split(',').map(Number)
+                    : []
+            }))
         } catch (error) {
             throw new Error('Failed to get all running tournaments')
         }
@@ -261,11 +297,10 @@ class TournamentDB {
                     ), '') AS player_ids
                 FROM tournament t`)
 
-            console.log(result)
-            return result.map(row => ({
+            return result.map(({ player_ids, ...row }) => ({
                 ...row,
-                players: row.player_ids
-                    ? row.player_ids.split(',').map(Number)
+                players: player_ids
+                    ? player_ids.split(',').map(Number)
                     : []
             }))
         } catch (error) {
@@ -285,38 +320,60 @@ class TournamentDB {
         }
 
         const tourObj = await this.db.get(`
-            SELECT
-                t.id, t.name, t.rounds,
-                t.isRunning, t.lockTime, t.playerCount, t.maxPlayers,
-                GROUP_CONCAT(p.userID) AS players
+            SELECT t.id, t.name, t.rounds, t.isRunning, t.isFinished, t.lockTime, t.playerCount, t.maxPlayers,
+            (SELECT GROUP_CONCAT(p.userID)
+                FROM players p
+                WHERE p.tournamentID = t.id)
+            AS players,
+            (SELECT GROUP_CONCAT(
+                    COALESCE(m.player1_id, 'NULL') || ',' || COALESCE(m.player2_id, 'NULL'),
+                    ';')
+            FROM match m
+            WHERE m.tournamentID = t.id
+            ORDER BY m.round, m.position)
+            AS matches
             FROM tournament t
-            LEFT JOIN players p ON t.id = p.tournamentID
-            WHERE t.id = ?
-            GROUP BY t.id`,
+            WHERE t.id = ?`,
             [tournamentID])
 
         if (tourObj === undefined) {
             throw new Error('could not get tournament from DB')
         }
 
-        // TODO: query nextMatchs
+        const matches = tourObj.matches
+                ? tourObj.matches.split(';').map(matchStr => {
+                    const [p1, p2] = matchStr.split(',');
+                    return [
+                        p1 !== 'NULL' ? parseInt(p1, 10) : null,
+                        p2 !== 'NULL' ? parseInt(p2, 10) : null
+                    ]
+                })
+                : []
+
         return {
-            id: tourObj['id'],
-            name: tourObj['name'],
-            rounds: tourObj['rounds'],
-            isRunning: tourObj['isRunning'],
-            lockTime: tourObj['lockTime'],
-            playerCount: tourObj['playerCount'],
-            maxPlayers: tourObj['maxPlayers'],
-            players: tourObj['players'] ? tourObj['players'].split(',').map(Number) : [],
-            nextMatchs: [[]]
+            id: tourObj.id,
+            name: tourObj.name,
+            rounds: tourObj.rounds,
+            isRunning: tourObj.isRunning,
+            isFinished: tourObj.isFinished,
+            lockTime: tourObj.lockTime,
+            playerCount: tourObj.playerCount,
+            maxPlayers: tourObj.maxPlayers,
+            players: tourObj.players ? tourObj.players.split(',').map(Number) : [],
+            nextMatchs: matches
         }
     }
 
     async getPlayers(tournamentID: number) {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
         try {
             const players = await this.db.all(`
-                SELECT userID FROM players WHERE tournamentID = ?`,
+                SELECT userID
+                FROM players
+                WHERE tournamentID = ?`,
                 [tournamentID])
             return players.map(players => players.userID)
         } catch (error) {
@@ -351,7 +408,8 @@ class TournamentDB {
             await this.db.run(`
                 UPDATE tournament
                 SET isRunning = 1
-                WHERE id = ? AND NOT isRunning`,
+                WHERE id = ?
+                AND NOT isRunning`,
                 [tournamentID])
         } catch (error) {
             throw error

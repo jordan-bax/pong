@@ -3,6 +3,7 @@ export interface Tournament {
     name: string
     rounds: number
     isRunning: boolean
+    isFinished: boolean
     lockTime: number
     playerCount: number
     maxPlayers: number

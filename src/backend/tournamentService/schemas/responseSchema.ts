@@ -89,9 +89,11 @@ export const gameDoneSchema = {
             tournamentID: { type: 'number' },
             playerID1: { type: 'number' },
             playerID2: { type: 'number' },
-            winnerID: { type: 'number' }
+            winnerID: { type: 'number' },
+            player1Score: { type: 'number'},
+            player2Score: { type: 'number'}
         },
-        required: ['playerID1', 'playerID2', 'winnerID']
+        required: ['playerID1', 'playerID2', 'winnerID', 'player1Score', 'player2Score']
     },
     response: {
         201: {
@@ -129,6 +131,7 @@ export const getTourSchema = {
                 name: { type: 'string' },
                 rounds: { type: 'number' },
                 isRunning: { type: 'boolean' },
+                isFinished: { type: 'boolean' },
                 lockTime: { type: 'number' },
                 playerCount: { type: 'number' },
                 maxPlayers: { type: 'number' },
@@ -144,7 +147,7 @@ export const getTourSchema = {
                     }
                 }
             },
-            required: ['id', 'name', 'rounds', 'isRunning', 'lockTime', 'playerCount', 'maxPlayers', 'players'],
+            required: ['id', 'name', 'rounds', 'isRunning', 'isFinished', 'lockTime', 'playerCount', 'maxPlayers', 'players', 'nextMatchs'],
             additionalProperties: true
         },
         400: {
@@ -166,11 +169,9 @@ export const getToursSchema = {
                 properties: {
                     id: { type: 'number' },
                     name: { type: 'string' },
-                    description: { type: 'string' },
                     rounds: { type: 'number' },
-                    currentRound: { type: 'number' },
-                    winner: { type: 'number' },
                     isRunning: { type: 'boolean' },
+                    isFinished: { type: 'boolean' },
                     lockTime: { type: 'number' },
                     playerCount: { type: 'number' },
                     maxPlayers: { type: 'number' },
@@ -186,7 +187,7 @@ export const getToursSchema = {
                         }
                     }
                 },
-                required: ['id', 'name', 'description', 'rounds', 'currentRound', 'winner', 'isRunning', 'lockTime', 'playerCount', 'maxPlayers', 'players'],
+                required: ['id', 'name', 'rounds', 'isRunning', 'isFinished' , 'lockTime', 'playerCount', 'maxPlayers', 'players'],
                 additionalProperties: true
             }
         },

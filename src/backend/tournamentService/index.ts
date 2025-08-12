@@ -85,17 +85,17 @@ server.post('/leave', { schema: leaveSchema }, async (request: FastifyRequest, r
     }
 })
 
-// server.post('/done', { schema: gameDoneSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
-//     const { tournamentID, playerID1, playerID2, winnerID } = request.body as { tournamentID: number, playerID1: number, playerID2: number, winnerID: number }
-//     const result = await tournamentObj.matchDone(tournamentID, playerID1, playerID2, winnerID)
-//     switch (result) {
-//         case 0:
-//             reply.status(201).send({ 'message': 'OK' })
-//             break
-//         case 1:
-//             reply.status(400).send({ 'error': 'Invalid tournamentID' })
-//     }
-// })
+server.post('/done', { schema: gameDoneSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const { tournamentID, playerID1, playerID2, winnerID } = request.body as { tournamentID: number, playerID1: number, playerID2: number, winnerID: number }
+    const result = await tournamentObj.matchDone(tournamentID, playerID1, playerID2, winnerID)
+    switch (result) {
+        case 0:
+            reply.status(201).send({ 'message': 'OK' })
+            break
+        case 1:
+            reply.status(400).send({ 'error': 'Invalid tournamentID' })
+    }
+})
 
 // endpoint notification [{'timestamp', 'message: str'}] leeg als er niks is
 

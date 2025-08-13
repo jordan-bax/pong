@@ -148,6 +148,19 @@ export async function searchUsers(query: string): Promise<searchUser[] | null> {
     return data as searchUser[];
 }
 
+export async function removeRequest(email:string): Promise<boolean> {
+    const response = await fetch('/api/user/friendRequest', {
+        method: 'DELETE',
+        body: email,
+        credentials: 'include'
+    });
+    if (!response.ok) {
+        console.error('failed to remove request');
+        return false;
+    }
+    return true;
+}
+
 export function getLoggin(): boolean {
     return isLoggedIn;
 }
@@ -194,10 +207,14 @@ export async function updateUserInfo(
     formData.append('oldEmail', oldEmail);
     formData.append('oldUsername', oldUsername);
     formData.append('oldPassword', oldPassword);
+    console.log(formData);
     const response = await fetch('api/user/update', {
         credentials: 'include',
         method: 'PATCH',
-        body: formData
+        body: formData,
+        headers: {
+            'x-csrf-token': formData.get('_csrf') as string
+        }
     });
     const content = document.getElementById('error');
     if (!response.ok) {
@@ -235,7 +252,10 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
     const response = await fetch('api/user/update-google', {
         credentials: 'include',
         method: 'PATCH',
-        body: formData
+        body: formData,
+        headers: {
+            'x-csrf-token': formData.get('_csrf') as string
+        }
     });
     const content = document.getElementById('error');
     if (!response.ok) {
@@ -282,6 +302,9 @@ export async function login(formData: FormData): Promise<void> {
     const response = await fetch('/api/user/login', {
         method: 'POST',
         body: formData,
+        headers: {
+            'x-csrf-token': formData.get('_csrf') as string
+        }
     });
     const content = document.getElementById('error');
     if (!response.ok) {
@@ -319,9 +342,13 @@ export async function login(formData: FormData): Promise<void> {
 }
 
 export async function register(formData: FormData): Promise<void> {
+    console.log(formData);
     const response = await fetch('/api/user/register', {
         method: 'POST',
         body: formData,
+        headers: {
+            'x-csrf-token': formData.get('_csrf') as string
+        }
     });
 
     const content = document.getElementById('error');

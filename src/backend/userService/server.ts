@@ -268,6 +268,23 @@ class server {
                 return reply.code(500).send({ error: 'serverError' });
             }
             return reply.send({ success: true});
+        });
+
+        this.fastify.delete('/friendRequest', async (req, reply) => {
+            const user = req.session.user;
+            const deleteRequest = req.body as string | null;
+            if (!user) {
+                return reply.code(401).send({ error: 'unauthorized' });
+            } 
+            if (!deleteRequest) {
+                return reply.code(400).send({error: 'noBody' });
+            }
+
+            const dbRemove = await this.db.removeRequestPending(user.email, deleteRequest);
+            if (!dbRemove) {
+                return reply.code(500).send({ error: 'serverError' });
+            }
+            return reply.send({ success: true });
         })
 
         this.fastify.post( '/register', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
@@ -435,15 +452,21 @@ class server {
             const parts = req.parts();
             for await (const part of parts) {
                 if (part.type === 'file') {
-                    const fileHandler = await this.validate.validateFile(part);
-                    if (fileHandler === 'TOO LARGE') {
-                        return reply.code(400).send({ error: 'fileTooLarge' });
-                    } else if (fileHandler === 'MIMETYPE INCORRECT') {
-                        return reply.code(400).send({error: 'fileIncorrectMime'});
+                    if (part.filename && part.filename !== '') {
+                        const fileHandler = await this.validate.validateFile(part);
+                        if (fileHandler === 'TOO LARGE') {
+                            return reply.code(400).send({ error: 'fileTooLarge' });
+                        } else if (fileHandler === 'MIMETYPE INCORRECT') {
+                            return reply.code(400).send({error: 'fileIncorrectMime'});
+                        }
+                        userData['pathToProfileP'] = fileHandler;
                     }
-                    userData['pathToProfileP'] = fileHandler;
                 } else if (part.type === 'field' && typeof part.value === 'string') {
-                    userData[part.fieldname as keyof patchBody] = part.value;
+                    if (part.value === '') {
+                        userData[part.fieldname as keyof patchBody] = null;
+                    } else {
+                        userData[part.fieldname as keyof patchBody] = part.value;
+                    }
                 }
             }
             console.log('update userdata', userData);

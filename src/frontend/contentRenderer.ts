@@ -1,7 +1,7 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest } from "./routing.js";
 
 declare global {
     interface Window {
@@ -158,9 +158,11 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
                 const addFriendButton = document.createElement('button');
                 addFriendButton.id = 'AddFriendbutton' + i;
                 addFriendButton.textContent = 'Add friend';
-                addFriendButton.addEventListener('click', async () => {
+                addFriendButton.onclick = async (e) => {
                     await sendFriendRequest(user);
-                });
+                    e.preventDefault();
+                    renderContent('profile');
+                };
                 item.appendChild(addFriendButton);
             } else {
                 const friendButton = document.getElementById('AddFriendButton' + i)
@@ -246,7 +248,19 @@ async function pendingList(): Promise<HTMLTableRowElement> {
             }
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
-            // TODO add online accept/reject buttons
+            const removeRequestButton = document.createElement('button');
+            removeRequestButton.textContent = 'X';
+            removeRequestButton.style.color = 'red';
+            removeRequestButton.style.background = 'none';
+            removeRequestButton.style.border = 'none'
+            removeRequestButton.onclick = async (e) => {
+                if (user[0].email) {
+                    await removeRequest(user[0].email);
+                }
+                e.preventDefault();
+                renderContent('profile')
+            };
+            listItem.appendChild(removeRequestButton);
             list.appendChild(listItem);
         });
     } else {
@@ -256,6 +270,18 @@ async function pendingList(): Promise<HTMLTableRowElement> {
         }
         const listItem = document.createElement('li');
         listItem.textContent = user[0].username;
+        const removeRequestButton = document.createElement('button');
+        removeRequestButton.textContent = 'X';
+        removeRequestButton.style.color = 'red';
+        removeRequestButton.onclick = async (e) => {
+            if (user[0].email) {
+                await removeRequest(user[0].email);
+            }
+            e.preventDefault();
+            history.pushState({}, '', '/profile');
+            renderContent('profile')
+        };
+        listItem.appendChild(removeRequestButton);
         list.appendChild(listItem);
     }
     data.appendChild(list);

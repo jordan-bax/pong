@@ -23,7 +23,7 @@ import path from 'path';
             (data: patchBody) => this.validateNewPassword(data.newPassword),
             (data: patchBody) => this.validateNewEmail(data.newEmail),
             (data: patchBody) => this.validateOldEmail(data.oldEmail),
-            (data: patchBody) => this.validateOldPassword(data.oldEmail),
+            (data: patchBody) => this.validateOldPassword(data.oldPassword),
             (data: patchBody) => this.validateOldUsername(data.oldUsername, isGoogleLogin),
             (data: patchBody) => this.validatePathToProfileP(data.pathToProfileP)
         ];
@@ -114,6 +114,7 @@ import path from 'path';
 
     private validateNewPassword(password: string | null):string[] {
         const errors = [];
+        console.log('password in validateNewPassword is', password);
         if (typeof password !== 'string' && password !== null) {
             errors.push('errorPasswordType');
         } else if (typeof password === 'string') {
@@ -122,6 +123,7 @@ import path from 'path';
                 password = null;
             } else {
                 if (!this.testPasswordPattern(password) || password.length < 12 ) {
+                    console.log('in validateNewPassword error');
                     errors.push('errorNewPassword');
                 }
             }
@@ -169,13 +171,16 @@ import path from 'path';
     }
 
     private validateOldPassword(password: string | null): string[] {
+        console.log('password is validateOldPassword', password);
         const errors = [];
         if ((typeof password !== 'string' && password !== null) || password === '') {
+            console.log('password is not a string and not null or a empty string');
             errors.push('errorPasswordNoString');
         } else {
             if (password !== null) {
                 password = password.trim();
                 if (!this.testPasswordPattern(password) || password.length < 12) {
+                    console.log('password is string but not correct pattern');
                     errors.push('errorNewPassword');
                 }
             }

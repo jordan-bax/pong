@@ -63,9 +63,9 @@ class UserDatabase {
         await this.db.exec('BEGIN TRANSACTION');
         try {
             await this.db.run(`
-                INSERT INTO users (username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends, requestedFriends) 
+                INSERT INTO users (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-                [username, password, email, googleEmail, pathToPP, null, null, null, null]);
+                [username, password, email, googleEmail, 0, pathToPP, null, null, null]);
             await this.db.exec('COMMIT');
         } catch (err) {
             await this.db.exec('ROLLBACK');
@@ -429,41 +429,75 @@ class UserDatabase {
             throw new Error('database is null');
         }
         let userPending = await this.db.get(`
-            SELECT friendsPending
+            SELECT pendingFriends, requestedFriends
             FROM users
             WHERE email = ? OR googleEmail = ?`,
-            [friendEmail, friendEmail]
+            [userEmail, userEmail]
         );
         if (!userPending) {
             return false;
         }
 
         let friendRequests = await this.db.get(`
-            SELECT requestedFriends
+            SELECT requestedFriends, pendingFriends
             FROM users
             WHERE email = ? OR googleEmail = ?`,
-            [userEmail, userEmail]
+            [friendEmail, friendEmail]
         );
         if (!friendRequests) {
             return false;
         }
-        
-        const pending = userPending.friendsPending as string;
-        const request = friendRequests.requestedFriends as string;
-        const newPending = pending.split(',')
-            .map(email => email.trim())
-            .filter(email => email !== friendEmail)
-            .join(',');
-        const newRequest = request.split(',')
-            .map(email => email !== userEmail)
-            .join(',');
+        const myPending = userPending.pendingFriends as string | null;
+        let myNewPending: string | null = null;
+        if (myPending) {
+            myNewPending = myPending.split(',')
+                .map(email => email.trim())
+                .filter(email => email != friendEmail)
+                .join(',');
+        }
+        if ( myNewPending === '') {
+            myNewPending = null;
+        }
+        const myRequest = userPending.requestedFriends as string;
+        let myNewRequest: string | null = null;
+        if (myRequest) {
+            myNewRequest = myRequest.split(',')
+                .map(email => email.trim())
+                .filter(email => email != friendEmail)
+                .join(',');
+        }
+        if (myNewRequest === '') {
+            myNewRequest = null;
+        }
+        const friendPending = friendRequests.pendingFriends as string;
+        let newFriendPending: string | null = null;
+        if (friendPending) {
+            newFriendPending = friendEmail.split(',')
+                .map(email=> email.trim())
+                .filter(email => email != userEmail)
+                .join(',');
+        }
+        if (newFriendPending === '') {
+            newFriendPending = null;
+        }
+        const friendRequest = friendRequests.requestedFriends as string;
+        let newFriendRequest: string | null = null;
+        if (friendRequest) {
+            newFriendRequest = friendRequest.split(',')
+                .map(email => email.trim())
+                .filter(email => email != userEmail)
+                .join(',');
+        }
+        if (newFriendRequest === '') {
+            newFriendRequest = null;
+        }
         await this.db.exec('BEGIN TRANSACTION');
         try {
             let row = await this.db.run(`
                 UPDATE users
-                SET friendsPending = ?
+                SET pendingFriends = ?, requestedFriends = ?
                 WHERE email = ? OR googleEmail = ?`,
-                [newPending, userEmail, userEmail]
+                [myNewPending, myNewRequest, userEmail, userEmail]
             );
             let changes = row.changes || 0;
             if (changes > 1) {
@@ -474,9 +508,9 @@ class UserDatabase {
 
             row = await this.db.run(`
                 UPDATE users
-                SET requestedFriends = ?}
+                SET requestedFriends = ?, pendingFriends = ?
                 WHERE email = ? OR googleEmail = ?`,
-                [newRequest, friendEmail, friendEmail]
+                [newFriendRequest, newFriendRequest, friendEmail, friendEmail]
             );
             changes = row.changes || 0;
             if (changes > 1) {

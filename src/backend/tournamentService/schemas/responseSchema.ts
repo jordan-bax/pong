@@ -87,13 +87,13 @@ export const gameDoneSchema = {
         type: 'object',
         properties: {
             tournamentID: { type: 'number' },
-            playerID1: { type: 'number' },
-            playerID2: { type: 'number' },
+            player1ID: { type: 'number' },
+            player2ID: { type: 'number' },
             winnerID: { type: 'number' },
             player1Score: { type: 'number'},
             player2Score: { type: 'number'}
         },
-        required: ['playerID1', 'playerID2', 'winnerID', 'player1Score', 'player2Score']
+        required: ['tournamentID', 'player1ID', 'player2ID', 'winnerID', 'player1Score', 'player2Score']
     },
     response: {
         201: {

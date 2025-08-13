@@ -44,17 +44,15 @@ class TournamentDB {
                 tournamentID INTEGER NOT NULL,
                 round INTEGER NOT NULL,
                 position INTEGER NOT NULL,
-                player1_id INTEGER,
-                player2_id INTEGER,
-                winner_id INTEGER,
-                parent_match1_id INTEGER,
-                parent_match2_id INTEGER,
+                player1ID INTEGER,
+                player2ID INTEGER,
+                winnerID INTEGER DEFAULT 0,
+                player1Score INTEGER DEFAULT 0,
+                player2Score INTEGER DEFAULT 0,
                 FOREIGN KEY(tournamentID) REFERENCES tournament(id) ON DELETE CASCADE,
-                FOREIGN KEY(player1_id) REFERENCES players(userID),
-                FOREIGN KEY(player2_id) REFERENCES players(userID),
-                FOREIGN KEY(winner_id) REFERENCES players(userID),
-                FOREIGN KEY(parent_match1_id) REFERENCES match(id),
-                FOREIGN KEY(parent_match2_id) REFERENCES match(id))`)
+                FOREIGN KEY(player1ID) REFERENCES players(userID),
+                FOREIGN KEY(player2ID) REFERENCES players(userID),
+                FOREIGN KEY(winnerID) REFERENCES players(userID))`)
 
         await this.db.run(`
             CREATE TRIGGER IF NOT EXISTS increment_player_count
@@ -304,14 +302,84 @@ class TournamentDB {
                     : []
             }))
         } catch (error) {
-            console.log(error)
             throw new Error('Failed to get all running tournaments')
         }
     }
 
-    async matches(tournamentID: number) {
+    async done(
+        tournamentID: number,
+        player1ID: number,
+        player2ID: number,
+        winnerID: number,
+        player1Score: number,
+        player2Score: number) {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
 
-        return []
+        try {
+            await this.db.run(`
+                UPDATE match
+                SET winnerID = ?,
+                    player1Score = ?,
+                    player2Score = ?
+                WHERE tournamentID = ?
+                AND player1ID = ?
+                AND player2ID = ?`,
+                [winnerID, player1Score, player2Score, tournamentID, player1ID, player2ID])
+        } catch (error) {
+            throw new Error('Failed to update the match')
+        }
+    }
+
+    async roundeDone(tournamentID: number) {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
+        try {
+            const result = await this.db.get(`
+                SELECT NOT EXISTS (
+                    SELECT 1
+                    FROM match
+                    WHERE winnerID = 0
+                    AND tournamentID = ?
+                ) AS all_nonzero`,
+                [tournamentID])
+
+            if (result['all_nonzero'] === 1) {
+                return true
+            } else {
+                return false
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async nextMatches(tournamentID: number) {
+        const result = await this.db.all(`
+                SELECT
+                    winnerID
+                FROM
+                    match
+                WHERE
+                    round = (SELECT MAX(round) FROM match)
+                    AND tournamentID = ?`,
+                [tournamentID])
+
+        let nextMatch = []
+
+        for (let index = 0; index < result.length; index++) {
+            const winner1 = result[index]['winnerID'];
+            if (index + 1 < result.length) {
+                nextMatch.push([winner1, result[index + 1]['winnerID']])
+                index++;
+            } else {
+                nextMatch.push([winner1, null])
+            }
+        }
+        return nextMatch
     }
 
     async getTournament(tournamentID: number) {
@@ -326,7 +394,7 @@ class TournamentDB {
                 WHERE p.tournamentID = t.id)
             AS players,
             (SELECT GROUP_CONCAT(
-                    COALESCE(m.player1_id, 'NULL') || ',' || COALESCE(m.player2_id, 'NULL'),
+                    COALESCE(m.player1ID, 'NULL') || ',' || COALESCE(m.player2ID, 'NULL'),
                     ';')
             FROM match m
             WHERE m.tournamentID = t.id
@@ -389,7 +457,7 @@ class TournamentDB {
         for (let index = 0; index < players.length; index++) {
             try {
                 await this.db.run(`
-                    INSERT INTO match ( tournamentID, round, position, player1_id, player2_id )
+                    INSERT INTO match ( tournamentID, round, position, player1ID, player2ID )
                     VALUES (?, ?, ?, ?, ?)`,
                     [tournamentID, 1, index + 1, players[index][0], players[index][1]])
             } catch (error) {

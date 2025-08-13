@@ -149,32 +149,30 @@ class TournamentService {
         tournamentID: number,
         playerID1: number,
         playerID2: number,
-        winnerID: number) {
-        // const index = this.runningTournaments.findIndex(t => t.tournament.id === tournamentID)
-        // if (index === -1) {
-        //     return 1
-        // }
+        winnerID: number,
+        player1Score: number,
+        player2Score: number) {
 
-        // const t = this.runningTournaments[index]
 
-        const lossersID = playerID2 === winnerID ? playerID1 : playerID2
+        // validate stuff
 
-        // const lossersIndex = t.currentPlayers.indexOf(lossersID, 0)
-        // t.currentPlayers.splice(lossersIndex, 0)
-        //
-        // // remove from nextMatchs
-        // const removeMatchIndex = t.nextMatchs.indexOf([playerID1, playerID2], 0)
-        // t.nextMatchs.splice(removeMatchIndex, 0)
+        try {
+            await db.done(
+                tournamentID,
+                playerID1,
+                playerID2,
+                winnerID,
+                player1Score,
+                player2Score)
+        } catch (error) {
 
-        // if (t.nextMatchs.length === 0) {
-        //     this.nextMatch(t.tournament.players, t.tournament.players.length)
-        // }
-        //
+        }
+
         return 0
     }
 
-    private async nextMatch(players: number[], playerCount: number) {
-        return [[]]
+    private async nextMatch(tournamentID: number) {
+        const nextMatches = await db.nextMatches(tournamentID)
     }
 
     private async initMatches(
@@ -233,6 +231,15 @@ class TournamentService {
                 await db.lock(idleTours[index].id)
                 this.start(idleTours[index].id)
             }
+        }
+
+        const runningTours = await db.running()
+        for (let index = 0; index < runningTours.length; index++) {
+            const roundDone = await db.roundeDone(runningTours[index].id)
+            if (roundDone) {
+                this.nextMatch(runningTours[index].id)
+            }
+
         }
 
         this.isChecking = false

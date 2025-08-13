@@ -56,9 +56,7 @@ server.get('/tours', { schema: getToursSchema }, async (request: FastifyRequest,
 server.post('/create', { schema: createSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
         const { name, maxPlayers, userID, lockTime } = request.body as { name: string, maxPlayers: number, userID: number, lockTime: number | undefined }
-        console.log(maxPlayers)
         const tournament = await tournamentObj.create(name, maxPlayers, userID, lockTime)
-        console.log('api tour: ', tournament)
         reply.status(201).send(tournament)
     } catch (error) {
         reply.status(400).send({ error: error instanceof Error ? error.message : String(error) })
@@ -86,14 +84,13 @@ server.post('/leave', { schema: leaveSchema }, async (request: FastifyRequest, r
 })
 
 server.post('/done', { schema: gameDoneSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
-    const { tournamentID, playerID1, playerID2, winnerID } = request.body as { tournamentID: number, playerID1: number, playerID2: number, winnerID: number }
-    const result = await tournamentObj.matchDone(tournamentID, playerID1, playerID2, winnerID)
-    switch (result) {
-        case 0:
-            reply.status(201).send({ 'message': 'OK' })
-            break
-        case 1:
-            reply.status(400).send({ 'error': 'Invalid tournamentID' })
+    console.log('done endpoint')
+    const { tournamentID, player1ID, player2ID, winnerID, player1Score, player2Score } = request.body as { tournamentID: number, player1ID: number, player2ID: number, winnerID: number, player1Score: number, player2Score: number }
+    try {
+        await tournamentObj.matchDone(tournamentID, player1ID, player2ID, winnerID, player1Score, player2Score)
+        reply.status(201).send({ 'message': 'OK' })
+    } catch (error) {
+        reply.status(400).send({ 'error': 'Invalid tournamentID' })
     }
 })
 

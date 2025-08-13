@@ -270,6 +270,25 @@ class server {
             return reply.send({ success: true});
         });
 
+        this.fastify.post('/acceptFriend', async (req, reply) => {
+            console.log('in acceptFriend');
+            const user = req.session.user;
+            if (!user) {
+                return reply.code(401).send({ error: 'unauthorized' });
+            }
+            const friend = req.body as string | null;
+            if (!friend) {
+                return reply.code(400).send({ error: 'noBody' });
+            }
+            console.log('user.email is:', user.email);
+            console.log('friend is:', friend);
+            const accepted = await this.db.acceptFriendRequest(user.email, friend);
+            if (!accepted) {
+                return reply.code(500).send({ error: 'serverError' });
+            }
+            return reply.send({success: true });
+        })
+
         this.fastify.delete('/friendRequest', async (req, reply) => {
             const user = req.session.user;
             const deleteRequest = req.body as string | null;
@@ -280,7 +299,7 @@ class server {
                 return reply.code(400).send({error: 'noBody' });
             }
 
-            const dbRemove = await this.db.removeRequestPending(user.email, deleteRequest);
+            const dbRemove = await this.db.removeRequestPending(user.email, deleteRequest, false);
             if (!dbRemove) {
                 return reply.code(500).send({ error: 'serverError' });
             }

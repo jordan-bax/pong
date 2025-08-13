@@ -5,6 +5,10 @@ import type { TokenPayload } from 'google-auth-library';
 
 sqlite3.verbose();
 
+interface in_transactionRow {
+    in_transaction: number;
+}
+
 class UserDatabase {
     private db: Database|null
     constructor() {
@@ -263,12 +267,6 @@ class UserDatabase {
         if(userFriends?.includes(toEmail) && friendFriends?.includes(fromEmail)){
             console.log('already friends');
             return false;
-        } else if (userFriends?.includes(toEmail) && friendFriends?.includes(fromEmail)) {
-            if (! await this.acceptFriendRequest(fromEmail, toEmail)) {
-                console.log('already asked');
-                return false;
-            }
-            return true;
         }
 
         let pendingFrom = await this.getPendingFriends(fromEmail);
@@ -331,35 +329,45 @@ class UserDatabase {
     }
 
     async acceptFriendRequest(userEmail: string, fromEmail: string): Promise<boolean> {
+        console.log('at start acceptFriendRequest');
         if (!this.db) {
             throw new Error('database is null');
         }
         let user = await this.findUserByEmail(userEmail);
+        console.log('user in accept is:', user);
         if (!user) {
+            console.error('user is null');
             return false;
         }
-        
         let friend = await this.findUserByEmail(fromEmail);
+        console.log('friend in accept is:', friend);
         if (!friend) {
+            console.error('friend is null');
             return false;
         }
 
-        let userFriends = user.friends as string;
-        let friendFriends = friend.friends as string;
-        if (userFriends.includes(fromEmail)) {
-            if (friendFriends.includes(userEmail)) {
-                if (! await this.removeRequestPending(userEmail, fromEmail)) {
+        let userFriends: string | null = null;
+        let friendFriends: string | null = null
+        if (user.friends && friend.friends)
+        {
+            userFriends = user.friends as string;
+            friendFriends = friend.friends as string;
+        }
+        if (userFriends?.includes(fromEmail)) {
+            if (friendFriends?.includes(userEmail)) {
+                if (! await this.removeRequestPending(userEmail, fromEmail, false)) {
                     return false;
                 }
                 return true;
             }
             
+        console.log('users where not found in friends')
             if (!friendFriends) {
                 friendFriends = userEmail;
             } else {
                 friendFriends += ',' + userEmail;
             }
-        } else if (friendFriends.includes(userEmail)) {
+        } else if (friendFriends?.includes(userEmail)) {
             if (!userFriends) {
                 userFriends = fromEmail;
             } else {
@@ -377,6 +385,7 @@ class UserDatabase {
                 friendFriends += ',' + userEmail;
             }
         }
+        console.log('get to update part');
 
         await this.db.exec('BEGIN TRANSACTION');
         try {
@@ -400,7 +409,7 @@ class UserDatabase {
                 UPDATE users
                 SET friends = ?
                 WHERE email = ? OR googleEmail = ?`,
-                [userFriends, fromEmail, fromEmail]
+                [friendFriends, fromEmail, fromEmail]
             );
             changes = row.changes || 0;
             if (changes > 1) {
@@ -411,7 +420,7 @@ class UserDatabase {
                 await this.db.exec('ROLLBACK');
                 return false;
             }
-            if (! await this.removeRequestPending(userEmail, fromEmail)) {
+            if (! await this.removeRequestPending(userEmail, fromEmail, true)) {
                 await this.db.exec('ROLLBACK');
                 return false;
             }
@@ -424,7 +433,7 @@ class UserDatabase {
         }
     }
 
-    async removeRequestPending(userEmail: string, friendEmail: string): Promise<boolean> {
+    async removeRequestPending(userEmail: string, friendEmail: string, transaction: boolean): Promise<boolean> {
         if (!this.db) {
             throw new Error('database is null');
         }
@@ -491,7 +500,12 @@ class UserDatabase {
         if (newFriendRequest === '') {
             newFriendRequest = null;
         }
-        await this.db.exec('BEGIN TRANSACTION');
+
+        if (transaction) {
+            await this.db.exec('SAVEPOINT remove_step');
+        } else {
+            await this.db.exec('BEGIN TRANSACTION');
+        }
         try {
             let row = await this.db.run(`
                 UPDATE users
@@ -501,7 +515,11 @@ class UserDatabase {
             );
             let changes = row.changes || 0;
             if (changes > 1) {
-                await this.db.exec('ROLLBACK');
+                if (transaction) {
+                    await this.db.exec('ROLLBACK TO remove_step')
+                } else {
+                    await this.db.exec('ROLLBACK');
+                }
                 console.error('error when removing pending friend');
                 return false;
             }
@@ -514,14 +532,26 @@ class UserDatabase {
             );
             changes = row.changes || 0;
             if (changes > 1) {
-                await this.db.exec('ROLLBACK');
+                if (transaction) {
+                    await this.db.exec('SAVEPOINT remove_step');
+                } else {
+                    await this.db.exec('BEGIN TRANSACTION');
+                }
                 console.error("error when removing request friend");
                 return false;
             }
-            await this.db.exec('COMMIT');
+            if (transaction) {
+                this.db.exec('RELEASE SAVEPOINT remove_step');
+            } else {
+                await this.db.exec('COMMIT');
+            }
             return true;
         } catch (err) {
-            await this.db.exec('ROLLBACK');
+            if (transaction) {
+                await this.db.exec('SAVEPOINT remove_step');
+            } else {
+                await this.db.exec('BEGIN TRANSACTION');
+            }
             console.error('error in removeRequestPending', err);
             return false;
         }

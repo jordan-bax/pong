@@ -161,6 +161,19 @@ export async function removeRequest(email:string): Promise<boolean> {
     return true;
 }
 
+export async function acceptFriendRequest(email:string): Promise<boolean> {
+    const respone = await fetch('/api/user/acceptFriend', {
+        method: 'POST',
+        body: email,
+        credentials: 'include'
+    });
+    if (!respone.ok) {
+        console.error('failed to accept friend request');
+        return false;
+    }
+    return true;
+}
+
 export function getLoggin(): boolean {
     return isLoggedIn;
 }

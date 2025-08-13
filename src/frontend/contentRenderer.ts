@@ -1,7 +1,7 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest } from "./routing.js";
 
 declare global {
     interface Window {
@@ -218,9 +218,11 @@ async function friendsList(): Promise<HTMLTableRowElement> {
         if (!user) {
             return listRow;
         }
-        const listItem = document.createElement('li');
-        listItem.textContent = user[0].username;
-        list.appendChild(listItem);
+        if (user.length) {
+            const listItem = document.createElement('li');
+            listItem.textContent = user[0].username;
+            list.appendChild(listItem);
+        }
     }
     data.appendChild(list);
     listRow.appendChild(data);
@@ -254,6 +256,7 @@ async function pendingList(): Promise<HTMLTableRowElement> {
             removeRequestButton.style.background = 'none';
             removeRequestButton.style.border = 'none'
             removeRequestButton.onclick = async (e) => {
+                console.log('user in eventListener is', user);
                 if (user[0].email) {
                     await removeRequest(user[0].email);
                 }
@@ -273,7 +276,10 @@ async function pendingList(): Promise<HTMLTableRowElement> {
         const removeRequestButton = document.createElement('button');
         removeRequestButton.textContent = 'X';
         removeRequestButton.style.color = 'red';
+        removeRequestButton.style.background = 'none';
+        removeRequestButton.style.border = 'none';
         removeRequestButton.onclick = async (e) => {
+            console.log('user in eventListener is', user);
             if (user[0].email) {
                 await removeRequest(user[0].email);
             }
@@ -310,7 +316,33 @@ async function requestedList(): Promise<HTMLTableRowElement> {
             }
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
-            // TODO add online accept/reject buttons
+            const acceptRequestButton = document.createElement('button');
+            acceptRequestButton.textContent = '✔️'
+            acceptRequestButton.style.color = 'green';
+            acceptRequestButton.style.background = 'none';
+            acceptRequestButton.style.border = 'none';
+            acceptRequestButton.onclick = async (e) => {
+                if (user[0].email) {
+                    await acceptFriendRequest(user[0].email);
+                }
+                e.preventDefault();
+                renderContent('profile');
+            }
+            listItem.appendChild(acceptRequestButton);
+
+            const removeRequestButton = document.createElement('button');
+            removeRequestButton.textContent = 'X';
+            removeRequestButton.style.color = 'red';
+            removeRequestButton.style.background = 'none';
+            removeRequestButton.style.border = 'none'
+            removeRequestButton.onclick = async (e) => {
+                if (user[0].email) {
+                    await removeRequest(user[0].email);
+                }
+                e.preventDefault();
+                renderContent('profile')
+            };
+            listItem.appendChild(removeRequestButton);
             list.appendChild(listItem);
         });
     } else {
@@ -320,6 +352,33 @@ async function requestedList(): Promise<HTMLTableRowElement> {
         }
         const listItem = document.createElement('li');
         listItem.textContent = user[0].username;
+        const acceptRequestButton = document.createElement('button');
+        acceptRequestButton.textContent = '✔️'
+        acceptRequestButton.style.color = 'green';
+        acceptRequestButton.style.background = 'none';
+        acceptRequestButton.style.border = 'none';
+        acceptRequestButton.onclick = async (e) => {
+            if (user[0].email) {
+                await acceptFriendRequest(user[0].email);
+            }
+            e.preventDefault();
+            renderContent('profile');
+        }
+        listItem.appendChild(acceptRequestButton);
+
+        const removeRequestButton = document.createElement('button');
+        removeRequestButton.textContent = 'X';
+        removeRequestButton.style.color = 'red';
+        removeRequestButton.style.background = 'none';
+        removeRequestButton.style.border = 'none'
+        removeRequestButton.onclick = async (e) => {
+            if (user[0].email) {
+                await removeRequest(user[0].email);
+            }
+            e.preventDefault();
+            renderContent('profile');
+        };
+        listItem.appendChild(removeRequestButton);
         list.appendChild(listItem);
     }
     data.appendChild(list);

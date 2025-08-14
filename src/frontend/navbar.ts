@@ -59,6 +59,11 @@ export async function renderNavbar(): Promise<void> {
     };
     navbar.appendChild(gameLink);
 
+    let notificationArea = document.createElement('div');
+    notificationArea.id = 'notification-area';
+    notificationArea.textContent = "🔔 New notification!";
+    navbar.appendChild(notificationArea);
+
     const isLoggedIn = getLoggin();
     const isLoggedInServer = await getLogginServer();
     if (isLoggedIn && isLoggedInServer !== null) {
@@ -136,5 +141,6 @@ export async function renderNavbar(): Promise<void> {
 
     const googleLogin = document.createElement('div');
     googleLogin.id = 'google-signin-button';
+
     navbar.appendChild(googleLogin);
 }

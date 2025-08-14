@@ -1,4 +1,8 @@
 import { fastify as Fastify } from 'fastify';
+import { FastifyReply } from 'fastify';
+import { FastifyRequest } from 'fastify';
+import fastifyCors from '@fastify/cors';
+
 import fastifyStatic from '@fastify/static';
 import fastifySession from '@fastify/session';
 import fastifyCookie from '@fastify/cookie';
@@ -14,19 +18,30 @@ import { str } from 'ajv';
 import { get } from 'http';
 import { error } from 'console';
 enum GameTypeId {
-    AI = 0,
-    UNKNOWN = 1,
-    LOCAL = 2
+	AI = 0,
+	UNKNOWN = 1,
+	LOCAL = 2
 }
-
+interface notificationInterface {
+	message: string;
+	data: Date;
+}
+// testing notifications
+var notifications: Array<notificationInterface> = [];
+function addNotification(message: string): void {   
+notifications.push({
+	message: message,
+	data: new Date()
+});
+}
 interface idandplayerposition {
-    id: number | null; // Use string or null for player ID
-    player: 1 | 2; // Player number
+	id: number | null; // Use string or null for player ID
+	player: 1 | 2; // Player number
 }
 
 player2Template.x -= player2Template.width; // Adjust player 1 position to the left edge
 var ai_var: aiInterface = {
-    //The average (median) reaction time is 273 milliseconds
+	//The average (median) reaction time is 273 milliseconds
 	reactionTime: 100 // Default reaction time in milliseconds
 };
 var ballSpeed: number;
@@ -37,24 +52,24 @@ let matching: Array<gamestateinterface|null> = [];
 var fps: number = 30; // Default frames per second
 startGame(); // Start the game loop
 async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
-    // Check if the game is paused
-    if (gamestate.gamePause || !gamestate.gameActive) {
-        // If the game is paused, do not update the game state
-        // console.log('Game is paused');
-        return; // Exit the game loop if paused
-    }
-    ballmove(gamestate);
-    if (use_ai && gamestate.gametype === 'ai') {
-        simpleAi(gamestate);
-    }
-    playerMoveCheck(gamestate.player1);
-    playerMoveCheck(gamestate.player2);
-    if (gamestate.player1.score >= 11 || gamestate.player2.score >= 11) {
-        // End the game if a player reaches 11 points
-        console.log('Game Over! Final Score:', '-');
-        gamestate.gamePause = true; // Pause the game
-        gamestate.gameActive = false; // Set gameActive to false
-    }
+	// Check if the game is paused
+	if (gamestate.gamePause || !gamestate.gameActive) {
+		// If the game is paused, do not update the game state
+		// console.log('Game is paused');
+		return; // Exit the game loop if paused
+	}
+	ballmove(gamestate);
+	if (use_ai && gamestate.gametype === 'ai') {
+		simpleAi(gamestate);
+	}
+	playerMoveCheck(gamestate.player1);
+	playerMoveCheck(gamestate.player2);
+	if (gamestate.player1.score >= 11 || gamestate.player2.score >= 11) {
+		// End the game if a player reaches 11 points
+		console.log('Game Over! Final Score:', '-');
+		gamestate.gamePause = true; // Pause the game
+		gamestate.gameActive = false; // Set gameActive to false
+	}
 }
 
 // function generateUniqueGameId(): string {
@@ -65,185 +80,186 @@ async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
 //     return id;
 // }
 function lastId(): number {
-    if (games.length === 0 && matching.length === 0) {
-        return 2;
-    }
-    // Find the highest game ID in the games array
-    const maxId = games.reduce((max, game) => {
-        if (game && game.gameID > max) {
-            return game.gameID;
-        }
-        return max;
-    }, 0);
-    const maxMatchingId = matching.reduce((max, game) => {
-        if (game && game.gameID > max) {
-            return game.gameID;
-        }
-        return max;
-    }, 0);
+	if (games.length === 0 && matching.length === 0) {
+		return 1;
+	}
+	// Find the highest game ID in the games array
+	const maxId = games.reduce((max, game) => {
+		if (game && game.gameID > max) {
+			return game.gameID;
+		}
+		return max;
+	}, 0);
+	const maxMatchingId = matching.reduce((max, game) => {
+		if (game && game.gameID > max) {
+			return game.gameID;
+		}
+		return max;
+	}, 0);
 
-    return Math.max(maxId, maxMatchingId);
+	return Math.max(maxId, maxMatchingId);
 }
 
 async function makeNewGame(type: string, playername: string, playerid: number): Promise<gamestateinterface > {
-    // Create a new game state
-    // const gameid = generateUniqueGameId(); // Generate a unique game ID
-    
-    // const gameid = await dbfunc.createGame({
-    //     id: 1, // Assuming ID is auto-incremented in the database
-    //     type: type,
-    //     player1: { id: playerid, username: playername },
-    //     player2: { id: null, username: 'Player 2' }, // Placeholder for player 2
-    //     player1Score: 0,
-    //     player2Score: 0,
-    //     winner: 'temp',
-    //     createdAt: null});
-    var gameid = await dbfunc.getLastGameId();
-    if (!gameid) {
-        gameid = lastId();
-        // throw new Error('Failed to retrieve game ID');
-    }
-    var player2Id: number | null = null;
-    switch (type) {
-        case 'ai':
-            player2Id = GameTypeId.AI; // AI player ID
-            break;
-        case 'local':
-            player2Id = GameTypeId.LOCAL; // Local player ID
-            break;
-        case 'online':
-            player2Id = GameTypeId.UNKNOWN; // Online player ID
-            break;
-        case 'ranking':
-            player2Id = GameTypeId.UNKNOWN; // Ranking player ID
-            break;
-        default:
-            throw new Error('Invalid game type');
-    }
-    gameid++;
-    var newGame: gamestateinterface = {
-        player1: {...player1Template, id: playerid, name: playername},
-        player2: {...player2Template, id: player2Id, name: 'Player 2'},
-        ball: {...ballvarTemplate, speed: ballSpeed},
-        gameActive: true,
-        gamePause: false,
-        gameID: gameid, // Use the ID from the database
-        gametype: type,
-    };
-    console.log('New game created:', newGame);
-    return newGame;
+	// Create a new game state
+	// const gameid = generateUniqueGameId(); // Generate a unique game ID
+	
+	// const gameid = await dbfunc.createGame({
+	//     id: 1, // Assuming ID is auto-incremented in the database
+	//     type: type,
+	//     player1: { id: playerid, username: playername },
+	//     player2: { id: null, username: 'Player 2' }, // Placeholder for player 2
+	//     player1Score: 0,
+	//     player2Score: 0,
+	//     winner: 'temp',
+	//     createdAt: null});
+	var gameid = await dbfunc.getLastGameId();
+	if (gameid === null) {
+		gameid = 1; // Start with 1 if no games exist
+	}
+	gameid = Math.max(lastId(), gameid);
+	var player2Id: number | null = null;
+	switch (type) {
+		case 'ai':
+			player2Id = GameTypeId.AI; // AI player ID
+			break;
+		case 'local':
+			player2Id = GameTypeId.LOCAL; // Local player ID
+			break;
+		case 'online':
+			player2Id = GameTypeId.UNKNOWN; // Online player ID
+			break;
+		case 'ranking':
+			player2Id = GameTypeId.UNKNOWN; // Ranking player ID
+			break;
+		default:
+			throw new Error('Invalid game type');
+	}
+	gameid++;
+	var newGame: gamestateinterface = {
+		player1: {...player1Template, id: playerid, name: playername},
+		player2: {...player2Template, id: player2Id, name: 'Player 2'},
+		ball: {...ballvarTemplate, speed: ballSpeed},
+		gameActive: true,
+		gamePause: false,
+		gameID: gameid, // Use the ID from the database
+		gametype: type,
+	};
+	console.log('New game created:', newGame);
+	return newGame;
 }
 async function updateGameInDB(game: gamestateinterface): Promise<void> {
-    // Update the game in the database
-    var winner: string = '';
-    if (game.player1.score > game.player2.score) {
-        winner = game.player1.name;
-    }
-    else if (game.player1.score == game.player2.score) {
-        winner = 'Draw';
-    }
-    else {
-        winner = game.player2.name;
-    }
-    const db = await dbfunc.createGame({
-        id: game.gameID,
-        type: game.gametype,
-        player1: { id: game.player1.id, username: game.player1.name },
-        player2: { id: game.player2.id, username: game.player2.name },
-        player1Score: game.player1.score,
-        player2Score: game.player2.score,
-        winner: winner,
-        createdAt: null
-    });
-    if (!db) {
-        throw new Error('Failed to update game in database');
-    }
-    console.log('Game updated in database:', game.gameID);
+	// Update the game in the database
+	var winner: string = '';
+	if (game.player1.score > game.player2.score) {
+		winner = game.player1.name;
+	}
+	else if (game.player1.score == game.player2.score) {
+		winner = 'Draw';
+	}
+	else {
+		winner = game.player2.name;
+	}
+	const db = await dbfunc.createGame({
+		id: game.gameID,
+		type: game.gametype,
+		player1: { id: game.player1.id, username: game.player1.name },
+		player2: { id: game.player2.id, username: game.player2.name },
+		player1Score: game.player1.score,
+		player2Score: game.player2.score,
+		winner: winner,
+		createdAt: null
+	});
+	if (!db) {
+		throw new Error('Failed to update game in database');
+	}
+	console.log('Game updated in database:', game.gameID);
 
 }
 async function addGameLoop(type : string, playername: string, playerid: number): Promise< idandplayerposition | null >{
-    // Add a new game to the games array
-    // if (matching.length > 0) {}
-    if (!type || !playername) {
-        console.error('Invalid game type or player name');
-        return null; // Return null if type or playername is not provided
-    }
-    if (type === 'ai' || type === 'local') {
-        var newGame = await makeNewGame(type, playername, playerid);
-        if (!newGame) {
-            console.error('Failed to create a new game');
-            return null; // Return null if the new game could not be created
-        }
-        const ng = newGame.gameID as number; // Assign the new game to the variable
-        games.push(newGame);
-    
-        return {id :ng,player: 1};
-    }
-    if (type !== 'online' && type !== 'ranking') {
-        console.error('Invalid game type:', type);
-        return null; // Return null if the game type is not valid
-    }
-    if (matching.length > 0) {
-        // Match with an existing game
-        var existingGame = matching.pop();
-        if (existingGame) {
-            existingGame.player2 = {...player2Template, id: playerid, name: playername};
-            existingGame.gameActive = true; // Set the game to active
-            existingGame.gamePause = false; // Ensure the game is not paused
-            games.push(existingGame);
-            // await updateGameInDB(existingGame); // Update the game in the database
-            console.log('Game updated in database:', existingGame.gameID);
-            console.log('Matched with existing game:', existingGame.gameID);
-            return {id: existingGame.gameID,player: 2};
-        }
-        return null; // No matching game found
-    }
-    // Create a new game if no matching game is found
-    var newGame = await makeNewGame(type, playername, playerid);
-    if (!newGame) {
-        console.error('Failed to create a new game');
-        return null; // Return null if the new game could not be created
-    }
-    matching.push(newGame); // Add the new game to the matching array
-    console.log('Game added:', newGame, 'Total games:', games.length);
-    return {id: newGame.gameID,player :1}; // Return the game ID with '-1' suffix for player 1
+	// Add a new game to the games array
+	// if (matching.length > 0) {}
+	if (!type || !playername) {
+		console.error('Invalid game type or player name');
+		return null; // Return null if type or playername is not provided
+	}
+	if (type === 'ai' || type === 'local') {
+		var newGame = await makeNewGame(type, playername, playerid);
+		if (!newGame) {
+			console.error('Failed to create a new game');
+			return null; // Return null if the new game could not be created
+		}
+		const ng = newGame.gameID as number; // Assign the new game to the variable
+		games.push(newGame);
+	
+		return {id :ng,player: 1};
+	}
+	if (type !== 'online' && type !== 'ranking') {
+		console.error('Invalid game type:', type);
+		return null; // Return null if the game type is not valid
+	}
+	if (matching.length > 0) {
+		// Match with an existing game
+		var existingGame = matching.pop();
+		if (existingGame) {
+			existingGame.player2 = {...player2Template, id: playerid, name: playername};
+			existingGame.gameActive = true; // Set the game to active
+			existingGame.gamePause = false; // Ensure the game is not paused
+			games.push(existingGame);
+			// await updateGameInDB(existingGame); // Update the game in the database
+			console.log('Game updated in database:', existingGame.gameID);
+			console.log('Matched with existing game:', existingGame.gameID);
+			return {id: existingGame.gameID,player: 2};
+		}
+		return null; // No matching game found
+	}
+	// Create a new game if no matching game is found
+	var newGame = await makeNewGame(type, playername, playerid);
+	if (!newGame) {
+		console.error('Failed to create a new game');
+		return null; // Return null if the new game could not be created
+	}
+	matching.push(newGame); // Add the new game to the matching array
+	console.log('Game added:', newGame, 'Total games:', games.length);
+	return {id: newGame.gameID,player :1}; // Return the game ID with '-1' suffix for player 1
 }
+
 async function startGame() {
-    console.log('Starting game loop...');
-    const delay: number = gamespeed(); // Set the initial delay based on the game speed
-    let intervalRef: NodeJS.Timeout | null = null;
-    var use_ai: boolean = true; // Set to true if you want to use AI for player 2
-    var use_ai_loop: boolean = true; // Set to true if you want to use AI for player 2
+	console.log('Starting game loop...');
+	const delay: number = gamespeed(); // Set the initial delay based on the game speed
+	let intervalRef: NodeJS.Timeout | null = null;
+	var use_ai: boolean = true; // Set to true if you want to use AI for player 2
+	var use_ai_loop: boolean = true; // Set to true if you want to use AI for player 2
 	// enableKeyListener(); // Enable key listener for player controls
-    if (!intervalRef) {
-        intervalRef = setInterval(() => {
-            use_ai = true; // Enable AI control for player 2
-        }, ai_var.reactionTime);}
-    while (true) {
-        if (use_ai){
-            use_ai_loop = true; // Enable AI control for player 2
-            use_ai = false; // Disable AI control for player 2 for second loop
-        }
+	if (!intervalRef) {
+		intervalRef = setInterval(() => {
+			use_ai = true; // Enable AI control for player 2
+		}, ai_var.reactionTime);}
+	while (true) {
+		if (use_ai){
+			use_ai_loop = true; // Enable AI control for player 2
+			use_ai = false; // Disable AI control for player 2 for second loop
+		}
 
-        for (const game of games) {
-            if (!game) continue; // Skip if the game is null
-            // console.log('Processing game:', game.gameID, 'Player 1:', game.player1.name, 'Player 2:', game.player2.name);
-            gameturn(game, use_ai_loop);
-        }
-        use_ai_loop = false; // Disable AI control for player 2 after the first loop
-        await new Promise(resolve => setTimeout(resolve, delay));
+		for (const game of games) {
+			if (!game) continue; // Skip if the game is null
+			// console.log('Processing game:', game.gameID, 'Player 1:', game.player1.name, 'Player 2:', game.player2.name);
+			gameturn(game, use_ai_loop);
+		}
+		use_ai_loop = false; // Disable AI control for player 2 after the first loop
+		await new Promise(resolve => setTimeout(resolve, delay));
 
-    }
-    // clearInterval(intervalRef);
-    // intervalRef = null;
+	}
+	// clearInterval(intervalRef);
+	// intervalRef = null;
 }
 function getGameID(gamePlayerId: string): string[] | null {
-    // Extract the game ID from the player ID
-    const parts = gamePlayerId.split('-');
-    if (parts.length > 0) {
-        return parts; // Return the game ID part
-    }
-    return null; // Return null if no valid game ID is found
+	// Extract the game ID from the player ID
+	const parts = gamePlayerId.split('-');
+	if (parts.length > 0) {
+		return parts; // Return the game ID part
+	}
+	return null; // Return null if no valid game ID is found
 }
 // function findGamebyplayerId(playerId: string): gamestateinterface | null {
 //     // Find the game by player ID
@@ -268,236 +284,256 @@ function getGameID(gamePlayerId: string): string[] | null {
 //     return null; // Return null if no game is found for the player ID
 // }
 function findGamebyGameId(gameid: number | null): gamestateinterface | null {
-    // Find the game by player ID
-    if (!gameid ) {
-        console.error('Invalid game ID:', gameid);
-        return null; // Return null if game ID is not valid
-    }
-    for (const game of games) {
-        if (game && game.gameID === gameid) {
-            return game;
-        }
-    }
-    for (const game of matching) {
-        if (game && game.gameID === gameid) {
-            return game;
-        }
-    }
-    console.log('Game not found for game ID:', gameid);
-    return null; // Return null if no game is found for the gameid); ID
+	// Find the game by player ID
+	if (!gameid ) {
+		console.error('Invalid game ID:', gameid);
+		return null; // Return null if game ID is not valid
+	}
+	for (const game of games) {
+		if (game && game.gameID === gameid) {
+			return game;
+		}
+	}
+	for (const game of matching) {
+		if (game && game.gameID === gameid) {
+			return game;
+		}
+	}
+	console.log('Game not found for game ID:', gameid);
+	return null; // Return null if no game is found for the gameid); ID
 }
 
 const fastify = Fastify({logger : true});
 fastify.register(fastifyStatic, {
-    root: path.join(__dirname, './dist'),
-    prefix: '/',
+	root: path.join(__dirname, './dist'),
+	prefix: '/',
 });
 const sessionSecret = process.env.SESSION_SECRET;
 const cookieSecret = process.env.COOKIE_SECRET;
 
 if (!sessionSecret || !cookieSecret) {
-    throw new Error('MISSING ENV VARIABLES');
+	throw new Error('MISSING ENV VARIABLES');
 }
 // Register cookie and session plugins
 // cookie + session support
 fastify.register(fastifyCookie, {
-    secret: cookieSecret, // Optional, needed only for signed cookies 
-    parseOptions: {}
+	secret: cookieSecret, // Optional, needed only for signed cookies 
+	parseOptions: {}
 });
 fastify.register(fastifySession, {
-    secret: sessionSecret, // Replace with a secure secret in production
-    cookie: {
-        maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
-        secure: false, // Set to true if using HTTPS
-    },
-    saveUninitialized: false,
-    // resave: false,
+	secret: sessionSecret, // Replace with a secure secret in production
+	cookie: {
+		maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
+		secure: false, // Set to true if using HTTPS
+	},
+	saveUninitialized: false,
+	// resave: false,
 });
+fastify.register(fastifyCors, { origin: true });
+
 async function getUserIdFromSession(req: any): Promise<number | null> {
-    var userId: number | null = null;
-    const user = await fetch('http://user:3001/me', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-            Cookie: req.headers.cookie || '',
-            'Content-Type': 'application/json',
-            'x-session-id': req.cookies['sessionId'] || ''
-        }
-    });
-    if (user.ok) {
-        await user.json().then(data => {
-            console.log('User data:', data);
-            userId = data.user.userId; // Assuming the user object has an 'id' property
-        });
-    }
-    else {
-        console.error('Failed to fetch user data:', user.statusText);
-    }
-    return userId;
+	var userId: number | null = null;
+	const user = await fetch('http://user:3001/me', {
+		method: 'GET',
+		credentials: 'include',
+		headers: {
+			Cookie: req.headers.cookie || '',
+			'Content-Type': 'application/json',
+			'x-session-id': req.cookies['sessionId'] || ''
+		}
+	});
+	if (user.ok) {
+		await user.json().then(data => {
+			console.log('User data:', data);
+			userId = data.user.userId; // Assuming the user object has an 'id' property
+		});
+	}
+	else {
+		console.error('Failed to fetch user data:', user.statusText);
+	}
+	return userId;
+}
+async function getUserIdFromRequest(req: FastifyRequest): Promise<number | null> {
+	var playid: number | null = null;
+	if (!req.session.player || !req.session.player.id) {
+		await getUserIdFromSession(req).then((userId) => {
+			if (userId) {
+				playid = userId; // Assign the user ID to playid
+				console.log('User ID from usersession:', playid);
+			} else {
+				playid = null; // Default player ID for non-logged-in users
+				console.error('User ID not found in session', playid);
+			}
+	});
+	} else {
+		playid = req.session.player.id; // Use the player ID from the session
+	}
+	return typeof playid === 'number' ? playid : null;
 }
 // Start the game loop
 fastify.post('/start', async (req, reply) => {
-    var playid :number | null = null;
-    var online: boolean = false;
-    const { type, playername } = req.body as { type: string; playername: string };
-    if (!req.session.player || !req.session.player.id) {
-        await getUserIdFromSession(req).then((userId) => {
-            if (userId) {
-                playid = userId; // Assign the user ID to playid
-                online = true; // Set online to true if user is logged in
-                console.log('User ID from usersession:', playid);
-            } else {
-                playid = GameTypeId.UNKNOWN; // Default player ID for non-logged-in users
-                online = false;
-                console.error('User ID not found in session', playid);
-            }
-    });
-    } else {
-        playid = req.session.player.id; // Use the player ID from the session
-        online = req.session.player.loggedin || false; // Check if the player is logged in
-    }
-    
-    console.log('Starting game with AI:', type, 'Player Name:', playername);
-    if (!playid) {
-        console.error('Invalid player ID', playid);
-        reply.status(400).send({ error: 'Invalid player ID' });
-        return;
-    }
-    const gameid = await addGameLoop(type , playername, playid);
-    if (!gameid) {
-        console.error('Failed to start game');
-        reply.status(400).send({ error: 'Failed to start game' });
-        return;
-    }
+	var playid :number | null = null;
+	var online: boolean = false;
+	const { type, playername } = req.body as { type: string; playername: string };
+	if (!req.session.player || !req.session.player.id) {
+		await getUserIdFromSession(req).then((userId) => {
+			if (userId) {
+				playid = userId; // Assign the user ID to playid
+				online = true; // Set online to true if user is logged in
+				console.log('User ID from usersession:', playid);
+			} else {
+				playid = GameTypeId.UNKNOWN; // Default player ID for non-logged-in users
+				online = false;
+				console.error('User ID not found in session', playid);
+			}
+	});
+	} else {
+		playid = req.session.player.id; // Use the player ID from the session
+		online = req.session.player.loggedin || false; // Check if the player is logged in
+	}
+	
+	console.log('Starting game with AI:', type, 'Player Name:', playername);
+	if (!playid) {
+		console.error('Invalid player ID', playid);
+		reply.status(400).send({ error: 'Invalid player ID' });
+		return;
+	}
+	const gameid = await addGameLoop(type , playername, playid);
+	if (!gameid) {
+		console.error('Failed to start game');
+		reply.status(400).send({ error: 'Failed to start game' });
+		return;
+	}
 
-    // const splitted = gameid.split('-');
-    // var num : 1 | 2;
-    // if (splitted[1] == '1')
-    //     num = 1;
-    // else
-    //     num = 2;
-    if (gameid.id === null) {
-        reply.status(400).send({ error: 'Game ID is null' });
-        return;
-    }
-    req.session.player = {
-        username : playername,
-        id: playid,
-        player: gameid.player, // Use the second part of the game ID as the player number
-        gameid: gameid?.id, // Use the game ID from the game loop
-        loggedin: online
-    };
-    console.log('Player session:', req.session.player);
+	// const splitted = gameid.split('-');
+	// var num : 1 | 2;
+	// if (splitted[1] == '1')
+	//     num = 1;
+	// else
+	//     num = 2;
+	if (gameid.id === null) {
+		reply.status(400).send({ error: 'Game ID is null' });
+		return;
+	}
+	req.session.player = {
+		username : playername,
+		id: playid,
+		player: gameid.player, // Use the second part of the game ID as the player number
+		gameid: gameid?.id, // Use the game ID from the game loop
+		loggedin: online
+	};
+	console.log('Player session:', req.session.player);
 
-    reply.send({gameid: gameid, status: 'started' });
+	reply.send({gameid: gameid, status: 'started' });
 });
 
 fastify.post('/leave', async (req, reply) => {
-    if (!req.session.player) {
-        reply.status(401).send({ status: 'Unauthorized' });
-        console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
-        return;
-    }
-    const gameid  = req.session.player?.gameid
-    // const { gameid:gameid } = req.body as { gameid: string };
-    console.log('Player leaving game with ID:', gameid);
-    // const game = findGamebyplayerId(gameid);
-    const game = findGamebyGameId(gameid);
-    if (!game) {
-        reply.status(404).send({ status: 'Game not found' });
-        return;
-    }
-    if (game.gameActive) {
-        await updateGameInDB(game); // Update the game in the database before removing it
-        console.log('Game updated in database before leaving:', game.gameID);
-    }
-    if (req.session.player.id) {
-        const db = await dbfunc.getGamesForPlayer(req.session.player.id);
-        if (!db) {
-            console.error('Failed to retrieve game from database');
-            // reply.status(500).send({ status: 'Error retrieving game' });
-            // return;
-        }
-        console.log('Game retrieved from database:', db);
-    }
-    // Remove the game from the games array
-    if (game.gameActive && game.gametype === 'online') {
-        game.gameActive = false; // Set gameActive to false
-        game.gamePause = true; // Pause the game
-        reply.send({ status: 'left', gameid: gameid });
-        console.log('Game with ID:', gameid, 'has been paused.');
-        return;
-    }
-    games = games.filter(g => g && g.gameID !== game.gameID);
-    console.log('Game with ID:', gameid, 'has been removed. Remaining games:', games.length);
-    reply.send({ status: 'left', gameid: gameid });
+	if (!req.session.player) {
+		reply.status(401).send({ status: 'Unauthorized' });
+		console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
+		return;
+	}
+	const gameid  = req.session.player?.gameid
+	// const { gameid:gameid } = req.body as { gameid: string };
+	console.log('Player leaving game with ID:', gameid);
+	// const game = findGamebyplayerId(gameid);
+	const game = findGamebyGameId(gameid);
+	if (!game) {
+		reply.status(404).send({ status: 'Game not found' });
+		return;
+	}
+	if (game.gameActive) {
+		addNotification('Game has been played by: ' + req.session.player.username);
+		await updateGameInDB(game); // Update the game in the database before removing it
+		console.log('Game updated in database before leaving:', game.gameID);
+	}
+	if (req.session.player.id) {
+		const db = await dbfunc.getGamesForPlayer(req.session.player.id);
+		if (!db) {
+			console.error('Failed to retrieve game from database');
+			// reply.status(500).send({ status: 'Error retrieving game' });
+			// return;
+		}
+		console.log('Game retrieved from database:', db);
+	}
+	// Remove the game from the games array
+	if (game.gameActive && game.gametype === 'online') {
+		game.gameActive = false; // Set gameActive to false
+		game.gamePause = true; // Pause the game
+		reply.send({ status: 'left', gameid: gameid });
+		console.log('Game with ID:', gameid, 'has been paused.');
+		return;
+	}
+	games = games.filter(g => g && g.gameID !== game.gameID);
+	console.log('Game with ID:', gameid, 'has been removed. Remaining games:', games.length);
+	reply.send({ status: 'left', gameid: gameid });
 });
 
 
 
 // Pause the game
 fastify.post('/pause', async (req, reply) => {
-    if (!req.session.player) {
-        reply.status(401).send({ status: 'Unauthorized' });
-        console.error('Unauthorized access: Player session not found');
-        return;
-    }
-    // const { gameid} = req.query as { gameid: string };
+	if (!req.session.player) {
+		reply.status(401).send({ status: 'Unauthorized' });
+		console.error('Unauthorized access: Player session not found');
+		return;
+	}
+	// const { gameid} = req.query as { gameid: string };
 
-    // console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', gameid);
-    const game = findGamebyGameId(req.session.player?.gameid);
-    if (!game) {
-        reply.status(404).send({ status: 'Game not found' });
-        return;
-    }
-    if (game.gamePause) {
-        game.gamePause = false; // Resume the game
-        reply.send({ status: 'started' });
-        return;
-    }
-    game.gamePause = true;
-    reply.send({ status: 'paused' });
+	// console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', gameid);
+	const game = findGamebyGameId(req.session.player?.gameid);
+	if (!game) {
+		reply.status(404).send({ status: 'Game not found' });
+		return;
+	}
+	if (game.gamePause) {
+		game.gamePause = false; // Resume the game
+		reply.send({ status: 'started' });
+		return;
+	}
+	game.gamePause = true;
+	reply.send({ status: 'paused' });
 });
 // move the player paddle
 fastify.post('/move', async (req, reply) => {
-    if (!req.session.player) {
-        reply.status(401).send({ status: 'Unauthorized' });
-        console.error('Unauthorized access: Player session not found');
-        return;
-    }
-    const { direction } = req.body as { direction: 'up' | 'down' };
-    var player: 1|2 | null = req.session.player?.player; // Default player is 1
-    // const { gameid} = req.query as { gameid: string };
-    // const player = gameid.split('-')[1]; // Extract player from gameid
-    const game = findGamebyGameId(req.session.player?.gameid);
-    if (!game) {
-        reply.status(404).send({ status: 'no Game' });
-        return;
-    }
-    if (game.gamePause) {
-        reply.status(400).send({ status: 'paused' });
-        return;
-    }
-    if (game.gametype === 'local') {
-        player = (req.query as { player: 1|2 }).player; // Default to player 1 if not specified
-    }
-    console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.gametype);
-    if (player == 1) {
-        if (direction === 'up') {
-            game.player1.y -= game.player1.speed;
-        } else if (direction === 'down') {
-            game.player1.y += game.player1.speed;
-        }
-        playerMoveCheck(game.player1);
-    } else if (player == 2) {
-        if (direction === 'up') {
-            game.player2.y -= game.player2.speed;
-        } else if (direction === 'down') {
-            game.player2.y += game.player2.speed;
-        }
-        playerMoveCheck(game.player2);
-    }
-    reply.send({ status: 'moved'});
+	if (!req.session.player) {
+		reply.status(401).send({ status: 'Unauthorized' });
+		console.error('Unauthorized access: Player session not found');
+		return;
+	}
+	const { direction } = req.body as { direction: 'up' | 'down' };
+	var player: 1|2 | null = req.session.player?.player; // Default player is 1
+	// const { gameid} = req.query as { gameid: string };
+	// const player = gameid.split('-')[1]; // Extract player from gameid
+	const game = findGamebyGameId(req.session.player?.gameid);
+	if (!game) {
+		reply.status(404).send({ status: 'no Game' });
+		return;
+	}
+	if (game.gamePause) {
+		reply.status(400).send({ status: 'paused' });
+		return;
+	}
+	if (game.gametype === 'local') {
+		player = (req.query as { player: 1|2 }).player; // Default to player 1 if not specified
+	}
+	console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.gametype);
+	if (player == 1) {
+		if (direction === 'up') {
+			game.player1.y -= game.player1.speed;
+		} else if (direction === 'down') {
+			game.player1.y += game.player1.speed;
+		}
+		playerMoveCheck(game.player1);
+	} else if (player == 2) {
+		if (direction === 'up') {
+			game.player2.y -= game.player2.speed;
+		} else if (direction === 'down') {
+			game.player2.y += game.player2.speed;
+		}
+		playerMoveCheck(game.player2);
+	}
+	reply.send({ status: 'moved'});
 });
 
 // // Resume the game
@@ -508,226 +544,226 @@ fastify.post('/move', async (req, reply) => {
 
 // Get the current game state
 fastify.get('/state', async (req, reply) => {
-    if (!req.session.player) {
-        reply.status(401).send({ status: 'Unauthorized' });
-        console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
-        return;
-    }
-    // const playerId = req.query.gameId as string;
-    console.log('Fetching game state...', games.length);
-    console.log('Player session:', req.session.player, 'session ID:', req.cookies.sessionId);
-    // const {gameid:gamePlayerId} = req.query as  {gameid: string};
-    // console.log('Game Player ID:', gamePlayerId);
-    // const gameParts = getGameID(gamePlayerId);
-    // if (!gameParts) {
-    //     reply.status(400).send({ error: 'Invalid game ID format' });
-    //     return;
-    // }
-    // const game = findGamebyplayerId(gamePlayerId);
-    const game = findGamebyGameId(req.session.player?.gameid);
-    if (!game) {
-        reply.status(404).send({ error: 'Game not found' });
-        return;
-    }
-    reply.send(game || { error: 'Game not found' });
+	if (!req.session.player) {
+		reply.status(401).send({ status: 'Unauthorized' });
+		console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
+		return;
+	}
+	// const playerId = req.query.gameId as string;
+	console.log('Fetching game state...', games.length);
+	console.log('Player session:', req.session.player, 'session ID:', req.cookies.sessionId);
+	// const {gameid:gamePlayerId} = req.query as  {gameid: string};
+	// console.log('Game Player ID:', gamePlayerId);
+	// const gameParts = getGameID(gamePlayerId);
+	// if (!gameParts) {
+	//     reply.status(400).send({ error: 'Invalid game ID format' });
+	//     return;
+	// }
+	// const game = findGamebyplayerId(gamePlayerId);
+	const game = findGamebyGameId(req.session.player?.gameid);
+	if (!game) {
+		reply.status(404).send({ error: 'Game not found' });
+		return;
+	}
+	reply.send(game || { error: 'Game not found' });
 });
-    function simpleAi(gamestate:gamestateinterface): void {
-    // Simple AI to control player 2
-    var player2: pcInterface = gamestate.player2;
-    var ballvar: ballInterface = gamestate.ball;
+	function simpleAi(gamestate:gamestateinterface): void {
+	// Simple AI to control player 2
+	var player2: pcInterface = gamestate.player2;
+	var ballvar: ballInterface = gamestate.ball;
 
-    if (ballvar.y < player2.y) {
-        player2.y -= player2.speed; // Move up
-    } else if (ballvar.y + ballvar.height > player2.y + player2.height) {
-        player2.y += player2.speed; // Move down
-    }
-    // Ensure the AI paddle stays within the game walls
-    if (player2.y < 0) {
-        player2.y = 0; // Prevent moving above the top wall
-    }
-    else if (player2.y + player2.height > gameWall.height) {
-        player2.y = gameWall.height - player2.height; // Prevent moving below the bottom wall
-    }
+	if (ballvar.y < player2.y) {
+		player2.y -= player2.speed; // Move up
+	} else if (ballvar.y + ballvar.height > player2.y + player2.height) {
+		player2.y += player2.speed; // Move down
+	}
+	// Ensure the AI paddle stays within the game walls
+	if (player2.y < 0) {
+		player2.y = 0; // Prevent moving above the top wall
+	}
+	else if (player2.y + player2.height > gameWall.height) {
+		player2.y = gameWall.height - player2.height; // Prevent moving below the bottom wall
+	}
 
-    }
-    function gamespeed(): number {
-    // Adjust the game speed based on the current FPS
-    if (fps < 1) {
-        fps = 1; // Ensure FPS is at least 1
-    } else if (fps > 60) {
-        fps = 60; // Cap FPS at 60
-    }
-    ballSpeed = ballvarTemplate.staticSpeed / fps; // Set the ball speed based on FPS
-    return 1000 / fps; // Return the delay in milliseconds for the next frame
+	}
+	function gamespeed(): number {
+	// Adjust the game speed based on the current FPS
+	if (fps < 1) {
+		fps = 1; // Ensure FPS is at least 1
+	} else if (fps > 60) {
+		fps = 60; // Cap FPS at 60
+	}
+	ballSpeed = ballvarTemplate.staticSpeed / fps; // Set the ball speed based on FPS
+	return 1000 / fps; // Return the delay in milliseconds for the next frame
 }
-    function getSize(): number {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        var smaller = Math.min(width, height);
-        smaller -= gameWall.wallTickness2x; // Adjust for wall thickness
-        smaller -= gameWall.egdeThickness * 2; // Adjust for edge thickness
-        var sizeAduster = smaller / gameWall.width; // Calculate the size aduster based on the smaller dimension
-        if (sizeAduster < 1) {
-            sizeAduster = 1;
-        }
-        return sizeAduster;
-    }
-    function playerMoveCheck(player: pcInterface): void {
-        // Get the current position of the player
-        if (player.y < 0) {
-            player.y = 0; // Prevent moving above the top wall
-        } else if (player.y + player.height > gameWall.height) {
-            player.y = gameWall.height - player.height; // Prevent moving below the bottom wall
-        }
-    }
-    function ballmove(gamestate:gamestateinterface): void {
-    // Move the ball
+	function getSize(): number {
+		const width = window.innerWidth;
+		const height = window.innerHeight;
+		var smaller = Math.min(width, height);
+		smaller -= gameWall.wallTickness2x; // Adjust for wall thickness
+		smaller -= gameWall.egdeThickness * 2; // Adjust for edge thickness
+		var sizeAduster = smaller / gameWall.width; // Calculate the size aduster based on the smaller dimension
+		if (sizeAduster < 1) {
+			sizeAduster = 1;
+		}
+		return sizeAduster;
+	}
+	function playerMoveCheck(player: pcInterface): void {
+		// Get the current position of the player
+		if (player.y < 0) {
+			player.y = 0; // Prevent moving above the top wall
+		} else if (player.y + player.height > gameWall.height) {
+			player.y = gameWall.height - player.height; // Prevent moving below the bottom wall
+		}
+	}
+	function ballmove(gamestate:gamestateinterface): void {
+	// Move the ball
 
-    var oldBall : ballInterface = gamestate.ball;
-    gamestate.ball.x += gamestate.ball.dx * gamestate.ball.speed;
-    gamestate.ball.y += gamestate.ball.dy * gamestate.ball.speed;
-    const WallHeight = gameWall.height - gamestate.ball.height;
-    // Check for collision with the walls
-    if (gamestate.ball.y <= 0 || gamestate.ball.y >= gameWall.height - gamestate.ball.height) {
-        gamestate.ball.dy *= -1; // Reverse the y direction
-        if (gamestate.ball.y <= 0) {
-            gamestate.ball.y *= -1; // Prevent the ball from going above the top wall
-        } else {
-            gamestate.ball.y -= (gamestate.ball.y - WallHeight)*2; // Prevent the ball from going below the bottom wall
-        }
-    }
-    simplePadleCollisionPlayer1(oldBall, gamestate);
-    simplePadleCollisionPlayer2(oldBall, gamestate);
-    if (gamestate.ball.x <= 0 || gamestate.ball.x >= gameWall.width - gamestate.ball.width) {
-        gamestate.ball.dx *= -1; // Reverse the x direction
-        // Check which player scored
-        if (gamestate.ball.x <= 0) {
-            gamestate.player2.score++; // Player 2 scores
-        } else {
-            gamestate.player1.score++; // Player 1 scores
-        }
-        // Reset the ball position
-        gamestate.ball.x = gameWall.width / 2 - gamestate.ball.width / 2; // Center the ball horizontally
-        gamestate.ball.y = gameWall.height / 2 - gamestate.ball.height / 2; // Center the ball vertically
-    }
+	var oldBall : ballInterface = gamestate.ball;
+	gamestate.ball.x += gamestate.ball.dx * gamestate.ball.speed;
+	gamestate.ball.y += gamestate.ball.dy * gamestate.ball.speed;
+	const WallHeight = gameWall.height - gamestate.ball.height;
+	// Check for collision with the walls
+	if (gamestate.ball.y <= 0 || gamestate.ball.y >= gameWall.height - gamestate.ball.height) {
+		gamestate.ball.dy *= -1; // Reverse the y direction
+		if (gamestate.ball.y <= 0) {
+			gamestate.ball.y *= -1; // Prevent the ball from going above the top wall
+		} else {
+			gamestate.ball.y -= (gamestate.ball.y - WallHeight)*2; // Prevent the ball from going below the bottom wall
+		}
+	}
+	simplePadleCollisionPlayer1(oldBall, gamestate);
+	simplePadleCollisionPlayer2(oldBall, gamestate);
+	if (gamestate.ball.x <= 0 || gamestate.ball.x >= gameWall.width - gamestate.ball.width) {
+		gamestate.ball.dx *= -1; // Reverse the x direction
+		// Check which player scored
+		if (gamestate.ball.x <= 0) {
+			gamestate.player2.score++; // Player 2 scores
+		} else {
+			gamestate.player1.score++; // Player 1 scores
+		}
+		// Reset the ball position
+		gamestate.ball.x = gameWall.width / 2 - gamestate.ball.width / 2; // Center the ball horizontally
+		gamestate.ball.y = gameWall.height / 2 - gamestate.ball.height / 2; // Center the ball vertically
+	}
 }
 function simplePadleCollisionPlayer1(ball: ballInterface, gamestate: gamestateinterface) {
-    var player: pcInterface = gamestate.player1;
-    // Check if the ball is colliding with the paddle
-    if (gamestate.ball.x > player.x + player.width)
-        return false; // Ball is to the right of the paddle
-    if (ball.y + ball.height < player.y && gamestate.ball.y + gamestate.ball.height < player.y)
-        return false; // Ball is above the paddle
-    if (ball.y > player.y + player.height && gamestate.ball.y > player.y + player.height)
-        return false; // Ball is below the paddle
-    // If none of the conditions are met, the ball is colliding with the paddle
-    // Reverse the x direction of the ball
-    ball.dx *= -1; // Reverse the x direction
-    gamestate.ball.x += ((player.x + player.width) - gamestate.ball.x )*2;
-    // Position the ball to the right of the paddle
-    return true; // Ball is colliding with the paddle
+	var player: pcInterface = gamestate.player1;
+	// Check if the ball is colliding with the paddle
+	if (gamestate.ball.x > player.x + player.width)
+		return false; // Ball is to the right of the paddle
+	if (ball.y + ball.height < player.y && gamestate.ball.y + gamestate.ball.height < player.y)
+		return false; // Ball is above the paddle
+	if (ball.y > player.y + player.height && gamestate.ball.y > player.y + player.height)
+		return false; // Ball is below the paddle
+	// If none of the conditions are met, the ball is colliding with the paddle
+	// Reverse the x direction of the ball
+	ball.dx *= -1; // Reverse the x direction
+	gamestate.ball.x += ((player.x + player.width) - gamestate.ball.x )*2;
+	// Position the ball to the right of the paddle
+	return true; // Ball is colliding with the paddle
 }
 function simplePadleCollisionPlayer2(ball: ballInterface, gamestate: gamestateinterface) {
-    var player: pcInterface = gamestate.player2;
-    // Check if the ball is colliding with the paddle
-    if (gamestate.ball.x + gamestate.ball.width < player.x)
-        return false; // Ball is to the right of the paddle
-    if (ball.y + ball.height < player.y && gamestate.ball.y + gamestate.ball.height < player.y)
-        return false; // Ball is above the paddle
-    if (ball.y > player.y + player.height && gamestate.ball.y > player.y + player.height)
-        return false; // Ball is below the paddle
-    // If none of the conditions are met, the ball is colliding with the paddle
-    // Reverse the x direction of the ball
-    ball.dx *= -1; // Reverse the x direction
-    gamestate.ball.x -= ((gamestate.ball.x + gamestate.ball.width) - player.x)*2;
-    // Position the ball to the right of the paddle
-    return true; // Ball is colliding with the paddle
+	var player: pcInterface = gamestate.player2;
+	// Check if the ball is colliding with the paddle
+	if (gamestate.ball.x + gamestate.ball.width < player.x)
+		return false; // Ball is to the right of the paddle
+	if (ball.y + ball.height < player.y && gamestate.ball.y + gamestate.ball.height < player.y)
+		return false; // Ball is above the paddle
+	if (ball.y > player.y + player.height && gamestate.ball.y > player.y + player.height)
+		return false; // Ball is below the paddle
+	// If none of the conditions are met, the ball is colliding with the paddle
+	// Reverse the x direction of the ball
+	ball.dx *= -1; // Reverse the x direction
+	gamestate.ball.x -= ((gamestate.ball.x + gamestate.ball.width) - player.x)*2;
+	// Position the ball to the right of the paddle
+	return true; // Ball is colliding with the paddle
 }
 
 fastify.post('/db/addPlayer', async (req, reply) => {
-    const { playername, playerid } = req.body as { playername: string; playerid: number };
-    console.log('Adding player to database:', playername, 'Player ID:', playerid);
-    try {
-        const result = await dbfunc.createPlayer( playerid, playername);
-        reply.send({ status: 'player added', playerId: result });
-    } catch (error) {
-        console.error('Error adding player to database:', error);
-        reply.status(500).send({ error: 'Failed to add player' });
-    }
+	const { playername, playerid } = req.body as { playername: string; playerid: number };
+	console.log('Adding player to database:', playername, 'Player ID:', playerid);
+	try {
+		const result = await dbfunc.createPlayer( playerid, playername);
+		reply.send({ status: 'player added', playerId: result });
+	} catch (error) {
+		console.error('Error adding player to database:', error);
+		reply.status(500).send({ error: 'Failed to add player' });
+	}
 });
 fastify.get('/db/getGamesForPlayer', async (req, reply) => {
-    var playerid = GameTypeId.UNKNOWN; // Default player ID for unknown players
-    if (req.session.player && req.session.player.id) {
-        playerid = req.session.player.id;
-    } else if (req.session) {
-        const userId = await getUserIdFromSession(req);
-        if (userId) {
-            playerid = userId; // Use the user ID from the session
-        } else {
-            console.error('User ID not found in session');
-        }
-    } else {
-        console.error('Player ID is missing in the query parameters');
-    }
-    
-    console.log('Fetching games for player ID:', playerid);
-    try {
-        const games = await dbfunc.getGamesForPlayer(playerid);
-        if (!games || games.length === 0) {
-            reply.status(404).send({ error: 'No games found for player' });
-            return;
-        }
-        console.error('Games fetched for player ID:', playerid, 'Number of games:', games);
-        console.log('Games fetched for player ID:', playerid, 'Number of games:', games.length);
-        reply.send(games);
-    } catch (error) {
-        console.error('Error fetching games for player:', error);
-        reply.status(500).send({ error: 'Failed to fetch games for player' });
-    }
+	var playerid = GameTypeId.UNKNOWN; // Default player ID for unknown players
+	if (req.session.player && req.session.player.id) {
+		playerid = req.session.player.id;
+	} else if (req.session) {
+		const userId = await getUserIdFromSession(req);
+		if (userId) {
+			playerid = userId; // Use the user ID from the session
+		} else {
+			console.error('User ID not found in session');
+		}
+	} else {
+		console.error('Player ID is missing in the query parameters');
+	}
+	sendNotificationToUser(playerid, 'Fetching games for player ID: ' + playerid);
+	console.log('Fetching games for player ID:', playerid);
+	try {
+		const games = await dbfunc.getGamesForPlayer(playerid);
+		if (!games || games.length === 0) {
+			reply.status(404).send({ error: 'No games found for player' });
+			return;
+		}
+		console.error('Games fetched for player ID:', playerid, 'Number of games:', games);
+		console.log('Games fetched for player ID:', playerid, 'Number of games:', games.length);
+		reply.send(games);
+	} catch (error) {
+		console.error('Error fetching games for player:', error);
+		reply.status(500).send({ error: 'Failed to fetch games for player' });
+	}
 });
 // add a new game to the database
 fastify.post('/db/addGame', async (req, reply) => {
-    const { player1, player2, player1Score, player2Score, winner , gameID, gametype } = req.body as {
-        player1: { id: number; username: string };
-        player2: { id: number; username: string };
-        player1Score: number;
-        player2Score: number;
-        winner: string;
-        gameID: string;
-        gametype: string;
-    };
-    console.log('Adding game to database:', gameID, 'Player 1:', player1.username, 'Player 2:', player2.username);
-    try {
-        const result = await dbfunc.createGame({
-            id: 0, // Assuming ID is auto-incremented in the database
-            type: gametype,
-            player1: player1,
-            player2: player2,
-            player1Score: player1Score,
-            player2Score: player2Score,
-            winner: winner,
-            createdAt: new Date(), // Set the current date as createdAt
-        });
-        reply.send({ status: 'game added', gameId: result });
-    } catch (error) {
-        console.error('Error adding game to database:', error);
-        reply.status(500).send({ error: 'Failed to add game' });
-    }
+	const { player1, player2, player1Score, player2Score, winner , gameID, gametype } = req.body as {
+		player1: { id: number; username: string };
+		player2: { id: number; username: string };
+		player1Score: number;
+		player2Score: number;
+		winner: string;
+		gameID: string;
+		gametype: string;
+	};
+	console.log('Adding game to database:', gameID, 'Player 1:', player1.username, 'Player 2:', player2.username);
+	try {
+		const result = await dbfunc.createGame({
+			id: 0, // Assuming ID is auto-incremented in the database
+			type: gametype,
+			player1: player1,
+			player2: player2,
+			player1Score: player1Score,
+			player2Score: player2Score,
+			winner: winner,
+			createdAt: new Date(), // Set the current date as createdAt
+		});
+		reply.send({ status: 'game added', gameId: result });
+	} catch (error) {
+		console.error('Error adding game to database:', error);
+		reply.status(500).send({ error: 'Failed to add game' });
+	}
 });
 fastify.get('/db/getGameById', async (req, reply) => {
-    const { gameId } = req.query as { gameId: number };
-    console.log('Fetching game by ID:', gameId);
-    try {
-        const game = await dbfunc.getGameById(gameId);
-        if (!game) {
-            reply.status(404).send({ error: 'Game not found' });
-            return;
-        }
-        reply.send(game);
-    } catch (error) {
-        console.error('Error fetching game by ID:', error);
-        reply.status(500).send({ error: 'Failed to fetch game' });
-    }
+	const { gameId } = req.query as { gameId: number };
+	console.log('Fetching game by ID:', gameId);
+	try {
+		const game = await dbfunc.getGameById(gameId);
+		if (!game) {
+			reply.status(404).send({ error: 'Game not found' });
+			return;
+		}
+		reply.send(game);
+	} catch (error) {
+		console.error('Error fetching game by ID:', error);
+		reply.status(500).send({ error: 'Failed to fetch game' });
+	}
 });
 // Get all games from the database
 // fastify.get('/db/getAllGames', async (req, reply) => {
@@ -741,31 +777,49 @@ fastify.get('/db/getGameById', async (req, reply) => {
 //     }
 // });
 fastify.get('/db/getGameStats', async (req, reply) => {
-    const { playerid } = req.query as { playerid: number };
-    console.log('Fetching game stats for game ID:', playerid);
-    try {
-        const stats = await dbfunc.getGameStatsByPlayerId(playerid);
-        if (!stats) {
-            reply.status(404).send({ error: 'Game stats not found' });
-            return;
-        }
-        reply.send(stats);
-    } catch (error) {
-        console.error('Error fetching game stats:', error);
-        reply.status(500).send({ error: 'Failed to fetch game stats' });
-    }
+	const { playerid } = req.query as { playerid: number };
+	console.log('Fetching game stats for game ID:', playerid);
+	try {
+		const stats = await dbfunc.getGameStatsByPlayerId(playerid);
+		if (!stats) {
+			reply.status(404).send({ error: 'Game stats not found' });
+			return;
+		}
+		reply.send(stats);
+	} catch (error) {
+		console.error('Error fetching game stats:', error);
+		reply.status(500).send({ error: 'Failed to fetch game stats' });
+	}
 });
 
+// To send to a specific user:
+async function sendNotificationToUser(userId: number, message: string) {
+	const response = await fetch(`http://notification:3005/add?userId=${userId}`, {
+		method: 'POST',
+		credentials: 'include', // Include credentials for session management
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ message })
+	});
+	if (!response.ok) {
+		console.error('Failed to send notification:', response.statusText);
+	} else {
+		const data = await response.json();
+		console.log('Notification sent successfully:', data);
+	}
+}
 fastify.listen({host: "0.0.0.0", port: 3002 }, err => {
-    // seedDatabase();
-    if (err) {
-        fastify.log.error((err));
-        process.exit(1);
-    }
-    dbfunc.initializeDatabase().catch(console.error);
+	// seedDatabase();
+	if (err) {
+		fastify.log.error((err));
+		process.exit(1);
+	}
+	dbfunc.initializeDatabase().catch(console.error);
 
-    dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
-    dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
-    dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
+	dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
+	dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
+	dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
+	addNotification('Server started on port 3002');
 });
 

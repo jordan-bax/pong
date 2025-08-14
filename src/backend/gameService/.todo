@@ -1,8 +1,10 @@
 # body
 ## fastify
-
+btop
 **bold text** *✅*
-- [] fastify endpoint voor 2 users match 
+TODO:
+
+[] fastify endpoint voor 2 users match 
 [] fastify endpoint voor notivications 
 [] make notivications loop in frontend 
 [] notivication interfall and display

@@ -348,7 +348,7 @@ class server {
                 };
                 return reply.send({ success: true });
             } catch (err) {
-                req.log.error('inserting new user error', err);
+                req.log.error('inserting new user error');
                 return reply.code(500).send({ error: 'serverError' });
             }
         });
@@ -381,7 +381,7 @@ class server {
                 };
                 reply.send({ success: true });
             } catch (err) {
-                req.log.error('login error', err);
+                req.log.error('login error');
                 return reply.code(500).send({ error: 'serverError' });
             }
         });

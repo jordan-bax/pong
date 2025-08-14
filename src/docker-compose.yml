@@ -60,6 +60,20 @@ services:
   #   networks:
   #     - transcendanse
   #   restart: unless-stopped
+  notification:
+    build: 
+      context: ./backend/notificationService
+      # dockerfile: Dockerfile
+    container_name: notification
+    expose:
+      - "3005"
+    volumes:
+      - notification-db:/app/db
+    env_file:
+      - .env
+    networks:
+      - transcendanse
+    restart: unless-stopped
 
   page_content:
     build:
@@ -99,6 +113,7 @@ volumes:
       o: bind
       type: none
   game-db:
+  notification-db:
   # tournament-db:
   #   name: tournament
   #   driver: local

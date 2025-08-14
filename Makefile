@@ -80,6 +80,10 @@ rebuild-nginx:
 	docker-compose -f src/docker-compose.yml build --no-cache nginx
 	docker-compose -f src/docker-compose.yml up -d --force-recreate nginx
 
+rebuild-notification:
+	docker-compose -f src/docker-compose.yml build --no-cache notification
+	docker-compose -f src/docker-compose.yml up -d --force-recreate notification
+
 rebuild-backend: rebuild-user rebuild-page_content rebuild-game
 
 .PHONY: all up down start build clean re prune fresh rebuild-user rebuild-page_content rebuild.game rebuild-nginx rebuild-backend

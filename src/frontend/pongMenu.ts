@@ -1,6 +1,7 @@
 import {startGame} from './renderPong.js';
 import { createGameHistoryTable } from './gameHistoryTable.js';
 // import {  } from './sharedValuesPong.js';
+import {setNotifications} from './notifications.js';
 var fps: number = 10; // Default frames per second
 
 export async function pongbutton(): Promise<void> {
@@ -67,11 +68,12 @@ async function testData(frame: HTMLIFrameElement): Promise<void> {
 
 
 	const addPlayerButton = document.createElement('button');
-	addPlayerButton.textContent = 'add player';
+	addPlayerButton.textContent = 'test notify';
 	addPlayerButton.style.fontSize = '1.2em';
 	addPlayerButton.style.padding = '10px 20px';
-	addPlayerButton.onclick = () => {
+	addPlayerButton.onclick = async () => {
 		frame?.removeChild(container); // Remove the container before adding a player
+		await setNotifications();
 		console.log('Add player button clicked');
 		return;
 	};
@@ -80,6 +82,7 @@ async function testData(frame: HTMLIFrameElement): Promise<void> {
 
 	frame.appendChild(container);
 }
+
 function createCenterButtons(){
 	const frame = document.getElementById('content');
 	if (!frame) {

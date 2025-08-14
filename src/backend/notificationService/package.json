@@ -1,10 +1,10 @@
 {
-    "name": "game-service",
+    "name": "notification-service",
     "version": "1.0.0",
     "description": "pong microservice for transcendence",
     "scripts": {
       "build": "tsc --build",
-      "start": "node dist/game.js"
+      "start": "node dist/notifications.js"
     },
     "dependencies": {
       "@fastify/cookie": "11.0.2",

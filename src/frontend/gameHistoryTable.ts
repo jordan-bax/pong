@@ -110,6 +110,7 @@ function renderTableRows(data: Game[]) {
     const row = document.createElement("tr");
     [game.id, game.type, game.player1.username, game.player2.username, game.player1Score, game.player2Score, game.winner, game.createdAt].forEach(value => {
       const td = document.createElement("td");
+      td.id = "td";
       td.textContent = String(value);
       // td.style.padding = "10px";
       // td.style.border = "1px solid #ccc";

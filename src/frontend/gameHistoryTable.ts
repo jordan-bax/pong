@@ -1,15 +1,5 @@
-type Person = {
-  id: number;
-  name: string;
-  age: number;
-  favoriteColor: string;
-};
-const people: Person[] = [
-  { id: 1, name: "Alice", age: 30, favoriteColor: "Blue" },
-  { id: 2, name: "Bob", age: 25, favoriteColor: "Green" },
-  { id: 3, name: "Charlie", age: 35, favoriteColor: "Red" },
-  { id: 4, name: "Diana", age: 28, favoriteColor: "Purple" },
-];
+
+
 export interface player {
 	id: number | null; // Player ID, can be null for new players
 	username: string;

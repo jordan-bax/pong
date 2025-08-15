@@ -1,6 +1,7 @@
 import { renderContent, getPageContent } from "./contentRenderer.js";
 import { getLanguage, setLanguage } from "./index.js";
 import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
+import { dropdowngamemenu } from "./settings.js";
 
 interface navbarContent {
     homeNavbarText: string;
@@ -58,6 +59,20 @@ export async function renderNavbar(): Promise<void> {
         renderContent('game');
     };
     navbar.appendChild(gameLink);
+    
+    dropdowngamemenu(navbar);
+    
+    let settingsLink = document.createElement('a');
+    settingsLink.href = '/settings';
+    settingsLink.textContent = "Settings";
+    // settingsLink.textContent = navbarText.settingsNavbarText;
+    settingsLink.className = 'btn navItem';
+    settingsLink = navbarStyling(settingsLink);
+    settingsLink.onclick = (e) => {
+        e.preventDefault();
+        history.pushState({}, '', '/settings');
+        renderContent('settings');
+    };
 
     let notificationArea = document.createElement('div');
     notificationArea.id = 'notification-area';
@@ -113,34 +128,35 @@ export async function renderNavbar(): Promise<void> {
         navbar.appendChild(registerLink);
     }
 
-    const languageDropdown = document.createElement('select');
-    const options = ['NL', 'EN'];
-    options.forEach((text, index) => {
-        const option = document.createElement('option');
-        option.value  = options[index];
-        option.textContent = text;
-        languageDropdown.appendChild(option);
-    });
+    // const languageDropdown = document.createElement('select');
+    // const options = ['NL', 'EN'];
+    // options.forEach((text, index) => {
+    //     const option = document.createElement('option');
+    //     option.value  = options[index];
+    //     option.textContent = text;
+    //     languageDropdown.appendChild(option);
+    // });
     
-    languageDropdown.style.display = 'flex';
-    languageDropdown.style.position = 'absolute';
-    languageDropdown.style.right = '20px';
-    navbar.appendChild(languageDropdown);
-    Array.from(languageDropdown.options).forEach((option) => {
-        if (option.text == language) {
-            option.selected = true;
-        } else {
-            option.selected = false;
-        }
-    })
-    languageDropdown.addEventListener('change', (event) => {
-        const target = event.target as HTMLSelectElement;
-        setLanguage(target.value);
-        checkSession();
-    })
+    // languageDropdown.style.display = 'flex';
+    // languageDropdown.style.position = 'absolute';
+    // languageDropdown.style.right = '20px';
+    // navbar.appendChild(languageDropdown);
+    // Array.from(languageDropdown.options).forEach((option) => {
+    //     if (option.text == language) {
+    //         option.selected = true;
+    //     } else {
+    //         option.selected = false;
+    //     }
+    // })
+    // languageDropdown.addEventListener('change', (event) => {
+    //     const target = event.target as HTMLSelectElement;
+    //     setLanguage(target.value);
+    //     checkSession();
+    // })
 
     const googleLogin = document.createElement('div');
     googleLogin.id = 'google-signin-button';
+    navbar.appendChild(settingsLink);
 
     navbar.appendChild(googleLogin);
 }

@@ -2,6 +2,7 @@
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
 import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest } from "./routing.js";
+import { openSettings } from "./settings.js";
 
 declare global {
     interface Window {
@@ -857,6 +858,10 @@ export async function renderContent (route: string): Promise<void> {
         case 'game':
             content.textContent = 'Game page is under construction.';
             pongbutton();
+            break;
+        case 'settings':
+            content.textContent = 'Settings page is under construction.';
+            openSettings();
             break;
         default:
             content.textContent = textData.notFoundText;

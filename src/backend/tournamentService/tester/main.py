@@ -133,7 +133,7 @@ def main():
     print(f'{data}', resp.status_code)
     assert resp.status_code == 201
 
-    time.sleep(12)
+    time.sleep(15)
 
     url = f'http://127.0.0.1:3003/id/{data["id"]}'
     resp = requests.get(url=url, params={'id': data['id']})
@@ -141,17 +141,28 @@ def main():
     pprint(data)
     assert resp.status_code == 200
 
-    url = 'http://127.0.0.1:3003/done'
-    for index in range(len(data['nextMatchs'])):
-        resp = requests.post(url=url, json={
-            'tournamentID': data['id'],
-            'player1ID': data['nextMatchs'][index][0],
-            'player2ID': data['nextMatchs'][index][1],
-            'winnerID': data['nextMatchs'][index][0],
-            'player1Score': 11,
-            'player2Score': index})
-        pprint(resp.json())
-        assert resp.status_code == 201
+    for index in range(data['rounds']):
+        url = 'http://127.0.0.1:3003/done'
+        for index in range(len(data['nextMatchs'])):
+            print(data['nextMatchs'][index])
+            resp = requests.post(url=url, json={
+                'tournamentID': data['id'],
+                'player1ID': data['nextMatchs'][index][0],
+                'player2ID': data['nextMatchs'][index][1],
+                'winnerID': data['nextMatchs'][index][0],
+                'player1Score': 11,
+                'player2Score': index})
+            pprint(resp.json())
+            assert resp.status_code == 201
+
+        time.sleep(5)
+
+        url = f'http://127.0.0.1:3003/id/{data["id"]}'
+        resp = requests.get(url=url, params={'id': data['id']})
+        data = resp.json()
+        pprint(data)
+        assert resp.status_code == 200
+
 
 if __name__ == '__main__':
     main()

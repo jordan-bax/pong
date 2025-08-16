@@ -84,7 +84,6 @@ server.post('/leave', { schema: leaveSchema }, async (request: FastifyRequest, r
 })
 
 server.post('/done', { schema: gameDoneSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
-    console.log('done endpoint')
     const { tournamentID, player1ID, player2ID, winnerID, player1Score, player2Score } = request.body as { tournamentID: number, player1ID: number, player2ID: number, winnerID: number, player1Score: number, player2Score: number }
     try {
         await tournamentObj.matchDone(tournamentID, player1ID, player2ID, winnerID, player1Score, player2Score)

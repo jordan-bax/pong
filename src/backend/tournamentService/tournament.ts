@@ -173,6 +173,8 @@ class TournamentService {
 
     private async nextMatch(tournamentID: number) {
         const nextMatches = await db.nextMatches(tournamentID)
+        console.log(nextMatches)
+        log('-----------------------')
     }
 
     private async initMatches(
@@ -209,7 +211,7 @@ class TournamentService {
             matches.push(subMatch)
         }
 
-        await db.initMatches(tournamentID, matches)
+        await db.addMatches(tournamentID, matches, 1)
     }
 
     private async checkTournaments() {
@@ -235,11 +237,13 @@ class TournamentService {
 
         const runningTours = await db.running()
         for (let index = 0; index < runningTours.length; index++) {
-            const roundDone = await db.roundeDone(runningTours[index].id)
+            const roundDone = await db.roundDone(runningTours[index].id)
             if (roundDone) {
-                this.nextMatch(runningTours[index].id)
+                const tournamentDone = await db.isTournamentDone(runningTours[index].id)
+                if (!tournamentDone) {
+                    await this.nextMatch(runningTours[index].id)
+                }
             }
-
         }
 
         this.isChecking = false

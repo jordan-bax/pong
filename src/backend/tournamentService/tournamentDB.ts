@@ -1,3 +1,4 @@
+import { log } from 'console'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
@@ -332,7 +333,7 @@ class TournamentDB {
         }
     }
 
-    async roundeDone(tournamentID: number) {
+    async roundDone(tournamentID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -357,16 +358,50 @@ class TournamentDB {
         }
     }
 
+    async isTournamentDone(tournamentID: number) {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
+        const result = await this.db.get(`
+                SELECT
+                    CASE
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM match
+                            WHERE tournamentID = ?
+                              AND round = (
+                                  SELECT rounds
+                                  FROM tournament
+                                  WHERE id = ?
+                              )
+                        ) THEN 1
+                        ELSE 0
+                    END AS result`,
+                [tournamentID, tournamentID])
+
+        if (result.result) {
+            await this.setTournamentDone(tournamentID)
+            return true
+        }
+
+        return false
+    }
+
     async nextMatches(tournamentID: number) {
         const result = await this.db.all(`
                 SELECT
-                    winnerID
+                    winnerID,
+                    round
                 FROM
                     match
                 WHERE
-                    round = (SELECT MAX(round) FROM match)
-                    AND tournamentID = ?`,
-                [tournamentID])
+                    tournamentID = ?
+                    AND round = (
+                        SELECT COALESCE(MAX(round), 0)
+                        FROM match
+                        WHERE tournamentID = ?)`,
+                [tournamentID, tournamentID])
 
         let nextMatch = []
 
@@ -379,6 +414,9 @@ class TournamentDB {
                 nextMatch.push([winner1, null])
             }
         }
+
+        await this.addMatches(tournamentID, nextMatch, result[0]['round'] + 1)
+
         return nextMatch
     }
 
@@ -394,12 +432,13 @@ class TournamentDB {
                 WHERE p.tournamentID = t.id)
             AS players,
             (SELECT GROUP_CONCAT(
-                    COALESCE(m.player1ID, 'NULL') || ',' || COALESCE(m.player2ID, 'NULL'),
-                    ';')
+                COALESCE(m.player1ID, 'NULL') || ',' || COALESCE(m.player2ID, 'NULL'),
+                ';')
             FROM match m
             WHERE m.tournamentID = t.id
-            ORDER BY m.round, m.position)
-            AS matches
+                AND m.round = (SELECT MAX(round) FROM match WHERE tournamentID = t.id)
+                ORDER BY m.round, m.position)
+                AS matches
             FROM tournament t
             WHERE t.id = ?`,
             [tournamentID])
@@ -449,7 +488,7 @@ class TournamentDB {
         }
     }
 
-    async initMatches(tournamentID: number, players: number[][]) {
+    async addMatches(tournamentID: number, players: number[][], round: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -459,11 +498,10 @@ class TournamentDB {
                 await this.db.run(`
                     INSERT INTO match ( tournamentID, round, position, player1ID, player2ID )
                     VALUES (?, ?, ?, ?, ?)`,
-                    [tournamentID, 1, index + 1, players[index][0], players[index][1]])
+                    [tournamentID, round, index + 1, players[index][0], players[index][1]])
             } catch (error) {
                 throw error
             }
-
         }
     }
 
@@ -489,6 +527,18 @@ class TournamentDB {
             await this.db.close()
             this.db = null
         }
+    }
+
+    private async setTournamentDone(tournamentID: number) {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
+        await this.db.run(`
+                UPDATE tournament
+                    SET isFinished = 1
+                    WHERE id = ?`,
+                [tournamentID])
     }
 }
 

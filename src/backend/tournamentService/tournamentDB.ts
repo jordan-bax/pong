@@ -1,4 +1,3 @@
-import { log } from 'console'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
@@ -34,15 +33,15 @@ class TournamentDB {
         await this.db.run(`
             CREATE TABLE IF NOT EXISTS players (
                 userID INTEGER NOT NULL,
-                tournamentID INTEGER NOT NULL,
+                tourID INTEGER NOT NULL,
                 eliminated INTEGER DEFAULT 0,
-                PRIMARY KEY(userID, tournamentID),
-                FOREIGN KEY(tournamentID) REFERENCES tournament(id) ON DELETE CASCADE)`)
+                PRIMARY KEY(userID, tourID),
+                FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE)`)
 
         await this.db.run(`
             CREATE TABLE IF NOT EXISTS match (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tournamentID INTEGER NOT NULL,
+                tourID INTEGER NOT NULL,
                 round INTEGER NOT NULL,
                 position INTEGER NOT NULL,
                 player1ID INTEGER,
@@ -50,7 +49,7 @@ class TournamentDB {
                 winnerID INTEGER DEFAULT 0,
                 player1Score INTEGER DEFAULT 0,
                 player2Score INTEGER DEFAULT 0,
-                FOREIGN KEY(tournamentID) REFERENCES tournament(id) ON DELETE CASCADE,
+                FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE,
                 FOREIGN KEY(player1ID) REFERENCES players(userID),
                 FOREIGN KEY(player2ID) REFERENCES players(userID),
                 FOREIGN KEY(winnerID) REFERENCES players(userID))`)
@@ -62,7 +61,7 @@ class TournamentDB {
             BEGIN
                 UPDATE tournament
                 SET playerCount = playerCount + 1
-                WHERE id = NEW.tournamentID;
+                WHERE id = NEW.tourID;
             END`)
 
         await this.db.run(`
@@ -72,7 +71,7 @@ class TournamentDB {
             BEGIN
                 UPDATE tournament
                 SET playerCount = playerCount - 1
-                WHERE id = OLD.tournamentID;
+                WHERE id = OLD.tourID;
             END`)
     }
 
@@ -118,14 +117,14 @@ class TournamentDB {
         }
     }
 
-    async join(tournamentID: number, userID: number) {
+    async join(tourID: number, userID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
 
         try {
             const result = await this.db.run(`
-                INSERT INTO players (tournamentID, userID)
+                INSERT INTO players (tourID, userID)
                 SELECT ?, ?
                 WHERE (
                     SELECT NOT isRunning
@@ -137,9 +136,9 @@ class TournamentDB {
                     SELECT 1
                     FROM players
                     WHERE userID = ?
-                    AND tournamentID = ?
+                    AND tourID = ?
                 )`,
-                [tournamentID, userID, tournamentID, userID, tournamentID])
+                [tourID, userID, tourID, userID, tourID])
 
             if (result.changes === 0) {
                 throw new Error('Cannot join tournament with a invalid ID')
@@ -149,7 +148,7 @@ class TournamentDB {
         }
     }
 
-    async leave(tournamentID: number, userID: number) {
+    async leave(tourID: number, userID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -158,7 +157,7 @@ class TournamentDB {
             const result = await this.db.run(`
                 DELETE FROM players
                 WHERE userID = ?
-                    AND tournamentID IN (
+                    AND tourID IN (
                         SELECT id
                         FROM tournament
                         WHERE id = ?
@@ -168,7 +167,7 @@ class TournamentDB {
                     FROM tournament
                     WHERE id = ?
                     AND NOT isRunning)`,
-                [userID, tournamentID, tournamentID])
+                [userID, tourID, tourID])
 
             if (result.changes === 0) {
                 throw new Error('Can not leave tournament with invalid ID')
@@ -178,14 +177,14 @@ class TournamentDB {
                 SELECT playerCount
                 FROM tournament
                 WHERE id = ?`,
-                [tournamentID])
+                [tourID])
 
             if (row && row.playerCount === 0) {
                 await this.db.run(`
                 DELETE
                 FROM tournament
                 WHERE id = ?`,
-                    [tournamentID])
+                    [tourID])
             }
         } catch (error) {
             throw error
@@ -204,7 +203,7 @@ class TournamentDB {
                     COALESCE((
                         SELECT GROUP_CONCAT(p.userID)
                         FROM players p
-                        WHERE p.tournamentID = t.id
+                        WHERE p.tourID = t.id
                     ), '') AS player_ids
                 FROM tournament t
                 WHERE isRunning = ?
@@ -234,7 +233,7 @@ class TournamentDB {
                     COALESCE((
                         SELECT GROUP_CONCAT(p.userID)
                         FROM players p
-                        WHERE p.tournamentID = t.id
+                        WHERE p.tourID = t.id
                     ), '') AS player_ids
                 FROM tournament t
                 WHERE isRunning = ?`,
@@ -263,7 +262,7 @@ class TournamentDB {
                     COALESCE((
                         SELECT GROUP_CONCAT(p.userID)
                         FROM players p
-                        WHERE p.tournamentID = t.id
+                        WHERE p.tourID = t.id
                     ), '') AS player_ids
                 FROM tournament t
                 WHERE isFinished = ?`,
@@ -292,7 +291,7 @@ class TournamentDB {
                     COALESCE((
                         SELECT GROUP_CONCAT(p.userID)
                         FROM players p
-                        WHERE p.tournamentID = t.id
+                        WHERE p.tourID = t.id
                     ), '') AS player_ids
                 FROM tournament t`)
 
@@ -308,7 +307,7 @@ class TournamentDB {
     }
 
     async done(
-        tournamentID: number,
+        tourID: number,
         player1ID: number,
         player2ID: number,
         winnerID: number,
@@ -324,16 +323,16 @@ class TournamentDB {
                 SET winnerID = ?,
                     player1Score = ?,
                     player2Score = ?
-                WHERE tournamentID = ?
+                WHERE tourID = ?
                 AND player1ID = ?
                 AND player2ID = ?`,
-                [winnerID, player1Score, player2Score, tournamentID, player1ID, player2ID])
+                [winnerID, player1Score, player2Score, tourID, player1ID, player2ID])
         } catch (error) {
             throw new Error('Failed to update the match')
         }
     }
 
-    async roundDone(tournamentID: number) {
+    async roundDone(tourID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -344,9 +343,9 @@ class TournamentDB {
                     SELECT 1
                     FROM match
                     WHERE winnerID = 0
-                    AND tournamentID = ?
+                    AND tourID = ?
                 ) AS all_nonzero`,
-                [tournamentID])
+                [tourID])
 
             if (result['all_nonzero'] === 1) {
                 return true
@@ -358,7 +357,7 @@ class TournamentDB {
         }
     }
 
-    async isTournamentDone(tournamentID: number) {
+    async isTournamentDone(tourID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -369,7 +368,7 @@ class TournamentDB {
                         WHEN EXISTS (
                             SELECT 1
                             FROM match
-                            WHERE tournamentID = ?
+                            WHERE tourID = ?
                               AND round = (
                                   SELECT rounds
                                   FROM tournament
@@ -378,17 +377,17 @@ class TournamentDB {
                         ) THEN 1
                         ELSE 0
                     END AS result`,
-                [tournamentID, tournamentID])
+                [tourID, tourID])
 
         if (result.result) {
-            await this.setTournamentDone(tournamentID)
+            await this.setTournamentDone(tourID)
             return true
         }
 
         return false
     }
 
-    async nextMatches(tournamentID: number) {
+    async nextMatches(tourID: number) {
         const result = await this.db.all(`
                 SELECT
                     winnerID,
@@ -396,12 +395,12 @@ class TournamentDB {
                 FROM
                     match
                 WHERE
-                    tournamentID = ?
+                    tourID = ?
                     AND round = (
                         SELECT COALESCE(MAX(round), 0)
                         FROM match
-                        WHERE tournamentID = ?)`,
-                [tournamentID, tournamentID])
+                        WHERE tourID = ?)`,
+                [tourID, tourID])
 
         let nextMatch = []
 
@@ -411,16 +410,16 @@ class TournamentDB {
                 nextMatch.push([winner1, result[index + 1]['winnerID']])
                 index++;
             } else {
-                nextMatch.push([winner1, null])
+                nextMatch.push([winner1, 0])
             }
         }
 
-        await this.addMatches(tournamentID, nextMatch, result[0]['round'] + 1)
+        await this.addMatches(tourID, nextMatch, result[0]['round'] + 1)
 
         return nextMatch
     }
 
-    async getTournament(tournamentID: number) {
+    async getTournament(tourID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -429,19 +428,19 @@ class TournamentDB {
             SELECT t.id, t.name, t.rounds, t.isRunning, t.isFinished, t.lockTime, t.playerCount, t.maxPlayers,
             (SELECT GROUP_CONCAT(p.userID)
                 FROM players p
-                WHERE p.tournamentID = t.id)
+                WHERE p.tourID = t.id)
             AS players,
             (SELECT GROUP_CONCAT(
                 COALESCE(m.player1ID, 'NULL') || ',' || COALESCE(m.player2ID, 'NULL'),
                 ';')
             FROM match m
-            WHERE m.tournamentID = t.id
-                AND m.round = (SELECT MAX(round) FROM match WHERE tournamentID = t.id)
+            WHERE m.tourID = t.id
+                AND m.round = (SELECT MAX(round) FROM match WHERE tourID = t.id)
                 ORDER BY m.round, m.position)
                 AS matches
             FROM tournament t
             WHERE t.id = ?`,
-            [tournamentID])
+            [tourID])
 
         if (tourObj === undefined) {
             throw new Error('could not get tournament from DB')
@@ -471,7 +470,7 @@ class TournamentDB {
         }
     }
 
-    async getPlayers(tournamentID: number) {
+    async getPlayers(tourID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -480,15 +479,15 @@ class TournamentDB {
             const players = await this.db.all(`
                 SELECT userID
                 FROM players
-                WHERE tournamentID = ?`,
-                [tournamentID])
+                WHERE tourID = ?`,
+                [tourID])
             return players.map(players => players.userID)
         } catch (error) {
             throw error
         }
     }
 
-    async addMatches(tournamentID: number, players: number[][], round: number) {
+    async addMatches(tourID: number, players: number[][], round: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -496,16 +495,16 @@ class TournamentDB {
         for (let index = 0; index < players.length; index++) {
             try {
                 await this.db.run(`
-                    INSERT INTO match ( tournamentID, round, position, player1ID, player2ID )
+                    INSERT INTO match ( tourID, round, position, player1ID, player2ID )
                     VALUES (?, ?, ?, ?, ?)`,
-                    [tournamentID, round, index + 1, players[index][0], players[index][1]])
+                    [tourID, round, index + 1, players[index][0], players[index][1]])
             } catch (error) {
                 throw error
             }
         }
     }
 
-    async lock(tournamentID: number) {
+    async lock(tourID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -516,7 +515,7 @@ class TournamentDB {
                 SET isRunning = 1
                 WHERE id = ?
                 AND NOT isRunning`,
-                [tournamentID])
+                [tourID])
         } catch (error) {
             throw error
         }
@@ -529,7 +528,7 @@ class TournamentDB {
         }
     }
 
-    private async setTournamentDone(tournamentID: number) {
+    private async setTournamentDone(tourID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -538,7 +537,7 @@ class TournamentDB {
                 UPDATE tournament
                     SET isFinished = 1
                     WHERE id = ?`,
-                [tournamentID])
+                [tourID])
     }
 }
 

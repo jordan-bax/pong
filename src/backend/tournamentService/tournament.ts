@@ -1,4 +1,4 @@
-import { log } from "console"
+import { log, timeStamp } from "console"
 import TournementDB from "./tournamentDB"
 
 const db = new TournementDB
@@ -6,6 +6,7 @@ const db = new TournementDB
 class TournamentService {
     private checkInterval: NodeJS.Timeout | null
     private isChecking: boolean
+    private notifications: object[] = []
 
     constructor() {
         this.checkInterval = null
@@ -52,20 +53,20 @@ class TournamentService {
         }
     }
 
-    async getByID(tournamentID: number) {
-        if (tournamentID < 1) {
+    async getByID(tourID: number) {
+        if (tourID < 1) {
             throw new Error('Tournament can not be negative')
         }
 
         try {
-            return await db.getTournament(tournamentID)
+            return await db.getTournament(tourID)
         } catch (error) {
             throw error
         }
     }
 
-    async join(tournamentID: number, userID: number) {
-        if (tournamentID < 0) {
+    async join(tourID: number, userID: number) {
+        if (tourID < 0) {
             throw new Error('Tournament can not be negative')
         }
 
@@ -74,14 +75,14 @@ class TournamentService {
         }
 
         try {
-            await db.join(tournamentID, userID)
+            await db.join(tourID, userID)
         } catch (error) {
             throw error
         }
     }
 
-    async leave(tournamentID: number, userID: number) {
-        if (tournamentID < 1) {
+    async leave(tourID: number, userID: number) {
+        if (tourID < 1) {
             throw new Error('Tournament must be more then 0')
         }
 
@@ -90,7 +91,7 @@ class TournamentService {
         }
 
         try {
-            await db.leave(tournamentID, userID)
+            await db.leave(tourID, userID)
         } catch (error) {
             throw error
         }
@@ -131,22 +132,8 @@ class TournamentService {
         }
     }
 
-    async start(tournamentID: number) {
-        const tour = await db.getTournament(tournamentID)
-        console.log('start match: ', tour)
-
-        // check if thre are ai only games
-
-
-        // call game backend to set game
-
-        // set notification
-
-        return
-    }
-
     async matchDone(
-        tournamentID: number,
+        tourID: number,
         playerID1: number,
         playerID2: number,
         winnerID: number,
@@ -158,7 +145,7 @@ class TournamentService {
 
         try {
             await db.done(
-                tournamentID,
+                tourID,
                 playerID1,
                 playerID2,
                 winnerID,
@@ -171,26 +158,83 @@ class TournamentService {
         return 0
     }
 
-    private async nextMatch(tournamentID: number) {
-        const nextMatches = await db.nextMatches(tournamentID)
-        console.log(nextMatches)
+    async getNotifications() {
+        const cpy = JSON.parse(JSON.stringify(this.notifications))
+        this.notifications.length = 0
+        return cpy
+    }
+
+    private async match(tourID: number) {
+        const tour = await db.getTournament(tourID)
+        log(tour.nextMatchs)
         log('-----------------------')
+
+        for (let index = 0; index < tour.nextMatchs.length; index++) {
+            if (tour.nextMatchs[index][0] < 0 && tour.nextMatchs[index][1] < 0) {
+                const winner = Math.random() < 0.5 ? 0 : 1
+                const winnerID = tour.nextMatchs[index][winner]
+                const loserScore = Math.floor(Math.random() * 11)
+                if (winner) {
+                    await db.done(
+                        tourID,
+                        tour.nextMatchs[index][0],
+                        tour.nextMatchs[index][1],
+                        winnerID,
+                        loserScore,
+                        11)
+                } else {
+                    await db.done(
+                        tourID,
+                        tour.nextMatchs[index][0],
+                        tour.nextMatchs[index][1],
+                        winnerID,
+                        11,
+                        loserScore)
+                }
+            } else if (!tour.nextMatchs[index][0] || !tour.nextMatchs[index][1]) {
+                if (!tour.nextMatchs[index][0]) {
+                    await db.done(
+                        tourID,
+                        tour.nextMatchs[index][0],
+                        tour.nextMatchs[index][1],
+                        tour.nextMatchs[index][1],
+                        0,
+                        11)
+                } else {
+                    await db.done(
+                        tourID,
+                        tour.nextMatchs[index][0],
+                        tour.nextMatchs[index][1],
+                        tour.nextMatchs[index][0],
+                        11,
+                        0)
+                }
+            } else {
+                // check for players and add to notification array, and hit games endpoint
+                for (let idx = 0; idx < tour.nextMatchs[index].length; idx++) {
+                    if (tour.nextMatchs[index][idx] < 0) {
+                        continue
+                    }
+                    this.notifications.push({ timestamp: Date.now(), message: "You next match will start in 15 seconds" })
+                }
+            }
+        }
     }
 
     private async initMatches(
-        tournamentID: number,
+        tourID: number,
         players: number[],
         playerCount: number,
         maxPlayers: number) {
         let aiID = -1
         const len = maxPlayers - playerCount
         for (let index = 0; index < len; index++) {
-            await db.join(tournamentID, aiID)
+            await db.join(tourID, aiID)
             playerCount++
             aiID--;
         }
 
-        players = await db.getPlayers(tournamentID)
+        players = await db.getPlayers(tourID)
 
         let matches = []
         while (playerCount > 0) {
@@ -211,7 +255,7 @@ class TournamentService {
             matches.push(subMatch)
         }
 
-        await db.addMatches(tournamentID, matches, 1)
+        await db.addMatches(tourID, matches, 1)
     }
 
     private async checkTournaments() {
@@ -231,7 +275,7 @@ class TournamentService {
                     idleTours[index].playerCount,
                     idleTours[index].maxPlayers)
                 await db.lock(idleTours[index].id)
-                this.start(idleTours[index].id)
+                await this.match(idleTours[index].id)
             }
         }
 
@@ -241,7 +285,8 @@ class TournamentService {
             if (roundDone) {
                 const tournamentDone = await db.isTournamentDone(runningTours[index].id)
                 if (!tournamentDone) {
-                    await this.nextMatch(runningTours[index].id)
+                    await db.nextMatches(runningTours[index].id)
+                    await this.match(runningTours[index].id)
                 }
             }
         }

@@ -2,7 +2,7 @@ import console from "console"
 
 import { fastify, FastifyRequest, FastifyReply } from 'fastify'
 import TourService from "./tournament"
-import { createSchema, gameDoneSchema, joinSchema, leaveSchema, getTourSchema, getToursSchema } from "./schemas/responseSchema"
+import { createSchema, gameDoneSchema, joinSchema, leaveSchema, getTourSchema, getToursSchema, notificationSchema } from "./schemas/responseSchema"
 
 const server = fastify()
 const tournamentObj = new TourService
@@ -16,6 +16,12 @@ server.get('/id/:id', { schema: getTourSchema }, async (request: FastifyRequest,
         reply.status(400).send({ error: error instanceof Error ? error.message : String(error) })
     }
 })
+
+server.get('/notifactions', { schema: notificationSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const notifactions = await tournamentObj.getNotifications()
+    reply.status(200).send(notifactions)
+})
+
 
 server.get('/idle', { schema: getToursSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
@@ -92,8 +98,6 @@ server.post('/done', { schema: gameDoneSchema }, async (request: FastifyRequest,
         reply.status(400).send({ 'error': 'Invalid tournamentID' })
     }
 })
-
-// endpoint notification [{'timestamp', 'message: str'}] leeg als er niks is
 
 const start = async () => {
     try {

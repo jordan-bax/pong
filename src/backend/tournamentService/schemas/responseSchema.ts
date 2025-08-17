@@ -90,8 +90,8 @@ export const gameDoneSchema = {
             player1ID: { type: 'number' },
             player2ID: { type: 'number' },
             winnerID: { type: 'number' },
-            player1Score: { type: 'number'},
-            player2Score: { type: 'number'}
+            player1Score: { type: 'number' },
+            player2Score: { type: 'number' }
         },
         required: ['tournamentID', 'player1ID', 'player2ID', 'winnerID', 'player1Score', 'player2Score']
     },
@@ -187,7 +187,7 @@ export const getToursSchema = {
                         }
                     }
                 },
-                required: ['id', 'name', 'rounds', 'isRunning', 'isFinished' , 'lockTime', 'playerCount', 'maxPlayers', 'players'],
+                required: ['id', 'name', 'rounds', 'isRunning', 'isFinished', 'lockTime', 'playerCount', 'maxPlayers', 'players'],
                 additionalProperties: true
             }
         },
@@ -197,6 +197,18 @@ export const getToursSchema = {
                 error: { type: 'string' }
             },
             required: ['error']
+        }
+    }
+}
+
+export const notificationSchema = {
+    response: {
+        200: {
+            type: 'array',
+            items: {
+                timestap: { type: 'number' },
+                message: { type: 'string' }
+            }
         }
     }
 }

@@ -166,8 +166,6 @@ class TournamentService {
 
     private async match(tourID: number) {
         const tour = await db.getTournament(tourID)
-        log(tour.nextMatchs)
-        log('-----------------------')
 
         for (let index = 0; index < tour.nextMatchs.length; index++) {
             if (tour.nextMatchs[index][0] < 0 && tour.nextMatchs[index][1] < 0) {

@@ -59,11 +59,17 @@ class TournamentService {
         }
 
         try {
-            return await db.getTournament(tourID)
+            return await db.getTour(tourID)
         } catch (error) {
             throw error
         }
     }
+
+    async getUserTours(userID: number) {
+        const result = await db.getToursByUserID(userID);
+        return result
+    }
+
 
     async join(tourID: number, userID: number) {
         if (tourID < 0) {
@@ -165,7 +171,7 @@ class TournamentService {
     }
 
     private async match(tourID: number) {
-        const tour = await db.getTournament(tourID)
+        const tour = await db.getTour(tourID)
 
         for (let index = 0; index < tour.nextMatchs.length; index++) {
             if (tour.nextMatchs[index][0] < 0 && tour.nextMatchs[index][1] < 0) {

@@ -1,3 +1,4 @@
+import { log } from 'console'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
@@ -34,7 +35,6 @@ class TournamentDB {
             CREATE TABLE IF NOT EXISTS players (
                 userID INTEGER NOT NULL,
                 tourID INTEGER NOT NULL,
-                eliminated INTEGER DEFAULT 0,
                 PRIMARY KEY(userID, tourID),
                 FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE)`)
 
@@ -109,7 +109,7 @@ class TournamentDB {
 
         try {
             await this.join(id, userID)
-            const tournament = await this.getTournament(id)
+            const tournament = await this.getTour(id)
 
             return tournament
         } catch (error) {
@@ -377,7 +377,7 @@ class TournamentDB {
                         ) THEN 1
                         ELSE 0
                     END AS result`,
-                [tourID, tourID])
+            [tourID, tourID])
 
         if (result.result) {
             await this.setTournamentDone(tourID)
@@ -400,7 +400,7 @@ class TournamentDB {
                         SELECT COALESCE(MAX(round), 0)
                         FROM match
                         WHERE tourID = ?)`,
-                [tourID, tourID])
+            [tourID, tourID])
 
         let nextMatch = []
 
@@ -419,7 +419,62 @@ class TournamentDB {
         return nextMatch
     }
 
-    async getTournament(tourID: number) {
+    async getToursByUserID(userID: number) {
+        if (!this.db) {
+            throw new Error('DB is not open')
+        }
+
+        try {
+            const result = await this.db.all(`
+                 SELECT
+                     t.id AS tourID,
+                     t.name,
+                     t.playerCount,
+                     t.rounds,
+                     m.round,
+                     m.player1ID,
+                     m.player1Score,
+                     m.player2ID,
+                     m.player2Score,
+                     m.winnerID
+                 FROM tournament t
+                     INNER JOIN players p ON t.id = p.tourID
+                 LEFT JOIN match m
+                     ON t.id = m.tourID
+                     AND (m.player1ID = ? OR m.player2ID = ?)
+                 WHERE t.isFinished = 1
+                     AND p.userID = ?
+                 ORDER BY t.id, m.round, m.position`,
+                [userID, userID, userID])
+
+            let tours = {}
+            for (let index = 0; index < result.length; index++) {
+                const element = result[index];
+                if (tours[element.tourID] === undefined) {
+                    tours[element.tourID] = {
+                        name: element.name,
+                        playerCount: element.playerCount,
+                        rounds: element.rounds,
+                        matches: []
+                    }
+                }
+                tours[element.tourID].matches.push({
+                    round: element.round,
+                    player1: element.player1ID,
+                    player2: element.player2ID,
+                    score1: element.player1Score,
+                    score2: element.player2Score,
+                    winner: element.winnerID
+                })
+            }
+
+            return tours
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async getTour(tourID: number) {
         if (!this.db) {
             throw new Error('DB is not open')
         }
@@ -447,14 +502,14 @@ class TournamentDB {
         }
 
         const matches = tourObj.matches
-                ? tourObj.matches.split(';').map(matchStr => {
-                    const [p1, p2] = matchStr.split(',');
-                    return [
-                        p1 !== 'NULL' ? parseInt(p1, 10) : null,
-                        p2 !== 'NULL' ? parseInt(p2, 10) : null
-                    ]
-                })
-                : []
+            ? tourObj.matches.split(';').map(matchStr => {
+                const [p1, p2] = matchStr.split(',');
+                return [
+                    p1 !== 'NULL' ? parseInt(p1, 10) : null,
+                    p2 !== 'NULL' ? parseInt(p2, 10) : null
+                ]
+            })
+            : []
 
         return {
             id: tourObj.id,
@@ -537,7 +592,7 @@ class TournamentDB {
                 UPDATE tournament
                     SET isFinished = 1
                     WHERE id = ?`,
-                [tourID])
+            [tourID])
     }
 }
 

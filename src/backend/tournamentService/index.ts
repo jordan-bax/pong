@@ -7,10 +7,20 @@ import { createSchema, gameDoneSchema, joinSchema, leaveSchema, getTourSchema, g
 const server = fastify()
 const tournamentObj = new TourService
 
-server.get('/id/:id', { schema: getTourSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
+server.get('/tournament/:id', { schema: getTourSchema }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
         const { id } = request.params as { id: string }
         const tournament = await tournamentObj.getByID(Number(id))
+        reply.status(200).send(tournament)
+    } catch (error) {
+        reply.status(400).send({ error: error instanceof Error ? error.message : String(error) })
+    }
+})
+
+server.get('/user/:id', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const { id } = request.params as { id: string }
+        const tournament = await tournamentObj.getUserTours(Number(id))
         reply.status(200).send(tournament)
     } catch (error) {
         reply.status(400).send({ error: error instanceof Error ? error.message : String(error) })

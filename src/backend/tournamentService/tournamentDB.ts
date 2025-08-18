@@ -655,4 +655,4 @@ class TournamentDB {
     }
 }
 
-export default TournamentDB
+export { TournamentDB, DBError }

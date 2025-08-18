@@ -1,6 +1,13 @@
-import { log } from 'console'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
+
+class DBError extends Error {
+    constructor(message: string) {
+        super(message)
+        this.name = "DBError";
+        Object.setPrototypeOf(this, DBError.prototype);
+    }
+}
 
 class TournamentDB {
     private db: Database | null
@@ -11,77 +18,91 @@ class TournamentDB {
 
     async initDB(path: string) {
         if (this.db !== null) {
-            throw new Error('DB in class must be null to init it')
+            throw new DBError("DB in class must be null to init it")
         }
 
-        await this.openDB(path)
-        if (this.db === null) {
-            throw new Error('Failed to open the DB')
+        try {
+            await this.openDB(path)
+            if (this.db === null) {
+                throw new DBError("Failed to open the DB")
+            }
+        } catch (error) {
+            throw error
         }
 
-        await this.db.run(`
-            CREATE TABLE if not EXISTS tournament (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                rounds INTEGER NOT NULL,
-                isRunning INTEGER NOT NULL,
-                isFinished INTEGER NOT NULL,
-                lockTime REAL NOT NULL,
-                playerCount INTEGER NOT NULL,
-                maxPlayers INTEGER NOT NULL)`
-        )
+        try {
+            await this.db.run(`
+                CREATE TABLE if not EXISTS tournament (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    rounds INTEGER NOT NULL,
+                    isRunning INTEGER NOT NULL,
+                    isFinished INTEGER NOT NULL,
+                    lockTime REAL NOT NULL,
+                    playerCount INTEGER NOT NULL,
+                    maxPlayers INTEGER NOT NULL)`
+            )
 
-        await this.db.run(`
-            CREATE TABLE IF NOT EXISTS players (
-                userID INTEGER NOT NULL,
-                tourID INTEGER NOT NULL,
-                PRIMARY KEY(userID, tourID),
-                FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE)`)
+            await this.db.run(`
+                CREATE TABLE IF NOT EXISTS players (
+                    userID INTEGER NOT NULL,
+                    tourID INTEGER NOT NULL,
+                    PRIMARY KEY(userID, tourID),
+                    FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE)`)
 
-        await this.db.run(`
-            CREATE TABLE IF NOT EXISTS match (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tourID INTEGER NOT NULL,
-                round INTEGER NOT NULL,
-                position INTEGER NOT NULL,
-                player1ID INTEGER,
-                player2ID INTEGER,
-                winnerID INTEGER DEFAULT 0,
-                player1Score INTEGER DEFAULT 0,
-                player2Score INTEGER DEFAULT 0,
-                FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE,
-                FOREIGN KEY(player1ID) REFERENCES players(userID),
-                FOREIGN KEY(player2ID) REFERENCES players(userID),
-                FOREIGN KEY(winnerID) REFERENCES players(userID))`)
+            await this.db.run(`
+                CREATE TABLE IF NOT EXISTS match (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tourID INTEGER NOT NULL,
+                    round INTEGER NOT NULL,
+                    position INTEGER NOT NULL,
+                    player1ID INTEGER,
+                    player2ID INTEGER,
+                    winnerID INTEGER DEFAULT 0,
+                    player1Score INTEGER DEFAULT 0,
+                    player2Score INTEGER DEFAULT 0,
+                    FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE,
+                    FOREIGN KEY(player1ID) REFERENCES players(userID),
+                    FOREIGN KEY(player2ID) REFERENCES players(userID),
+                    FOREIGN KEY(winnerID) REFERENCES players(userID))`)
 
-        await this.db.run(`
-            CREATE TRIGGER IF NOT EXISTS increment_player_count
-            AFTER INSERT ON players
-            FOR EACH ROW
-            BEGIN
-                UPDATE tournament
-                SET playerCount = playerCount + 1
-                WHERE id = NEW.tourID;
-            END`)
+            await this.db.run(`
+                CREATE TRIGGER IF NOT EXISTS increment_player_count
+                AFTER INSERT ON players
+                FOR EACH ROW
+                BEGIN
+                    UPDATE tournament
+                    SET playerCount = playerCount + 1
+                    WHERE id = NEW.tourID;
+                END`)
 
-        await this.db.run(`
-            CREATE TRIGGER IF NOT EXISTS deccrement_player_count
-            AFTER DELETE ON players
-            FOR EACH ROW
-            BEGIN
-                UPDATE tournament
-                SET playerCount = playerCount - 1
-                WHERE id = OLD.tourID;
-            END`)
+            await this.db.run(`
+                CREATE TRIGGER IF NOT EXISTS deccrement_player_count
+                AFTER DELETE ON players
+                FOR EACH ROW
+                BEGIN
+                    UPDATE tournament
+                    SET playerCount = playerCount - 1
+                    WHERE id = OLD.tourID;
+                END`)
+        } catch (error) {
+            throw new DBError("Failed to run init query\'s")
+        }
     }
 
     async openDB(path: string) {
         if (this.db === null) {
-            this.db = await open({
-                filename: path,
-                driver: sqlite3.Database,
-                mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE | sqlite3.OPEN_FULLMUTEX
-            })
+            try {
+                this.db = await open({
+                    filename: path,
+                    driver: sqlite3.Database,
+                    mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE | sqlite3.OPEN_FULLMUTEX
+                })
+            } catch (error) {
+                throw new DBError(error)
+            }
+        } else {
+            return null;
         }
     }
 
@@ -91,23 +112,24 @@ class TournamentDB {
         lockTime: number,
         userID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
-        }
-
-        const result = await this.db.run(`
-            INSERT INTO tournament (name, rounds, isRunning, isFinished, lockTime, playerCount, maxPlayers)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [name, Math.ceil(Math.log2(maxPlayers)), false, false, lockTime, 0, maxPlayers])
-        if (result.changes === 0) {
-            new Error('Could not insert in database')
-        }
-
-        const id = result.lastID
-        if (id === undefined) {
-            new Error('Could not get the last ID in the DB')
+            throw new DBError("DB is not open")
         }
 
         try {
+            const result = await this.db.run(`
+                INSERT INTO tournament (name, rounds, isRunning, isFinished, lockTime, playerCount, maxPlayers)
+                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [name, Math.ceil(Math.log2(maxPlayers)), false, false, lockTime, 0, maxPlayers])
+
+            if (result.changes === 0) {
+                new DBError("Could not insert in database")
+            }
+
+            const id = result.lastID
+            if (id === undefined) {
+                new DBError("Could not get the last ID in the DB")
+            }
+
             await this.join(id, userID)
             const tournament = await this.getTour(id)
 
@@ -119,7 +141,7 @@ class TournamentDB {
 
     async join(tourID: number, userID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -141,7 +163,7 @@ class TournamentDB {
                 [tourID, userID, tourID, userID, tourID])
 
             if (result.changes === 0) {
-                throw new Error('Cannot join tournament with a invalid ID')
+                throw new DBError("Cannot join tournament with a invalid ID")
             }
         } catch (error) {
             throw error;
@@ -150,7 +172,7 @@ class TournamentDB {
 
     async leave(tourID: number, userID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -170,7 +192,7 @@ class TournamentDB {
                 [userID, tourID, tourID])
 
             if (result.changes === 0) {
-                throw new Error('Can not leave tournament with invalid ID')
+                throw new DBError("Can not leave tournament with invalid ID")
             }
 
             const row = await this.db.get(`
@@ -182,18 +204,19 @@ class TournamentDB {
             if (row && row.playerCount === 0) {
                 await this.db.run(`
                 DELETE
-                FROM tournament
+                FROM
+                    tournament
                 WHERE id = ?`,
                     [tourID])
             }
         } catch (error) {
-            throw error
+            throw new DBError(error)
         }
     }
 
     async running() {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -213,17 +236,17 @@ class TournamentDB {
             return result.map(({ player_ids, ...row }) => ({
                 ...row,
                 players: player_ids
-                    ? player_ids.split(',').map(Number)
+                    ? player_ids.split(",").map(Number)
                     : []
             }))
         } catch (error) {
-            throw new Error('Failed to get all running tournaments')
+            throw new DBError("Failed to get all running tournaments")
         }
     }
 
     async idle() {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -242,17 +265,17 @@ class TournamentDB {
             return result.map(({ player_ids, ...row }) => ({
                 ...row,
                 players: player_ids
-                    ? player_ids.split(',').map(Number)
+                    ? player_ids.split(",").map(Number)
                     : []
             }))
         } catch (error) {
-            throw new Error('Failed to get all running tournaments')
+            throw new DBError("Failed to get all running tournaments")
         }
     }
 
     async finished() {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -271,17 +294,17 @@ class TournamentDB {
             return result.map(({ player_ids, ...row }) => ({
                 ...row,
                 players: player_ids
-                    ? player_ids.split(',').map(Number)
+                    ? player_ids.split(",").map(Number)
                     : []
             }))
         } catch (error) {
-            throw new Error('Failed to get all running tournaments')
+            throw new DBError("Failed to get all running tournaments")
         }
     }
 
     async allTournaments() {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -298,11 +321,11 @@ class TournamentDB {
             return result.map(({ player_ids, ...row }) => ({
                 ...row,
                 players: player_ids
-                    ? player_ids.split(',').map(Number)
+                    ? player_ids.split(",").map(Number)
                     : []
             }))
         } catch (error) {
-            throw new Error('Failed to get all running tournaments')
+            throw new DBError("Failed to get all running tournaments")
         }
     }
 
@@ -314,11 +337,11 @@ class TournamentDB {
         player1Score: number,
         player2Score: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
-            await this.db.run(`
+            const result = await this.db.run(`
                 UPDATE match
                 SET winnerID = ?,
                     player1Score = ?,
@@ -327,14 +350,18 @@ class TournamentDB {
                 AND player1ID = ?
                 AND player2ID = ?`,
                 [winnerID, player1Score, player2Score, tourID, player1ID, player2ID])
+
+            if (result.changes === 0) {
+                throw new DBError("Failed to update the result of a match")
+            }
         } catch (error) {
-            throw new Error('Failed to update the match')
+            throw new DBError("Failed to update the match")
         }
     }
 
     async roundDone(tourID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -347,7 +374,7 @@ class TournamentDB {
                 ) AS all_nonzero`,
                 [tourID])
 
-            if (result['all_nonzero'] === 1) {
+            if (result["all_nonzero"] === 1) {
                 return true
             } else {
                 return false
@@ -357,71 +384,83 @@ class TournamentDB {
         }
     }
 
-    async isTournamentDone(tourID: number) {
+    async isTourDone(tourID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
-        const result = await this.db.get(`
-                SELECT
-                    CASE
-                        WHEN EXISTS (
-                            SELECT 1
-                            FROM match
-                            WHERE tourID = ?
-                              AND round = (
-                                  SELECT rounds
-                                  FROM tournament
-                                  WHERE id = ?
-                              )
-                        ) THEN 1
-                        ELSE 0
-                    END AS result`,
-            [tourID, tourID])
+        try {
+            const result = await this.db.get(`
+                    SELECT
+                        CASE
+                            WHEN EXISTS (
+                                SELECT 1
+                                FROM match
+                                WHERE tourID = ?
+                                  AND round = (
+                                      SELECT rounds
+                                      FROM tournament
+                                      WHERE id = ?
+                                  )
+                            ) THEN 1
+                            ELSE 0
+                        END AS result`,
+                [tourID, tourID])
 
-        if (result.result) {
-            await this.setTournamentDone(tourID)
-            return true
+            if (result.result) {
+                await this.setTourDone(tourID)
+                return true
+            }
+
+            return false
+        } catch (error) {
+            throw new DBError(error)
         }
-
-        return false
     }
 
     async nextMatches(tourID: number) {
-        const result = await this.db.all(`
-                SELECT
-                    winnerID,
-                    round
-                FROM
-                    match
-                WHERE
-                    tourID = ?
-                    AND round = (
-                        SELECT COALESCE(MAX(round), 0)
-                        FROM match
-                        WHERE tourID = ?)`,
-            [tourID, tourID])
-
-        let nextMatch = []
-
-        for (let index = 0; index < result.length; index++) {
-            const winner1 = result[index]['winnerID'];
-            if (index + 1 < result.length) {
-                nextMatch.push([winner1, result[index + 1]['winnerID']])
-                index++;
-            } else {
-                nextMatch.push([winner1, 0])
-            }
+        if (!this.db) {
+            throw new DBError("DB is not open")
         }
 
-        await this.addMatches(tourID, nextMatch, result[0]['round'] + 1)
+        try {
+            const result = await this.db.all(`
+                    SELECT
+                        winnerID,
+                        round
+                    FROM
+                        match
+                    WHERE
+                        tourID = ?
+                        AND round = (
+                            SELECT COALESCE(MAX(round), 0)
+                            FROM match
+                            WHERE tourID = ?)`,
+                [tourID, tourID])
 
-        return nextMatch
+            let nextMatch = []
+
+            for (let index = 0; index < result.length; index++) {
+                const winner1 = result[index]['winnerID'];
+                if (index + 1 < result.length) {
+                    nextMatch.push([winner1, result[index + 1]["winnerID"]])
+                    index++;
+                } else {
+                    nextMatch.push([winner1, 0])
+                }
+            }
+
+            await this.addMatches(tourID, nextMatch, result[0]["round"] + 1)
+
+            return nextMatch
+        } catch (error) {
+            throw new DBError(error)
+        }
     }
 
     async getToursByUserID(userID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -458,6 +497,7 @@ class TournamentDB {
                         matches: []
                     }
                 }
+
                 tours[element.tourID].matches.push({
                     round: element.round,
                     player1: element.player1ID,
@@ -470,13 +510,13 @@ class TournamentDB {
 
             return tours
         } catch (error) {
-            throw error
+            throw new DBError(error)
         }
     }
 
     async getTour(tourID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         const tourObj = await this.db.get(`
@@ -498,15 +538,15 @@ class TournamentDB {
             [tourID])
 
         if (tourObj === undefined) {
-            throw new Error('could not get tournament from DB')
+            throw new DBError("could not get tournament from DB")
         }
 
         const matches = tourObj.matches
-            ? tourObj.matches.split(';').map(matchStr => {
-                const [p1, p2] = matchStr.split(',');
+            ? tourObj.matches.split(";").map(matchStr => {
+                const [p1, p2] = matchStr.split(",");
                 return [
-                    p1 !== 'NULL' ? parseInt(p1, 10) : null,
-                    p2 !== 'NULL' ? parseInt(p2, 10) : null
+                    p1 !== "NULL" ? parseInt(p1, 10) : null,
+                    p2 !== "NULL" ? parseInt(p2, 10) : null
                 ]
             })
             : []
@@ -520,14 +560,14 @@ class TournamentDB {
             lockTime: tourObj.lockTime,
             playerCount: tourObj.playerCount,
             maxPlayers: tourObj.maxPlayers,
-            players: tourObj.players ? tourObj.players.split(',').map(Number) : [],
+            players: tourObj.players ? tourObj.players.split(",").map(Number) : [],
             nextMatchs: matches
         }
     }
 
     async getPlayers(tourID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
@@ -538,61 +578,80 @@ class TournamentDB {
                 [tourID])
             return players.map(players => players.userID)
         } catch (error) {
-            throw error
+            throw new DBError(error)
         }
     }
 
     async addMatches(tourID: number, players: number[][], round: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         for (let index = 0; index < players.length; index++) {
             try {
-                await this.db.run(`
+                const result = await this.db.run(`
                     INSERT INTO match ( tourID, round, position, player1ID, player2ID )
                     VALUES (?, ?, ?, ?, ?)`,
                     [tourID, round, index + 1, players[index][0], players[index][1]])
+
+                if (result.changes === 0) {
+                    throw new DBError("Failed to insert new matches")
+                }
             } catch (error) {
-                throw error
+                throw new DBError(error)
             }
         }
     }
 
     async lock(tourID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
         try {
-            await this.db.run(`
+            const result = await this.db.run(`
                 UPDATE tournament
                 SET isRunning = 1
                 WHERE id = ?
                 AND NOT isRunning`,
                 [tourID])
+
+            if (result.changes === 0) {
+                throw new DBError("Failed to lock a tournament")
+            }
         } catch (error) {
-            throw error
+            throw new DBError(error)
         }
     }
 
     async closeDB() {
         if (this.db) {
-            await this.db.close()
-            this.db = null
+            try {
+                await this.db.close()
+                this.db = null
+            } catch (error) {
+                throw new DBError(error)
+            }
         }
     }
 
-    private async setTournamentDone(tourID: number) {
+    private async setTourDone(tourID: number) {
         if (!this.db) {
-            throw new Error('DB is not open')
+            throw new DBError("DB is not open")
         }
 
-        await this.db.run(`
-                UPDATE tournament
-                    SET isFinished = 1
-                    WHERE id = ?`,
-            [tourID])
+        try {
+            const result = await this.db.run(`
+                    UPDATE tournament
+                        SET isFinished = 1
+                        WHERE id = ?`,
+                [tourID])
+            if (result.changes === 0) {
+                throw new DBError("Failed to set the tournament on finished")
+            }
+        } catch (error) {
+            throw new DBError(error)
+        }
     }
 }
 

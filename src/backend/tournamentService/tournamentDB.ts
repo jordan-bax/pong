@@ -163,7 +163,7 @@ class TournamentDB {
                 [tourID, userID, tourID, userID, tourID])
 
             if (result.changes === 0) {
-                throw new DBError("Cannot join tournament with a invalid ID")
+                throw new Error("Cannot join tournament with a invalid ID")
             }
         } catch (error) {
             throw error;
@@ -192,7 +192,7 @@ class TournamentDB {
                 [userID, tourID, tourID])
 
             if (result.changes === 0) {
-                throw new DBError("Can not leave tournament with invalid ID")
+                throw new Error("Can not leave tournament with invalid ID")
             }
 
             const row = await this.db.get(`
@@ -210,7 +210,7 @@ class TournamentDB {
                     [tourID])
             }
         } catch (error) {
-            throw new DBError(error)
+            throw error
         }
     }
 
@@ -325,7 +325,7 @@ class TournamentDB {
                     : []
             }))
         } catch (error) {
-            throw new DBError("Failed to get all running tournaments")
+            throw ("Failed to get all running tournaments")
         }
     }
 
@@ -355,7 +355,7 @@ class TournamentDB {
                 throw new DBError("Failed to update the result of a match")
             }
         } catch (error) {
-            throw new DBError("Failed to update the match")
+            throw "Failed to update the match"
         }
     }
 
@@ -414,7 +414,7 @@ class TournamentDB {
 
             return false
         } catch (error) {
-            throw new DBError(error)
+            throw error
         }
     }
 
@@ -454,7 +454,7 @@ class TournamentDB {
 
             return nextMatch
         } catch (error) {
-            throw new DBError(error)
+            throw error
         }
     }
 
@@ -510,7 +510,7 @@ class TournamentDB {
 
             return tours
         } catch (error) {
-            throw new DBError(error)
+            throw error
         }
     }
 
@@ -519,49 +519,53 @@ class TournamentDB {
             throw new DBError("DB is not open")
         }
 
-        const tourObj = await this.db.get(`
-            SELECT t.id, t.name, t.rounds, t.isRunning, t.isFinished, t.lockTime, t.playerCount, t.maxPlayers,
-            (SELECT GROUP_CONCAT(p.userID)
-                FROM players p
-                WHERE p.tourID = t.id)
-            AS players,
-            (SELECT GROUP_CONCAT(
-                COALESCE(m.player1ID, 'NULL') || ',' || COALESCE(m.player2ID, 'NULL'),
-                ';')
-            FROM match m
-            WHERE m.tourID = t.id
-                AND m.round = (SELECT MAX(round) FROM match WHERE tourID = t.id)
-                ORDER BY m.round, m.position)
-                AS matches
-            FROM tournament t
-            WHERE t.id = ?`,
-            [tourID])
+        try {
+            const tourObj = await this.db.get(`
+                SELECT t.id, t.name, t.rounds, t.isRunning, t.isFinished, t.lockTime, t.playerCount, t.maxPlayers,
+                (SELECT GROUP_CONCAT(p.userID)
+                    FROM players p
+                    WHERE p.tourID = t.id)
+                AS players,
+                (SELECT GROUP_CONCAT(
+                    COALESCE(m.player1ID, 'NULL') || ',' || COALESCE(m.player2ID, 'NULL'),
+                    ';')
+                FROM match m
+                WHERE m.tourID = t.id
+                    AND m.round = (SELECT MAX(round) FROM match WHERE tourID = t.id)
+                    ORDER BY m.round, m.position)
+                    AS matches
+                FROM tournament t
+                WHERE t.id = ?`,
+                [tourID])
 
-        if (tourObj === undefined) {
-            throw new DBError("could not get tournament from DB")
-        }
+            if (tourObj === undefined) {
+                throw new Error("could not get tournament from DB")
+            }
 
-        const matches = tourObj.matches
-            ? tourObj.matches.split(";").map(matchStr => {
-                const [p1, p2] = matchStr.split(",");
-                return [
-                    p1 !== "NULL" ? parseInt(p1, 10) : null,
-                    p2 !== "NULL" ? parseInt(p2, 10) : null
-                ]
-            })
-            : []
+            const matches = tourObj.matches
+                ? tourObj.matches.split(";").map(matchStr => {
+                    const [p1, p2] = matchStr.split(",");
+                    return [
+                        p1 !== "NULL" ? parseInt(p1, 10) : null,
+                        p2 !== "NULL" ? parseInt(p2, 10) : null
+                    ]
+                })
+                : []
 
-        return {
-            id: tourObj.id,
-            name: tourObj.name,
-            rounds: tourObj.rounds,
-            isRunning: tourObj.isRunning,
-            isFinished: tourObj.isFinished,
-            lockTime: tourObj.lockTime,
-            playerCount: tourObj.playerCount,
-            maxPlayers: tourObj.maxPlayers,
-            players: tourObj.players ? tourObj.players.split(",").map(Number) : [],
-            nextMatchs: matches
+            return {
+                id: tourObj.id,
+                name: tourObj.name,
+                rounds: tourObj.rounds,
+                isRunning: tourObj.isRunning,
+                isFinished: tourObj.isFinished,
+                lockTime: tourObj.lockTime,
+                playerCount: tourObj.playerCount,
+                maxPlayers: tourObj.maxPlayers,
+                players: tourObj.players ? tourObj.players.split(",").map(Number) : [],
+                nextMatchs: matches
+            }
+        } catch (error) {
+            throw error
         }
     }
 
@@ -578,7 +582,7 @@ class TournamentDB {
                 [tourID])
             return players.map(players => players.userID)
         } catch (error) {
-            throw new DBError(error)
+            throw error
         }
     }
 
@@ -598,7 +602,7 @@ class TournamentDB {
                     throw new DBError("Failed to insert new matches")
                 }
             } catch (error) {
-                throw new DBError(error)
+                throw error
             }
         }
     }
@@ -620,7 +624,7 @@ class TournamentDB {
                 throw new DBError("Failed to lock a tournament")
             }
         } catch (error) {
-            throw new DBError(error)
+            throw Error(error)
         }
     }
 
@@ -630,14 +634,14 @@ class TournamentDB {
                 await this.db.close()
                 this.db = null
             } catch (error) {
-                throw new DBError(error)
+                throw Error(error)
             }
         }
     }
 
     private async setTourDone(tourID: number) {
         if (!this.db) {
-            throw new DBError("DB is not open")
+            throw Error("DB is not open")
         }
 
         try {
@@ -650,7 +654,7 @@ class TournamentDB {
                 throw new DBError("Failed to set the tournament on finished")
             }
         } catch (error) {
-            throw new DBError(error)
+            throw error
         }
     }
 }

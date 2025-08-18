@@ -11,17 +11,17 @@ def main():
 
 
     # check to get tournament with invalid ID
-    url = 'http://127.0.0.1:3003/id/-100'
+    url = 'http://127.0.0.1:3003/tournament/-100'
     resp = requests.get(url=url, params={'id': -100})
     assert resp.status_code == 400
 
     # check to get tournament with ID thats not in DB
-    url = 'http://127.0.0.1:3003/id/100000'
+    url = 'http://127.0.0.1:3003/tournament/100000'
     resp = requests.get(url=url, params={'id': 100000})
     assert resp.status_code == 400
 
     # check to get tournament with a valid ID
-    url = f'http://127.0.0.1:3003/id/{data["id"]}'
+    url = f'http://127.0.0.1:3003/tournament/{data["id"]}'
     resp = requests.get(url=url, params={'id': data['id']})
     print(resp.json(), resp.status_code)
     assert resp.status_code == 200
@@ -91,7 +91,7 @@ def main():
     assert resp.status_code == 400
 
     # check that tournament is deleted
-    url = f'http://127.0.0.1:3003/id/{data["id"]}'
+    url = f'http://127.0.0.1:3003/tournament/{data["id"]}'
     resp = requests.get(url=url, params={'id': data['id']})
     assert resp.status_code == 400
 
@@ -140,7 +140,7 @@ def main():
 
     time.sleep(15)
 
-    url = f'http://127.0.0.1:3003/id/{data["id"]}'
+    url = f'http://127.0.0.1:3003/tournament/{data["id"]}'
     resp = requests.get(url=url, params={'id': data['id']})
     data = resp.json()
     pprint(data)
@@ -163,7 +163,7 @@ def main():
 
         time.sleep(5)
 
-        url = f'http://127.0.0.1:3003/id/{data["id"]}'
+        url = f'http://127.0.0.1:3003/tournament/{data["id"]}'
         resp = requests.get(url=url, params={'id': data['id']})
         data = resp.json()
         pprint(data)
@@ -182,7 +182,7 @@ def main():
 
     time.sleep(15)
 
-    url = f'http://127.0.0.1:3003/id/{data["id"]}'
+    url = f'http://127.0.0.1:3003/tournament/{data["id"]}'
     resp = requests.get(url=url, params={'id': data['id']})
     data = resp.json()
     pprint(data)
@@ -205,11 +205,17 @@ def main():
 
         time.sleep(5)
 
-        url = f'http://127.0.0.1:3003/id/{data["id"]}'
+        url = f'http://127.0.0.1:3003/tournament/{data["id"]}'
         resp = requests.get(url=url, params={'id': data['id']})
         data = resp.json()
         pprint(data)
         assert resp.status_code == 200
+
+    url = f'http://127.0.0.1:3003/user/1'
+    resp = requests.get(url=url, params={'id': 1})
+    data = resp.json()
+    pprint(data)
+    assert resp.status_code == 200
 
 
 if __name__ == '__main__':

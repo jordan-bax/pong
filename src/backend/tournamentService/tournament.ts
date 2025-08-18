@@ -1,6 +1,6 @@
-import TournementDB from "./tournamentDB"
+import { TournamentDB } from "./tournamentDB"
 
-const db = new TournementDB
+const db = new TournamentDB
 
 class TournamentService {
     private checkInterval: NodeJS.Timeout | null

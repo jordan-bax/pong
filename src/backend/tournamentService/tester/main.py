@@ -96,41 +96,46 @@ def main():
     assert resp.status_code == 400
 
     # check idle tournaments
-    # url = 'http://127.0.0.1:3003/create'
-    # resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'maxPlayers': '8', 'userID': 1, 'lockTime': 10})
-    # assert resp.status_code == 201
-    #
-    # data = resp.json()
-    # print(f'{data}')
-    #
-    # url = 'http://127.0.0.1:3003/idle'
-    # resp = requests.get(url=url)
-    # pprint(resp.json())
-    # assert resp.status_code == 200
-    # print('-' * 100)
-    #
-    # url = 'http://127.0.0.1:3003/running'
-    # resp = requests.get(url=url)
-    # pprint(resp.json())
-    # assert resp.status_code == 200
-    # print('-' * 100)
-    #
-    # url = 'http://127.0.0.1:3003/finished'
-    # resp = requests.get(url=url)
-    # pprint(resp.json())
-    # assert resp.status_code == 200
-    # print('-' * 100)
-    #
-    # url = 'http://127.0.0.1:3003/tours'
-    # resp = requests.get(url=url)
-    # pprint(resp.json())
-    # assert resp.status_code == 200
-    # print('-' * 100)
+    url = 'http://127.0.0.1:3003/create'
+    resp = requests.post(url=url, json={'name': 'luuk', 'description': 'This is a test', 'maxPlayers': '8', 'userID': 1, 'lockTime': 10})
+    assert resp.status_code == 201
+
+    data = resp.json()
+    print(f'{data}')
+
+    url = 'http://127.0.0.1:3003/idle'
+    resp = requests.get(url=url)
+    pprint(resp.json())
+    assert resp.status_code == 200
+    print('-' * 100)
+
+    url = 'http://127.0.0.1:3003/running'
+    resp = requests.get(url=url)
+    pprint(resp.json())
+    assert resp.status_code == 200
+    print('-' * 100)
+
+    url = 'http://127.0.0.1:3003/finished'
+    resp = requests.get(url=url)
+    pprint(resp.json())
+    assert resp.status_code == 200
+    print('-' * 100)
+
+    url = 'http://127.0.0.1:3003/tours'
+    resp = requests.get(url=url)
+    pprint(resp.json())
+    assert resp.status_code == 200
+    print('-' * 100)
 
     url = 'http://127.0.0.1:3003/create'
     resp = requests.post(url=url, json={'name': 'luuk', 'maxPlayers': 8, 'userID': 1, 'lockTime': 10})
     data = resp.json()
     print(f'{data}', resp.status_code)
+    assert resp.status_code == 201
+
+    # valid join
+    url = 'http://127.0.0.1:3003/join'
+    resp = requests.post(url=url, json={'tournamentID': data['id'], 'userID': 2})
     assert resp.status_code == 201
 
     time.sleep(15)
@@ -145,15 +150,58 @@ def main():
         url = 'http://127.0.0.1:3003/done'
         for index in range(len(data['nextMatchs'])):
             print(data['nextMatchs'][index])
-            resp = requests.post(url=url, json={
-                'tournamentID': data['id'],
-                'player1ID': data['nextMatchs'][index][0],
-                'player2ID': data['nextMatchs'][index][1],
-                'winnerID': data['nextMatchs'][index][0],
-                'player1Score': 11,
-                'player2Score': index})
-            pprint(resp.json())
-            assert resp.status_code == 201
+            if data['nextMatchs'][index][0] > 0 or data['nextMatchs'][index][1] > 0:
+                resp = requests.post(url=url, json={
+                    'tournamentID': data['id'],
+                    'player1ID': data['nextMatchs'][index][0],
+                    'player2ID': data['nextMatchs'][index][1],
+                    'winnerID': data['nextMatchs'][index][0],
+                    'player1Score': 11,
+                    'player2Score': index})
+                pprint(resp.json())
+                assert resp.status_code == 201
+
+        time.sleep(5)
+
+        url = f'http://127.0.0.1:3003/id/{data["id"]}'
+        resp = requests.get(url=url, params={'id': data['id']})
+        data = resp.json()
+        pprint(data)
+        assert resp.status_code == 200
+
+    url = 'http://127.0.0.1:3003/create'
+    resp = requests.post(url=url, json={'name': 'luuk', 'maxPlayers': 10, 'userID': 1, 'lockTime': 10})
+    data = resp.json()
+    print(f'{data}', resp.status_code)
+    assert resp.status_code == 201
+
+    # valid join
+    url = 'http://127.0.0.1:3003/join'
+    resp = requests.post(url=url, json={'tournamentID': data['id'], 'userID': 2})
+    assert resp.status_code == 201
+
+    time.sleep(15)
+
+    url = f'http://127.0.0.1:3003/id/{data["id"]}'
+    resp = requests.get(url=url, params={'id': data['id']})
+    data = resp.json()
+    pprint(data)
+    assert resp.status_code == 200
+
+    for index in range(data['rounds']):
+        url = 'http://127.0.0.1:3003/done'
+        for index in range(len(data['nextMatchs'])):
+            print(data['nextMatchs'][index])
+            if data['nextMatchs'][index][0] > 0 or data['nextMatchs'][index][1] > 0:
+                resp = requests.post(url=url, json={
+                    'tournamentID': data['id'],
+                    'player1ID': data['nextMatchs'][index][0],
+                    'player2ID': data['nextMatchs'][index][1],
+                    'winnerID': data['nextMatchs'][index][0],
+                    'player1Score': 11,
+                    'player2Score': index})
+                pprint(resp.json())
+                assert resp.status_code == 201
 
         time.sleep(5)
 

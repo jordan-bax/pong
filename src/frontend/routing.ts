@@ -7,7 +7,8 @@ export const routeFromPath: { [key: string]: string } = {
     '/profile': 'profile',
     '/login': 'login',
     '/register': 'register',
-    '/google': 'google'
+    '/google': 'google',
+    '/gameMenu': 'game'
 };
 
 export interface userInfo {
@@ -212,9 +213,9 @@ export async function getLogginUserData(): Promise<userInfo | null> {
 }
 
 export async function updateUserInfo(
-    oldEmail: string, 
-    oldUsername: string, 
-    oldPassword:string, 
+    oldEmail: string,
+    oldUsername: string,
+    oldPassword:string,
     formData: FormData
 ): Promise<void> {
     formData.append('oldEmail', oldEmail);
@@ -341,7 +342,7 @@ export async function login(formData: FormData): Promise<void> {
             for (const error of messages) {
                 const paragraph = document.createElement('p');
                 paragraph.style.color = 'red';
-                
+
                 const text = document.createTextNode(error);
                 paragraph.appendChild(text);
                 content.appendChild(paragraph);
@@ -417,8 +418,8 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
 
     const response = await fetch ('api/user/google', {
         method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json', 
+        headers: {
+            'Content-Type': 'application/json',
             'x-csrf-token': csrfToken ?? '',
         },
         body: JSON.stringify({ idToken: request.credential }),

@@ -3,6 +3,7 @@ import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
 import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest } from "./routing.js";
 import { openSettings } from "./settings.js";
+import {renderTournament} from "./renderTournament.js"
 
 declare global {
     interface Window {
@@ -42,7 +43,7 @@ function queryStringBuilder(language: string, array: string[]): string {
     output.append('language', language);
     array.forEach(tag => output.append('textKey', tag));
     return output.toString();
-    
+
 }
 
 function replacePlaceholders(original: string, values: Record<string, string>) {
@@ -66,7 +67,7 @@ function setupSearchUsers(): HTMLDivElement {
     const searchDiv = document.createElement('div');
     searchDiv.id = 'searchDiv';
     searchDiv.style.display = 'grid';
-    
+
     const input = document.createElement('input');
     input.type = 'text';
     input.name = 'userSearch';
@@ -82,7 +83,7 @@ function setupSearchUsers(): HTMLDivElement {
         if (!query) {
             return;
         }
-        
+
         try {
             const users = await searchUsers(query);
             await renderResult(users);
@@ -427,7 +428,7 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
     const passwordLabel = document.createElement('label');
     passwordLabel.textContent = text.passwordText;
     passwordLabel.setAttribute('for', 'password');
-    
+
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
     passwordInput.id = 'password';
@@ -444,7 +445,7 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
     submitButton.style.marginLeft = ' 10px';
     submitButton.textContent = text.loginButtonText;
     submitButton.id = 'login-btn';
-    
+
     const errorDiv = document.createElement('div');
     errorDiv.id = 'error';
 
@@ -630,7 +631,7 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     });
 
     contentDiv.appendChild(overlayGoogleLogin);
-    
+
     const exitButton = document.createElement('button');
     exitButton.id = 'exit-btn';
     exitButton.textContent = text.exitButtonText;
@@ -862,6 +863,9 @@ export async function renderContent (route: string): Promise<void> {
         case 'settings':
             content.textContent = 'Settings page is under construction.';
             openSettings();
+            break;
+        case 'tournament':
+            renderTournament();
             break;
         default:
             content.textContent = textData.notFoundText;

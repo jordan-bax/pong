@@ -8,7 +8,8 @@ export const routeFromPath: { [key: string]: string } = {
     '/login': 'login',
     '/register': 'register',
     '/google': 'google',
-    '/gameMenu': 'game'
+    '/gameMenu': 'game',
+    '/tournament': 'tournament'
 };
 
 export interface userInfo {

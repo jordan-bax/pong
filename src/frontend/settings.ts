@@ -2,13 +2,14 @@ import {createNewTable1} from './Tables';
 import { getLanguage, setLanguage } from "./index.js";
 import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
 import { setNotifications } from './notifications';
+import { renderContent } from './contentRenderer.js';
 
 // interface settingsContent {
 // 	languageSettings: string;
 // 	notificationsSettings: string;
 // }
 // const  settingsTextKeys : settingsContent = {
-// 	languageSettings :'languageSettings', 
+// 	languageSettings :'languageSettings',
 // 	notificationsSettings: 'notificationsSettings'};
 
 // const settingsHeader: Headers<settingsContent>[] = [settingsTextKeys];
@@ -34,7 +35,7 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 			option.textContent = text;
 			languageDropdown.appendChild(option);
 		});
-		
+
 		// languageDropdown.style.display = 'flex';
 		// languageDropdown.style.position = 'absolute';
 		// languageDropdown.style.right = '20px';
@@ -120,6 +121,16 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 	option2.href = '/game2';
 	option2.textContent = 'Game 2';
 	dropdownContent.appendChild(option2);
+
+	const option3 = document.createElement('a');
+	option3.href = '/tournament';
+	option3.textContent = 'tournament';
+    option3.onclick = (e) => {
+        e.preventDefault();
+        history.pushState({}, '', '/tournament');
+        renderContent('tournament');
+    }
+	dropdownContent.appendChild(option3);
 
 	dropdown.appendChild(dropbtn);
 	dropdown.appendChild(dropdownContent);

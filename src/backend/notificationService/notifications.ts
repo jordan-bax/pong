@@ -74,7 +74,7 @@ async function getUserIdFromSession(req: any): Promise<number | null> {
 const userIdQuerySchema = {
   type: 'object',
   properties: {
-    userId: { type: 'integer' }
+    userId: { type: 'number' }
   },
 //   required: ['userId']
 };
@@ -88,8 +88,9 @@ const notificationBodySchema = {
 };
 
 async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
-	if ((request as any).userId && !isNaN((request as any).userId)) {
-		console.log('User is authenticated:', (request as any).userId);
+    // const query = request.query;
+	if ((request as any).query.userId) {
+		console.log('User is authenticated:', (request as any).query.userId);
 		return; // User is already authenticated
 	}
     var userId = await getUserIdFromSession(request);
@@ -100,13 +101,13 @@ async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
         // throw new Error('Unauthorized');
     }
     // Attach userId to request for use in handlers
-    (request as any).userId = userId;
+    (request as any).query.userId = userId;
 }
 fastify.addHook('preHandler', requireAuth);
 
 fastify.get('/get', {schema: {querystring: userIdQuerySchema}}, 
 	async (request: FastifyRequest, reply: FastifyReply) => {
-		const userId = (request as any).userId; // Always set by requireAuth
+		const userId = (request as any).query.userId; // Always set by requireAuth
 		const userNotifications = notifications.filter(n => n.id === userId);
 		console.log('User notifications:', userNotifications);
 		reply.send(userNotifications);
@@ -114,7 +115,7 @@ fastify.get('/get', {schema: {querystring: userIdQuerySchema}},
 
 fastify.post('/add', {schema: {querystring: userIdQuerySchema, body: notificationBodySchema}}, 
 	async (request: FastifyRequest, reply: FastifyReply) => {
-		const userId = (request as any).userId; // Always set by requireAuth
+		const userId = (request as any).query.userId; // Always set by requireAuth
 		
 		const { message } = request.body as { message: string };
 		if (!message) {
@@ -132,7 +133,7 @@ fastify.post('/add', {schema: {querystring: userIdQuerySchema, body: notificatio
 	});
 
 fastify.delete('/clear', async (request: FastifyRequest, reply: FastifyReply) => {
-	const userId = (request as any).userId; // Always set by requireAuth
+	const userId = (request as any).query.userId; // Always set by requireAuth
 
 	notifications = notifications.filter(n => n.id !== userId);
 	reply.send({ message: 'Notifications cleared' });

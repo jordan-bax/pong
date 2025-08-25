@@ -9,7 +9,7 @@ services:
     depends_on:
       - user
       - game
-      # - tournament
+      - tournament
       - page_content
     networks:
       - transcendanse

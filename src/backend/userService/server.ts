@@ -216,7 +216,7 @@ class server {
             reply.header('content-type', mimeTypes);
             return reply.send(fs.createReadStream(imagePath));
         });
-        
+
         this.fastify.get('/friends', async (req, reply) => {
             const user = req.session.user;
             if (!user) {
@@ -299,7 +299,7 @@ class server {
             const deleteRequest = req.body as string | null;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
-            } 
+            }
             if (!deleteRequest) {
                 return reply.code(400).send({error: 'noBody' });
             }
@@ -353,7 +353,7 @@ class server {
                 };
                 return reply.send({ success: true });
             } catch (err) {
-                req.log.error('inserting new user error', err);
+                req.log.error(`inserting new user error: ${err}`);
                 return reply.code(500).send({ error: 'serverError' });
             }
         });
@@ -386,7 +386,7 @@ class server {
                 };
                 reply.send({ success: true });
             } catch (err) {
-                req.log.error('login error', err);
+                req.log.error(`login error: ${err}`);
                 return reply.code(500).send({ error: 'serverError' });
             }
         });
@@ -395,7 +395,7 @@ class server {
             if (!req.session.user) {
                 return reply.code(400).send({ error: 'noLogin' });
             }
-        
+
             delete req.session.user;
             return reply.send({ success: true });
         });
@@ -427,7 +427,7 @@ class server {
                 } else {
                     email = user.googleEmail;
                 }
-                req.session.user = { 
+                req.session.user = {
                     email: email,
                     userId: user.id,
                     loginMethod: 'google',
@@ -448,7 +448,7 @@ class server {
                 });
                 const payload = ticket.getPayload();
                 if (!payload || !payload.email) return reply.code(400).send({ error: 'googleToken' });
-                
+
                 const user = await this.db.findUserByEmail(payload.email);
                 if (!user) {
                     return reply.code(404).send({ error: 'noUser' });
@@ -494,7 +494,7 @@ class server {
                 }
             }
             console.log('update userdata', userData);
-    
+
             let user: any;
             if (userData.oldEmail !== null) {
                 user = await this.db.findUserByEmail(userData.oldEmail);
@@ -531,7 +531,7 @@ class server {
                     userId: user.id,
                     loginMethod: 'normal'
                 };
-                
+
                 reply.send({ success: true });
             } catch (err) {
                 req.log.error('error updating user');

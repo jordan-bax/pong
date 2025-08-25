@@ -95,7 +95,49 @@ async function createTournament(content: HTMLDivElement, userID: number) {
 async function tournament(content: HTMLDivElement, userID: number) {
     content.innerHTML = '';
     const div = createDiv();
+    const br = document.createElement('br')
 
+    const idle_tb: any = await idle_table(userID)
+    // const done_tb = await done_table()
+
+    div.appendChild(idle_tb)
+    div.appendChild(br)
+    // div.appendChild(done_tb)
+
+    content.appendChild(div)
+}
+
+function createButton(
+    div: HTMLElement,
+    name: string,
+    callback: Function,
+    id: string) {
+    const button = document.createElement('button');
+    button.textContent = `${name}`;
+    button.style.fontSize = '1.2em';
+    button.style.padding = '10px 20px';
+    button.id = id;
+    button.onclick = (e) => {
+        e.preventDefault();
+        callback();
+        history.pushState({}, '', '/tournament');
+    };
+
+    div.appendChild(button);
+}
+
+function createDiv() {
+    const div = document.createElement('div');
+    div.style.position = 'fixed';
+    div.style.top = '50%';
+    div.style.left = '50%';
+    div.style.transform = 'translate(-50%, -50%)';
+    div.style.display = 'flex';
+
+    return div
+}
+
+async function idle_table(userID: number) {
     const resp = await fetch('api/tournament/idle')
     if (resp.status != 200) {
         console.log("error", resp)
@@ -104,7 +146,6 @@ async function tournament(content: HTMLDivElement, userID: number) {
 
     const data: Array<any> = await resp.json()
 
-    // table
     if (data.length === 0) {
         console.log('geen data')
         return
@@ -165,48 +206,17 @@ async function tournament(content: HTMLDivElement, userID: number) {
     }
 
     const table = document.createElement('table')
+    table.className = "available_tours"
     const header = create_header()
     table.appendChild(header)
 
     for (const element of data) {
-        console.log(element.players)
         const in_tour = true ? element.players.includes(userID) : false
         const row = create_row(element, in_tour, userID)
         table.appendChild(row)
     }
 
-    div.appendChild(table)
-    content.appendChild(div)
-}
-
-function createButton(
-    div: HTMLElement,
-    name: string,
-    callback: Function,
-    id: string) {
-    const button = document.createElement('button');
-    button.textContent = `${name}`;
-    button.style.fontSize = '1.2em';
-    button.style.padding = '10px 20px';
-    button.id = id;
-    button.onclick = (e) => {
-        e.preventDefault();
-        callback();
-        history.pushState({}, '', '/tournament');
-    };
-
-    div.appendChild(button);
-}
-
-function createDiv() {
-    const div = document.createElement('div');
-    div.style.position = 'fixed';
-    div.style.top = '50%';
-    div.style.left = '50%';
-    div.style.transform = 'translate(-50%, -50%)';
-    div.style.display = 'flex';
-
-    return div
+    return table
 }
 
 function formatDateTime(timestamp: number): string {

@@ -1,4 +1,10 @@
 export async function renderTournament() {
+    const userID: number | null = await getID()
+    if (userID === null) {
+        console.log("moet ingeloged zijn om dit te doen")
+        return
+    }
+
     const content = document.getElementById("content") as HTMLDivElement;
     if (!content) {
         console.error("Content element not found");
@@ -10,14 +16,18 @@ export async function renderTournament() {
     createButton(
         div,
         "create Tournament",
-        async () => { await createTournament(content) },
+        async () => { await createTournament(content, userID) },
         "ct")
-    createButton(div, "join Tournament", () => { console.log("join clicked") }, "jt")
+    createButton(
+        div,
+        "Tournament",
+        async () => { await tournament(content, userID) },
+        "jt")
 
     content.appendChild(div)
 }
 
-async function createTournament(content: HTMLDivElement) {
+async function createTournament(content: HTMLDivElement, userID: number) {
     content.innerHTML = '';
     const div = createDiv();
 
@@ -65,7 +75,7 @@ async function createTournament(content: HTMLDivElement) {
                     'name': (document.getElementById('tname') as HTMLInputElement).value,
                     'maxPlayers': (document.getElementById('tplayers') as HTMLInputElement).value,
                     'lockTime': (document.getElementById('tlock') as HTMLInputElement).value,
-                    'id': 1
+                    'userID': userID
                 })
             })
 
@@ -80,6 +90,93 @@ async function createTournament(content: HTMLDivElement) {
 
     div.appendChild(form);
     content.appendChild(div);
+}
+
+async function tournament(content: HTMLDivElement, userID: number) {
+    content.innerHTML = '';
+    const div = createDiv();
+
+    const resp = await fetch('api/tournament/idle')
+    if (resp.status != 200) {
+        console.log("error", resp)
+        return
+    }
+
+    const data: Array<any> = await resp.json()
+
+    // table
+    if (data.length === 0) {
+        console.log('geen data')
+        return
+    }
+
+    function create_header() {
+        const tr = document.createElement('tr')
+        const names = ['id', 'name', 'players count', 'rounds', 'lockTime', 'action']
+
+        for (const index in names) {
+            const th = document.createElement('th')
+            th.style.textAlign = 'center';
+            th.textContent = names[index]
+            tr.appendChild(th)
+        }
+
+        return tr
+    }
+
+    // TODO: quick fix should replace any with type
+    function create_row(element: any, is_in_tour: boolean, userID: number) {
+        const tr = document.createElement('tr')
+        const keys = ['id', 'name', 'playerCount', 'rounds', 'lockTime', 'action']
+        const button = document.createElement('button')
+
+        for (const index in keys) {
+            const td = document.createElement('td')
+            td.style.textAlign = 'center';
+
+            const key: string = keys[index]
+            if (key === 'playerCount') {
+                td.textContent = `${element[key]}/${element['maxPlayers']}`
+            } else if (key === 'action') {
+                if (is_in_tour) {
+                    button.textContent = 'leave'
+                    button.className = `leave_${element['id']}`;
+                    button.addEventListener('click', async () => {
+                        await leave_tour(element['id'], userID)
+                    })
+                } else {
+                    button.textContent = 'join'
+                    button.className = `join_${element['id']}`;
+                    button.addEventListener('click', async () => {
+                        await join_tour(element['id'], userID)
+                    })
+                }
+                td.appendChild(button)
+            } else if (key === 'lockTime') {
+                td.textContent = formatDateTime(element[key])
+            } else {
+                td.textContent = `${element[key]}`
+            }
+
+            tr.appendChild(td)
+        }
+
+        return tr
+    }
+
+    const table = document.createElement('table')
+    const header = create_header()
+    table.appendChild(header)
+
+    for (const element of data) {
+        console.log(element.players)
+        const in_tour = true ? element.players.includes(userID) : false
+        const row = create_row(element, in_tour, userID)
+        table.appendChild(row)
+    }
+
+    div.appendChild(table)
+    content.appendChild(div)
 }
 
 function createButton(
@@ -110,4 +207,79 @@ function createDiv() {
     div.style.display = 'flex';
 
     return div
+}
+
+function formatDateTime(timestamp: number): string {
+    const date = new Date(timestamp);
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+}
+
+async function getID() {
+    const response = await fetch('api/user/me/data', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'x-internal': 'true'
+        }
+    });
+
+    if (!response.ok) {
+        return null
+    }
+
+    const data = await response.json();
+    return data.user.id
+
+}
+
+async function join_tour(tourID: number, userID: number) {
+    try {
+        const resp = await fetch('/api/tournament/join', {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'tournamentID': tourID,
+                'userID': userID
+            })
+        })
+
+        const result = resp.status
+        if (result !== 201) {
+            console.log("error it", result)
+        }
+    } catch (error) {
+        console.log("error it except", error)
+    }
+}
+
+async function leave_tour(tourID: number, userID: number) {
+    try {
+        const resp = await fetch('/api/tournament/leave', {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'tournamentID': tourID,
+                'userID': userID
+            })
+        })
+
+        const result = resp.status
+        if (result !== 201) {
+            console.log("error it", result)
+        }
+    } catch (error) {
+        console.log("error it except", error)
+    }
 }

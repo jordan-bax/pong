@@ -177,7 +177,7 @@ class server {
                 if (!email) {
                     return reply.code(401).send({ error: 'unauthorized' });
                 }
-                const user = await this.db.findUserByEmail(email)
+                const user = await this.db.getUserData(email)
                 if (user) {
                     return reply.send({ user });
                 } else {
@@ -194,7 +194,7 @@ class server {
             if (!user) {
                 return reply.code(404).send({ error: 'noUser' });
             }
-            const dbInfo = await this.db.findUserByEmail(user.email);
+            const dbInfo = await this.db.getUserData(user.email);
             if (!dbInfo) {
                 console.error('user in request but not database');
                 return reply.code(500).send({ error: 'serverError' })
@@ -412,12 +412,12 @@ class server {
                     return reply.code(400).send({ error: 'googleToken' });
                 }
                 console.log('finding user');
-                let user = await this.db.findUserByEmail(payload.email)
+                let user = await this.db.findUserByEmail(payload.email);
                 if (!user) {
                     const googlePicture = await this.downloadGooglePicure(payload.picture, payload.sub)
                     await this.db.insertGoogleUser(payload, googlePicture);
+                    user = await this.db.findUserByEmail(payload.email);
                 }
-                user = await this.db.findUserByEmail(payload.email);
                 let email: string;
                 if (!user.email && !user.googleEmail) {
                     return reply.code(404).send({error: 'noUser' });
@@ -448,8 +448,8 @@ class server {
                 });
                 const payload = ticket.getPayload();
                 if (!payload || !payload.email) return reply.code(400).send({ error: 'googleToken' });
-
-                const user = await this.db.findUserByEmail(payload.email);
+                
+                const user = await this.db.getUserData(payload.email);
                 if (!user) {
                     return reply.code(404).send({ error: 'noUser' });
                 }

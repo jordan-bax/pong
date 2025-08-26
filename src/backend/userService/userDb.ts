@@ -39,6 +39,19 @@ class UserDatabase {
         return user;
     }
 
+    async getUserData(email:string): Promise<any> {
+        if (!this.db) {
+            throw new Error('database is null');
+        }
+        const user = await this.db.get(`
+            SELECT username, email, googleEmail, friends, pendingFriends, requestedFriends, pathToProfilePicture
+            FROM users
+            WHERE email = ? OR googleEmail = ?`,
+            [email, email]
+        );
+        return user;
+    }
+
     async getUsers(data: string, email: string): Promise<any> {
         if(!this.db) {
             throw new Error('database is null');
@@ -333,13 +346,13 @@ class UserDatabase {
         if (!this.db) {
             throw new Error('database is null');
         }
-        let user = await this.findUserByEmail(userEmail);
+        let user = await this.getUserData(userEmail);
         console.log('user in accept is:', user);
         if (!user) {
             console.error('user is null');
             return false;
         }
-        let friend = await this.findUserByEmail(fromEmail);
+        let friend = await this.getUserData(fromEmail);
         console.log('friend in accept is:', friend);
         if (!friend) {
             console.error('friend is null');

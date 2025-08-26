@@ -72,7 +72,7 @@ class UserDatabase {
         email: string | null,
         googleEmail: string | null,
         pathToPP: string | null,
-    ): Promise<void>
+    ): Promise<boolean | unknown>
     {
         if (!this.db) {
             throw new Error('database is null');
@@ -84,13 +84,15 @@ class UserDatabase {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
                 [username, password, email, googleEmail, 0, pathToPP, null, null, null]);
             await this.db.exec('COMMIT');
+            return true;
         } catch (err) {
             await this.db.exec('ROLLBACK');
             console.error("transaction error in insert user:", err);
+            return err;
         }
     }
 
-    async insertGoogleUser(payload: TokenPayload, picture: string | null): Promise<void> {
+    async insertGoogleUser(payload: TokenPayload, picture: string | null): Promise<boolean | unknown> {
         if (!this.db) {
             throw new Error('database is null');
         }
@@ -112,9 +114,11 @@ class UserDatabase {
                     null, 
                     null]);
             await this.db.exec("COMMIT");
+            return true;
         } catch (err) {
             await this.db.exec('ROLLBACK');
             console.error('error on insert google user', err);
+            return err;
         }
     }
 
@@ -635,40 +639,38 @@ class UserDatabase {
                 CREATE TRIGGER  IF NOT EXISTS enforce_email_uniqueness
                 BEFORE INSERT ON users
                 FOR EACH ROW
-                WHEN (
-                    (NEW.email IS NOT NULL AND EXISTS (
-                        SELECT 1 FROM users
-                        WHERE email = NEW.email OR googleEmail = NEW.email
-                    ))
-                    OR
-                    (NEW.googleEmail IS NOT NULL AND EXISTS (
-                        SELECT 1 FROM users
-                        WHERE email = NEW.googleEmail OR googleEmail = NEW.googleEmail
-                    ))
-                )
                 BEGIN
-                    SELECT RAISE(ABORT, 'email already in use on create');
+                    SELECT RAISE(ABORT, 'email Already in use on create')
+                    WHERE NEW.email IS NOT NULL
+                        AND EXISTS (
+                            SELECT 1 FROM users
+                            WHERE email = NEW.email OR googleEmail = NEW.email
+                    );
+                    SELECT RAISE(ABORT, 'email already in user on create')
+                    WHERE NEW.googleEmail IS NOT NULL
+                        AND EXISTS (
+                            SELECT 1 FROM users
+                            WHERE email = NEW.googleEmail OR googleEmail = NEW.googleEmail
+                    );
                 END;`);
 
             await database.run(`
                 CREATE TRIGGER IF NOT EXISTS enforce_email_uniqueness_update
                 BEFORE UPDATE ON users
                 FOR EACH ROW
-                WHEN (
-                    (NEW.email IS NOT NULL AND EXISTS (
-                        SELECT 1 FROM users
-                        WHERE (email = NEW.email OR googleEmail = NEW.email)
-                        AND id != OLD.id
-                    ))
-                OR
-                    (NEW.googleEmail IS NOT NULL AND EXISTS (
-                    SELECT 1 FROM users
-                    WHERE (email = NEW.googleEmail OR googleEmail = NEW.googleEmail)
-                    AND id != OLD.id
-                ))
-                )
                 BEGIN
-                    SELECT RAISE(ABORT, 'email already in use on update');
+                    SELECT RAISE(ABORT, 'email Already in use on update')
+                    WHERE NEW.email IS NOT NULL
+                        AND EXISTS (
+                            SELECT 1 FROM users
+                            WHERE email = NEW.email OR googleEmail = NEW.email
+                    );
+                    SELECT RAISE(ABORT, 'email already in user on update')
+                    WHERE NEW.googleEmail IS NOT NULL
+                        AND EXISTS (
+                            SELECT 1 FROM users
+                            WHERE email = NEW.googleEmail OR googleEmail = NEW.googleEmail
+                    );
                 END;`)
 
             await database.run(`

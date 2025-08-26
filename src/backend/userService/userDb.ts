@@ -131,8 +131,9 @@ class UserDatabase {
         pathToPP: string | null,
         oldPassword: string | null,
         oldUsername: string | null
-    ): Promise<boolean> 
+    ): Promise<boolean | unknown> 
     {
+        let isOld: boolean = false;
         if (!this.db) {
             throw new Error('database is null');
         }
@@ -140,12 +141,13 @@ class UserDatabase {
             newEmail = oldEmail;
         }
         if (newPassword === null) {
+            isOld = true;
             newPassword = oldPassword
         }
         if (newUsername === null) {
             newUsername = oldUsername;
         }
-        if (newPassword !== null) {
+        if (newPassword !== null && !isOld) {
             newPassword = await bcrypt.hash(newPassword, 10);
         }
         await this.db.exec('BEGIN TRANSACTION');
@@ -169,7 +171,7 @@ class UserDatabase {
         } catch (err) {
             console.error('error on updateUserInfo', err)
             await this.db.exec('ROLLBACK');
-            return false;
+            return err;
         }
     }
 

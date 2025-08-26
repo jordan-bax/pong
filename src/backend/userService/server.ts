@@ -513,7 +513,7 @@ class server {
                 if (userData.oldEmail === null) {
                     return reply.code(400).send({ error: 'wrongInfo' });
                 }
-                if (await this.db.updateUserInfo(
+                const dbUpdate = await this.db.updateUserInfo(
                     userData.oldEmail,
                     userData.newEmail,
                     userData.newPassword,
@@ -522,8 +522,13 @@ class server {
                     userData.pathToProfileP,
                     userData.oldPassword,
                     userData.oldUsername
-                ) === false) {
-                    return reply.code(404).send({ error: 'noUser' });
+                );
+                if (typeof dbUpdate !== 'boolean') {
+                    return reply.code(422).send({ error: 'Unprocessable Entity'})
+                } else {
+                    if (dbUpdate === false) {
+                        return reply.code(404).send({ error: 'noUser' });
+                    }
                 }
                 let newEmail = null;
                 if (userData.newEmail !== null && userData.newEmail !== userData.oldEmail && userData.newEmail !== '') {

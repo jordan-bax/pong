@@ -79,7 +79,10 @@ function createTable(): HTMLTableElement {
 
 async function fetchGameData(): Promise<Game[]> {
   try {
-	const response = await fetch('/api/game/db/getGamesForPlayer');
+	const response = await fetch('/api/game/db/getGamesForPlayer', {
+    method: 'GET',
+    credentials: 'include', // Include cookies for authentication
+    });
 	if (!response.ok) {
 	  throw new Error('Failed to fetch game data');
 	}
@@ -87,8 +90,8 @@ async function fetchGameData(): Promise<Game[]> {
 	games = data;
 	return data;
   } catch (error) {
-	console.error('Error fetching game data:', error);
-	return [];
+    console.error('Error fetching game data:', error);
+    return [];
   }
 }
 

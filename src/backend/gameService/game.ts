@@ -45,8 +45,6 @@ var ai_var: aiInterface = {
 	reactionTime: 100 // Default reaction time in milliseconds
 };
 var ballSpeed: number;
-var sizeAduster: number = 1;
-var pauze: boolean = true;
 let games: Array<gamestateinterface|null> = [];
 let matching: Array<gamestateinterface|null> = [];
 var fps: number = 30; // Default frames per second
@@ -59,7 +57,8 @@ async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
 		return; // Exit the game loop if paused
 	}
 	ballmove(gamestate);
-	if (use_ai && gamestate.gametype === 'ai') {
+	
+	if (use_ai && gamestate.player2.id && gamestate.player2.id <= GameTypeId.AI) {
 		simpleAi(gamestate);
 	}
 	playerMoveCheck(gamestate.player1);
@@ -104,15 +103,7 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 	// Create a new game state
 	// const gameid = generateUniqueGameId(); // Generate a unique game ID
 	
-	// const gameid = await dbfunc.createGame({
-	//     id: 1, // Assuming ID is auto-incremented in the database
-	//     type: type,
-	//     player1: { id: playerid, username: playername },
-	//     player2: { id: null, username: 'Player 2' }, // Placeholder for player 2
-	//     player1Score: 0,
-	//     player2Score: 0,
-	//     winner: 'temp',
-	//     createdAt: null});
+
 	var gameid = await dbfunc.getLastGameId();
 	if (gameid === null) {
 		gameid = 1; // Start with 1 if no games exist
@@ -176,6 +167,27 @@ async function updateGameInDB(game: gamestateinterface): Promise<void> {
 	console.log('Game updated in database:', game.gameID);
 
 }
+
+async function getGameById(gameId: number): Promise<gamestateinterface | null> {
+	const game = games.find(game => game && game.gameID === gameId);
+	return game || null;
+}
+async function findGameToJoin(playerid: number): Promise<gamestateinterface | null> {
+	// Find a game that the player can join
+	const index = matching.findIndex(game => game && game.player1.id === playerid);
+	if (index !== -1) {
+		const game = matching.splice(index,1)[0];
+		return game;
+	}
+	const index2 = matching.findIndex(game => game && game.player2.id === playerid);
+	if (index2 !== -1) {
+		const game = matching.splice(index2,1)[0];
+		return game;
+	}
+	return null;
+}
+
+
 async function addGameLoop(type : string, playername: string, playerid: number): Promise< idandplayerposition | null >{
 	// Add a new game to the games array
 	// if (matching.length > 0) {}
@@ -333,11 +345,13 @@ fastify.register(fastifyCors, { origin: true });
 
 async function getUserIdFromSession(req: any): Promise<number | null> {
 	var userId: number | null = null;
+	console.log('Forwarding cookies:', req.headers.cookie);
 	const user = await fetch('http://user:3001/me', {
 		method: 'GET',
 		credentials: 'include',
+		// cookies: req.cookies,
 		headers: {
-			Cookie: req.headers.cookie || '',
+			'Cookie': req.headers.cookie || '',
 			'Content-Type': 'application/json',
 			'x-session-id': req.cookies['sessionId'] || ''
 		}
@@ -793,7 +807,7 @@ fastify.get('/db/getGameStats', async (req, reply) => {
 });
 
 // To send to a specific user:
-async function sendNotificationToUser(userId: number, message: string) {
+async function sendNotificationToUser(userId: number, message: string)  {
 	const response = await fetch(`http://notification:3005/add?userId=${userId}`, {
 		method: 'POST',
 		credentials: 'include', // Include credentials for session management
@@ -809,6 +823,50 @@ async function sendNotificationToUser(userId: number, message: string) {
 		console.log('Notification sent successfully:', data);
 	}
 }
+const matchingBodySchema = {
+  type: 'object',
+  properties: {
+    playerid1: { type: 'number' },
+    playerid2: { type: 'number' },
+	gametype: { type: 'string' }
+
+  },
+  required: ['playerid1', 'playerid2', 'gametype']
+};
+
+fastify.post('/matching', {schema:{body: matchingBodySchema} }, async (req, reply) => {
+	const { playerid1, playerid2, gametype } = req.body as { playerid1: number; playerid2: number; gametype: string };
+	console.log('Matching players:', playerid1, playerid2, 'Game type:', gametype);
+	// Implement your matching logic here
+	const gameid = lastId() + 1; // Generate a new game ID
+	const newGame: gamestateinterface = {
+		player1: {...player1Template, id: playerid1, name: 'Player 1'},
+		player2: {...player2Template, id: playerid2, name: 'Player 2'},
+		ball: {...ballvarTemplate, speed: ballSpeed},
+		gameActive: true,
+		gamePause: true,
+		gameID: gameid,
+		gametype: gametype,
+	};
+	console.log('New game created for matching:', newGame);
+	matching.push(newGame); // Add the new game to the matching array
+	if (gametype == 'ranking')
+	{
+		if (playerid1 > 0)
+			await sendNotificationToUser(playerid1, `You have been matched for a tournament game`);
+		if (playerid2 > 0)
+			await sendNotificationToUser(playerid2, `You have been matched for a tournament game`);
+	}
+	else {
+		if (playerid1 > 0)
+			await sendNotificationToUser(playerid1, `You have been invited to play a game`);
+		if (playerid2 > 0)
+			await sendNotificationToUser(playerid2, `You have been invited to play a game`);
+	}
+	reply.send({ gameid: gameid, status: 'matched' });
+
+});
+
 fastify.listen({host: "0.0.0.0", port: 3002 }, err => {
 	// seedDatabase();
 	if (err) {

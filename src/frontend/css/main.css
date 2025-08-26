@@ -198,7 +198,7 @@ th {
   z-index: 1;
     top: 100%;      /* Add this line */
     left: 0;        /* Ensure it aligns with the left of the button */
-    width: 100%;;
+    width: 100%;
 }
 
 /* Links inside the dropdown */

@@ -5,6 +5,13 @@ btop
 TODO:
 
 [] fastify endpoint voor 2 users match 
-[] fastify endpoint voor notivications 
-[] make notivications loop in frontend 
-[] notivication interfall and display
+[] stuur terug gameid en in leave beide playid
+[] maak extra settings
+[] test dropdown naar echte veranderen 
+[] notify in settins aan uit
+[] setting taal niet varanderen van pagina 
+[] notify click for history
+[] notify backend
+[x] fastify endpoint voor notivications 
+[x] make notivications loop in frontend 
+[x] notivication interfall and display

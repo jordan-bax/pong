@@ -2,7 +2,8 @@ import {createNewTable1} from './Tables';
 import { getLanguage, setLanguage } from "./index.js";
 import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
 import { setNotifications } from './notifications';
-
+import { createGameHistoryTable } from './gameHistoryTable.js';
+import { renderContent } from './contentRenderer.js';
 // interface settingsContent {
 // 	languageSettings: string;
 // 	notificationsSettings: string;
@@ -100,6 +101,11 @@ export async function openSettings(): Promise<void> {
 
 export function dropdowngamemenu(frame: HTMLElement): void {
 	const dropdown = document.createElement('div');
+	const content = document.getElementById('content');
+	if (!content) {
+		console.error('Content element not found');
+		return;
+	}
 	// const dropdown = frame;
 	dropdown.className = 'dropdown';
 	dropdown.id = 'navstyle';
@@ -112,13 +118,24 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 	dropdownContent.className = 'dropdown-content';
 
 	const option1 = document.createElement('a');
-	option1.href = '/game1';
-	option1.textContent = 'Game 1';
+	option1.href = '/pong';
+	option1.textContent = 'pong';
+	option1.onclick = (e) => {
+		e.preventDefault();
+		console.log('Pong option clicked');
+		history.pushState({}, '', '/gameMenu');
+		renderContent('game');
+	};
 	dropdownContent.appendChild(option1);
 
 	const option2 = document.createElement('a');
-	option2.href = '/game2';
-	option2.textContent = 'Game 2';
+	option2.href = '/gamehistory';
+	option2.textContent = 'History';
+	option2.onclick = (e) => {
+		e.preventDefault();
+		console.log('Game history option clicked');
+		createGameHistoryTable(content as HTMLIFrameElement);
+	};
 	dropdownContent.appendChild(option2);
 
 	dropdown.appendChild(dropbtn);

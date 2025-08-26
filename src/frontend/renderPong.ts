@@ -83,7 +83,6 @@ async function getUserNameData(){
     if (!user.ok) {
         console.error('Failed to fetch user data:', user.statusText);
         return inputTempName(); // Prompt the user for a nickname if the fetch fails
-        return null; // Return null if the fetch fails
     }
     const data = await user.json(); // Parse the user data
     const userData: userInfo = data.user as userInfo; // Cast to userInfo type

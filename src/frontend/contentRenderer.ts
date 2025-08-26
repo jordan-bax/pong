@@ -825,6 +825,202 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
     }
 }
 
+async function renderGameData(): Promise<HTMLDivElement | null> {
+    try {
+        // TODO make work with data from game and tourniment
+        // const respone = await fetch('api/game/db/getGamesForPlayer', {
+        //     credentials: 'include'
+        // });
+        // if (!respone.ok) {
+        //     if (respone.status == 404) return null;
+        //     throw new Error('Failed to get game date from user');
+        // }
+        // const data = await respone.json();
+        const gameDataDiv = document.createElement('div');
+        // const played = data.totalGames;
+        // const won = data.gamesWon;
+        const played = 20;
+        const won = 4;
+        
+        gameDataDiv.style.display = 'flex';
+        gameDataDiv.style.justifyContent = 'center';
+        gameDataDiv.style.alignItems = 'center';
+        gameDataDiv.style.height = '500px';
+        gameDataDiv.style.background = '#fff';
+
+        const size = 250;
+        const strokeWidth = 20;
+        const radius = (size - strokeWidth) / 2;
+        const circumference = 2 * Math.PI * radius;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', size.toString());
+        svg.setAttribute("height", size.toString());
+
+        const bigCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bigCircle.setAttribute("cx", (size / 2).toString());
+        bigCircle.setAttribute('cy', (size / 2).toString());
+        bigCircle.setAttribute('r', radius.toString());
+        bigCircle.setAttribute('stroke', '#888');
+        bigCircle.setAttribute('stroke-width', strokeWidth.toString());
+        bigCircle.setAttribute('fill', 'none');
+        svg.appendChild(bigCircle);
+
+        const progressCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        progressCircle.setAttribute('cx', (size / 2).toString());
+        progressCircle.setAttribute('cy', (size / 2).toString());
+        progressCircle.setAttribute('r', radius.toString());
+        progressCircle.setAttribute('stroke', 'lime');
+        progressCircle.setAttribute('stroke-width', strokeWidth.toString());
+        progressCircle.setAttribute('fill', 'none');
+        progressCircle.setAttribute('stroke-linecap', 'round');
+        progressCircle.setAttribute('stroke-dasharray', circumference.toString());
+        progressCircle.setAttribute('stroke-dashoffset', circumference.toString());
+        progressCircle.style.transition = "stroke-dashoffset 1s ease";
+        svg.appendChild(progressCircle);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', '50%');
+        text.setAttribute('y', '50%');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#111');
+        text.setAttribute('font-size', '24');
+        text.textContent = `${won}/${played}`;
+        svg.appendChild(text);
+
+        const textTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textTitle.setAttribute('x', '50%');
+        textTitle.setAttribute('y', '40%');
+        textTitle.setAttribute('dominant-baseline', 'middle');
+        textTitle.setAttribute('text-anchor', 'middle');
+        textTitle.setAttribute('fill', '#111');
+        textTitle.setAttribute('font-size', '24');
+        textTitle.textContent = 'played/win ratio';
+        svg.appendChild(textTitle);
+
+        gameDataDiv.appendChild(svg);
+        let progress = won / played;
+        progressCircle.setAttribute('stroke-dashoffset', (circumference * (1 - progress)).toString());
+
+        return gameDataDiv;
+    } catch (err) {
+        console.error(`error in showing game stats: ${err}`);
+        return null;
+    }
+}
+
+interface kindOfGames {
+    random: number,
+    friends: number,
+    ai: number,
+    tournaments: number;
+};
+
+function makeBar(value: number, maxValue: number, charHeight: number, padding: number, index: number, height: number, barWidth: number): SVGRectElement {
+    const barHeight = (value / maxValue) * charHeight;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', (padding + index * barWidth + 10).toString());
+    rect.setAttribute('y', (height - padding - barHeight).toString());
+    rect.setAttribute('width', (barWidth - 20).toString());
+    rect.setAttribute('height', barHeight.toString());
+    rect.setAttribute('fill', 'lime');
+    return rect;
+}
+
+function makeValueText(value: number, padding: number, index: number, height: number, barWidth: number, barHeight: number):SVGTextElement {
+    const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    valueText.setAttribute('x', (padding + index * barWidth + barWidth / 2).toString());
+    valueText.setAttribute('y', (height - padding - barHeight - 5).toString());
+    valueText.setAttribute('fill', 'black');
+    valueText.setAttribute('font-size', '14');
+    valueText.setAttribute('text-anchor', 'middle');
+    valueText.textContent = value.toString();
+
+    return valueText;
+}
+
+function makeLabel(name: string, padding: number, index: number, height: number, barWidth: number): SVGTextElement {
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', (padding + index * barWidth + barWidth / 2).toString());
+    label.setAttribute('y', (height - padding + 20).toString());
+    label.setAttribute('fill', 'black');
+    label.setAttribute('font-size', '14');
+    label.setAttribute('text-anchor', 'middle');
+    label.textContent = name;
+
+    return label;
+}
+
+async function gameDataBrakedown(): Promise<HTMLDivElement> {
+    const gameDataBrakedownDiv = document.createElement('div');
+    gameDataBrakedownDiv.style.display = 'flex';
+    gameDataBrakedownDiv.style.justifyContent = 'center';
+    gameDataBrakedownDiv.style.alignItems = 'center';
+    gameDataBrakedownDiv.style.height = '200px';
+    gameDataBrakedownDiv.style.background = '#fff';
+
+    const width = 500;
+    const height = 300;
+    const padding = 50;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width.toString());
+    svg.setAttribute('height', height.toString());
+    svg.style.background = '#fff';
+    gameDataBrakedownDiv.appendChild(svg);
+
+    // TODO change to data from game and tournaments
+    const data: kindOfGames = {
+        random: 12,
+        friends: 8,
+        ai: 15,
+        tournaments: 4
+    };
+    const max = Math.max(data.random, data.friends, data.ai, data.tournaments);
+    const barWidth = (width - padding * 2) / 4;
+    const charHeigth = height - padding * 2;
+
+    let bar = makeBar(data.random, max, charHeigth, padding, 0, height, barWidth);
+    let valueText = makeValueText(data.random, padding, 0, height, barWidth, (data.random / max) * charHeigth);
+    let label = makeLabel('random', padding, 0, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
+
+    bar = makeBar(data.friends, max, charHeigth, padding, 1, height, barWidth);
+    valueText = makeValueText(data.friends, padding, 1, height, barWidth, (data.friends / max) * charHeigth);
+    label = makeLabel('friend', padding, 1, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
+
+    bar = makeBar(data.ai, max, charHeigth, padding, 2, height, barWidth);
+    valueText = makeValueText(data.ai, padding, 2, height, barWidth, (data.ai / max) * charHeigth);
+    label = makeLabel('ai', padding, 2, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
+
+    bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
+    valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
+    label = makeLabel('tournaments', padding, 3, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
+
+    const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    axis.setAttribute('x1', padding.toString());
+    axis.setAttribute('y1', (height - padding).toString());
+    axis.setAttribute('x2', (width - padding).toString());
+    axis.setAttribute('y2', (height - padding).toString());
+    axis.setAttribute('stroke', 'white');
+    axis.setAttribute('stroke-width', '2');
+    svg.appendChild(axis);
+    return gameDataBrakedownDiv;
+}
+
 export async function renderContent (route: string): Promise<void> {
     const content = document.getElementById('content');
     if (!content) return;
@@ -867,6 +1063,10 @@ export async function renderContent (route: string): Promise<void> {
             }
             const friends = await renderFriendLists();
             content.appendChild(friends);
+            const gameData = await renderGameData();
+            if (gameData) content.appendChild(gameData);
+            const gameBrake = await gameDataBrakedown();
+            if (gameBrake) content.appendChild(gameBrake);
             break;
         case 'login':
             const googleLogin = renderGoogle();

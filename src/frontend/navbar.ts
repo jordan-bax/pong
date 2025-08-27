@@ -17,16 +17,16 @@ async function getNavbarContent(language:string, textKeys: string[]): Promise<Ma
     return navbarMap;
 }
 
-function navbarStyling(navItem: HTMLAnchorElement): HTMLAnchorElement {
-    navItem.style.color = 'black';
-    navItem.style.display = 'flex';
-    navItem.style.textAlign = 'center';
-    navItem.style.justifyContent = 'left';
-    navItem.style.textDecoration = 'none';
-    navItem.style.marginLeft = '10px';
-    navItem.style.border = '1em';
-    return navItem;
-}
+// function navbarStyling(navItem: HTMLAnchorElement): HTMLAnchorElement {
+//     navItem.style.color = 'black';
+//     navItem.style.display = 'flex';
+//     navItem.style.textAlign = 'center';
+//     navItem.style.justifyContent = 'left';
+//     navItem.style.textDecoration = 'none';
+//     navItem.style.marginLeft = '10px';
+//     navItem.style.border = '1em';
+//     return navItem;
+// }
 
 export async function renderNavbar(): Promise<void> {
     const language = await getLanguage();
@@ -35,12 +35,12 @@ export async function renderNavbar(): Promise<void> {
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
     navbar.innerHTML = '';
-    navbar.style.display = 'flex';
+    navbar.className = 'navBar';
 
     let homeLink = document.createElement('a');
     homeLink.href = '/';
+    homeLink.className = 'btn navItem'
     homeLink.textContent = navbarText.homeNavbarText;
-    homeLink = navbarStyling(homeLink);
     homeLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
@@ -52,7 +52,6 @@ export async function renderNavbar(): Promise<void> {
     gameLink.href = '/gameMenu';
     gameLink.textContent = navbarText.gameNavbarText;
     gameLink.className = 'btn navItem';
-    gameLink = navbarStyling(gameLink);
     gameLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/gameMenu');
@@ -67,7 +66,6 @@ export async function renderNavbar(): Promise<void> {
     settingsLink.textContent = "Settings";
     // settingsLink.textContent = navbarText.settingsNavbarText;
     settingsLink.className = 'btn navItem';
-    settingsLink = navbarStyling(settingsLink);
     settingsLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/settings');
@@ -84,8 +82,8 @@ export async function renderNavbar(): Promise<void> {
     if (isLoggedIn && isLoggedInServer !== null) {
         let profileLink = document.createElement('a');
         profileLink.href = '/profile';
+        profileLink.className = 'btn navItem'
         profileLink.textContent = navbarText.profileNavbarText;
-        profileLink = navbarStyling(profileLink);
         profileLink.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/profile');
@@ -93,22 +91,17 @@ export async function renderNavbar(): Promise<void> {
         };
         navbar.appendChild(profileLink);
 
-        const logoutBtn = document.createElement('button');
+        const logoutBtn = document.createElement('a');
+        logoutBtn.className= 'btn navItem';
+        logoutBtn.href = '/';
         logoutBtn.textContent = navbarText.logoutNavbarText;
-        logoutBtn.style.color = 'black';
-        logoutBtn.style.display = 'flex';
-        logoutBtn.style.textAlign = 'center';
-        logoutBtn.style.justifyContent = 'left';
-        logoutBtn.style.textDecoration = 'none';
-        logoutBtn.style.marginLeft = '10px';
-        logoutBtn.style.border = '1em';
         logoutBtn.onclick = logout;
         navbar.appendChild(logoutBtn);
     } else {
         let loginLink = document.createElement('a');
         loginLink.href = '/login';
+        loginLink.className = 'btn navItem';
         loginLink.textContent = navbarText.loginNavbarText;
-        loginLink = navbarStyling(loginLink);
         loginLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/login');
@@ -119,7 +112,7 @@ export async function renderNavbar(): Promise<void> {
         let registerLink = document.createElement('a');
         registerLink.textContent= navbarText.registerNavbarText;
         registerLink.href = '/register';
-        registerLink = navbarStyling(registerLink);
+        registerLink.className = 'btn navItem';
         registerLink.onclick = (e) => {
             e.preventDefault();
             history.pushState({}, '', '/register');

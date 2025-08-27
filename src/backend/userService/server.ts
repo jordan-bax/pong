@@ -344,12 +344,16 @@ class server {
                 if (typeof dbInsert !== 'boolean'){
                     return reply.code(422).send({ error: 'unprocessable Entity' });
                 }
+                if (!dbInsert) {
+                    return reply.code(422).send({ error: 'unprocessable Entity' });
+                }
                 const user = await this.db.findUserByEmail(userData.email);
                 if (!user) {
                     req.log.error('user not added');
                     return reply.code(500).send({ error: 'serverError'});
                 }
                 req.session.user = {
+                    username: user.username,
                     email: user.email,
                     userId: user.id,
                     loginMethod: 'normal',
@@ -383,6 +387,7 @@ class server {
                     return reply.code(401).send({ error: 'incorrectLogin' });
                 }
                 req.session.user = {
+                    username: user.username,
                     email: user.email,
                     userId: user.id,
                     loginMethod: 'normal',
@@ -422,6 +427,9 @@ class server {
                     if (typeof dbInsert !== 'boolean') {
                         return reply.code(422).send({ error: 'unprocessable entity' });
                     }
+                    if (!dbInsert) {
+                        return reply.code(422).send({ error: 'unprocessable entity' });
+                    }
                     user = await this.db.findUserByEmail(payload.email);
                 }
                 let email: string;
@@ -434,6 +442,7 @@ class server {
                     email = user.googleEmail;
                 }
                 req.session.user = {
+                    username: user.username,
                     email: email,
                     userId: user.id,
                     loginMethod: 'google',
@@ -538,7 +547,8 @@ class server {
                 }
 
                 req.session.user = {
-                    email: user.email,
+                    username: user.username,
+                    email: newEmail,
                     userId: user.id,
                     loginMethod: 'normal'
                 };
@@ -632,6 +642,7 @@ class server {
                 }
 
                 req.session.user = {
+                    username: user.username,
                     email: newEmail,
                     userId: user.id,
                     loginMethod: 'google'

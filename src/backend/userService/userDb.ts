@@ -77,6 +77,10 @@ class UserDatabase {
         if (!this.db) {
             throw new Error('database is null');
         }
+        if (!(await this.isEmailUnique(email || googleEmail || ''))) {
+            console.error('Email already exists');
+            return false;
+        }
         await this.db.exec('BEGIN TRANSACTION');
         try {
             await this.db.run(`
@@ -95,6 +99,11 @@ class UserDatabase {
     async insertGoogleUser(payload: TokenPayload, picture: string | null): Promise<boolean | unknown> {
         if (!this.db) {
             throw new Error('database is null');
+        }
+
+        if (!(await this.isEmailUnique(payload.email || ''))) {
+            console.error('Email already exists');
+            return false;
         }
 
         await this.db.exec('BEGIN TRANSACTION');
@@ -140,6 +149,7 @@ class UserDatabase {
         if (newEmail === null) {
             newEmail = oldEmail;
         }
+        const user = await this.findUserByEmail(oldEmail);
         if (newPassword === null) {
             isOld = true;
             newPassword = oldPassword
@@ -149,6 +159,10 @@ class UserDatabase {
         }
         if (newPassword !== null && !isOld) {
             newPassword = await bcrypt.hash(newPassword, 10);
+        }
+        if (!(await this.isEmailUnique(oldEmail, user.id))) {
+            console.error('Email already exists');
+            return false;
         }
         await this.db.exec('BEGIN TRANSACTION');
         try {
@@ -184,6 +198,11 @@ class UserDatabase {
     ): Promise<boolean> {
         if (!this.db) {
             throw new Error("database is null");
+        }
+        const user = await this.findUserByEmail(googleEmail);
+        if (!(await this.isEmailUnique(googleEmail, user.id))) {
+            console.error('Email already exists');
+            return false;
         }
         await this.db.exec('BEGIN TRANSACTION');
         try {
@@ -612,6 +631,28 @@ class UserDatabase {
             console.error('error seeding database', err);
         }
     }
+
+    private async isEmailUnique(email: string, id?: number): Promise<boolean> {
+        if (!this.db) throw new Error('Database is null');
+        if (!email) throw new Error('No email provided');
+
+        let query = `
+            SELECT 1
+            FROM users
+            WHERE (email = ? OR googleEmail = ?)
+        `;
+        const params: (string | number)[] = [email, email];
+
+        if (id !== undefined) {
+            query += ' AND id != ?';
+            params.push(id);
+        }
+
+        query += ' LIMIT 1;';
+
+        const user = await this.db.get(query, params);
+        return !user;
+    }
     
     private async initdatabase(file: string):Promise<Database>  {
         const database = open({
@@ -636,44 +677,6 @@ class UserDatabase {
                 )
                 );
             `);
-
-            await database.run(`
-                CREATE TRIGGER  IF NOT EXISTS enforce_email_uniqueness
-                BEFORE INSERT ON users
-                FOR EACH ROW
-                BEGIN
-                    SELECT RAISE(ABORT, 'email Already in use on create')
-                    WHERE NEW.email IS NOT NULL
-                        AND EXISTS (
-                            SELECT 1 FROM users
-                            WHERE email = NEW.email OR googleEmail = NEW.email
-                    );
-                    SELECT RAISE(ABORT, 'email already in user on create')
-                    WHERE NEW.googleEmail IS NOT NULL
-                        AND EXISTS (
-                            SELECT 1 FROM users
-                            WHERE email = NEW.googleEmail OR googleEmail = NEW.googleEmail
-                    );
-                END;`);
-
-            await database.run(`
-                CREATE TRIGGER IF NOT EXISTS enforce_email_uniqueness_update
-                BEFORE UPDATE ON users
-                FOR EACH ROW
-                BEGIN
-                    SELECT RAISE(ABORT, 'email Already in use on update')
-                    WHERE NEW.email IS NOT NULL
-                        AND EXISTS (
-                            SELECT 1 FROM users
-                            WHERE email = NEW.email OR googleEmail = NEW.email
-                    );
-                    SELECT RAISE(ABORT, 'email already in user on update')
-                    WHERE NEW.googleEmail IS NOT NULL
-                        AND EXISTS (
-                            SELECT 1 FROM users
-                            WHERE email = NEW.googleEmail OR googleEmail = NEW.googleEmail
-                    );
-                END;`)
 
             await database.run(`
                 CREATE TABLE IF NOT EXISTS meta (

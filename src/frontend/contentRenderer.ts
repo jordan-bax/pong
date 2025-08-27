@@ -825,19 +825,47 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
     }
 }
 
+interface player {
+    userId: number;
+    username: string;
+}
+
+interface gamaData {
+    player1: player;
+    player2: player;
+    player1Score: number;
+    player2Score: number;
+    winner: string;
+    gameID: string;
+    gameType: string;
+}
+
 async function renderGameData(): Promise<HTMLDivElement | null> {
     try {
-        // TODO make work with data from game and tourniment
-        // const respone = await fetch('api/game/db/getGamesForPlayer', {
-        //     credentials: 'include'
+        // TODO once game service works again test this
+        // const user = await fetch('api/user/me', {
+        //     credentials: 'include',
+        //     method: 'GET',
+        //     headers: {
+        //         'x-internal': 'true'
+        //     }
         // });
-        // if (!respone.ok) {
-        //     if (respone.status == 404) return null;
-        //     throw new Error('Failed to get game date from user');
+        // if (!user.ok) {
+        //     if (user.status === 404) return null;
+        //     throw new Error('failed to get userID');
         // }
-        // const data = await respone.json();
+        // const userId = await user.json();
+        // const response = await fetch(`api/game/db/getGameStats?${userId.user.userId}`, {
+        //     credentials: 'include',
+        //     method: 'GET'
+        // });
+        // if (!response.ok) {
+        //     if (response.status === 404) return null;
+        //     throw new Error('Failed to get game data from user');
+        // }
+        // const data = await response.json();
         const gameDataDiv = document.createElement('div');
-        // const played = data.totalGames;
+        // const played = data.gamesPlayed;
         // const won = data.gamesWon;
         const played = 20;
         const won = 4;

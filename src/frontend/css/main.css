@@ -1,123 +1,6 @@
-/* global part 
-/* ids 
-#navbar {
-   display: flex;
+body {
+    background-color: #9ff;
 }
-
-#content {
-   display: flex;
-   justify-content: center;
-}
-
-/* classes 
-.navItem {
-    justify-content: left;
-    text-decoration: none;
-    color: black;
-}
-
-.btn {
-   color: #000;
-   text-align: center;
-}
-
-.btn-primary {
-    background-color: blue;
-    color: white;
-    border-color: rgb(155, 154, 154);
-}
-
-.btn-danger {
-    background-color: red;
-    color: white;
-    border-color: #ff3279;
-}
-
-.error-text {
-    color: red;
-}
-
-/* tags 
- 
-/* Extra small devices (phones, 600px and down) 
-@media only screen and (max-width: 600px) {
-/* ids 
-#content {
-    margin: 1em 0em;
-}
-
-/* classes 
-.btn {
-    border: 1em;
-    margin-left: 10px;
-}
-
-/* tags 
-}
-
-/* Small devices (portrait tablets and large phones, 600px and up) 
-@media only screen and (min-width: 600px) {
-/* ids 
-#content {
-    margin: 1em 0em;
-}
-
-/* classes 
-.btn {
-    border: 1em;
-    margin-left: 10px;
-}
-
-/* tags 
-}
-
-/* Medium devices (landscape tablets, 768px and up) 
-@media only screen and (min-width: 768px) {
-/* ids 
-#content {
-    margin: 1em 0em;
-}
-
-/* classes 
-.btn {
-    border: 1em;
-    margin-left: 10px;
-}
-
-/* tags 
-}
-
-/* Large devices (laptops/desktops, 992px and up) 
-@media only screen and (min-width: 992px) {
-/* ids 
-#content {
-    margin: 1em 0em;
-}
-
-/* classes 
-.btn {
-    border: 1em;
-    margin-left: 10px;
-}
-
-/* tags 
-}
-
-/* Extra large devices (large laptops and desktops, 1200px and up) 
-@media only screen and (min-width: 1200px) {
-/* ids 
-#content {
-    margin: 1em 0em;
-}
-
-/* classes 
-.btn {
-    border: 1em;
-    margin-left: 10px;
-}
-
-/* tags 
-} */
 table {
 	width: 100%;
 	border-collapse: collapse;
@@ -147,14 +30,14 @@ th {
     position: absolute;
     right: 10px;
     top: 10px;
-    min-width: 40px;
-    min-height: 24px;
+    /* min-width: 40px;
+    min-height: 24px; */
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    /* justify-content: flex-end; */
     background-color: color-mix(in srgb, gray 50%, transparent 50%);
     border: 1px solid gray;
-    padding: 10px;
+    /* padding: 10px; */
     z-index: 1000;
 }
 #settings-table {
@@ -175,10 +58,15 @@ th {
 
  /* Dropdown Button */
 .dropbtn {
-  background-color: #17cf8c;
-  color: white;
+  background-color: inherit;
+  color: black;
+  border: none;
+  font-size: 1rem;
+  padding: 0px;
+  font-weight: normal;
+  line-height: 1;
+  font-family: inherit;
   /* padding: 16px;
-  font-size: 16px;
   border: none; */
 }
 
@@ -186,6 +74,7 @@ th {
 .dropdown {
   position: relative;
   display: inline-block;
+  font-size: 1rem;
 }
 
 /* Dropdown Content (Hidden by Default) */
@@ -229,3 +118,26 @@ th {
 /* #content {
     overflow: auto;
 } */
+
+.btn {
+    border: 1em;
+    margin-left: 10px;
+}
+
+.navItem {
+    color: black;
+    display: flex;
+    text-align: center;
+    justify-content: left;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: normal;
+    line-height: 1;
+    padding: 0;
+    background: none;
+    font-family: inherit;
+}
+
+.navBar {
+    display: flex;
+}

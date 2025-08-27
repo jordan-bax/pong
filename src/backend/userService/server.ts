@@ -340,13 +340,20 @@ class server {
             }
             const hash = await bcrypt.hash(userData.password, 10);
             try {
-                await this.db.insertUserIntoDatabase(userData.username, hash, userData.email, null, userData.pathToProfileP);
+                const dbInsert = await this.db.insertUserIntoDatabase(userData.username, hash, userData.email, null, userData.pathToProfileP);
+                if (typeof dbInsert !== 'boolean'){
+                    return reply.code(422).send({ error: 'unprocessable Entity' });
+                }
+                if (!dbInsert) {
+                    return reply.code(422).send({ error: 'unprocessable Entity' });
+                }
                 const user = await this.db.findUserByEmail(userData.email);
                 if (!user) {
                     req.log.error('user not added');
                     return reply.code(500).send({ error: 'serverError'});
                 }
                 req.session.user = {
+                    username: user.username,
                     email: user.email,
                     userId: user.id,
                     loginMethod: 'normal',
@@ -380,6 +387,7 @@ class server {
                     return reply.code(401).send({ error: 'incorrectLogin' });
                 }
                 req.session.user = {
+                    username: user.username,
                     email: user.email,
                     userId: user.id,
                     loginMethod: 'normal',
@@ -415,7 +423,13 @@ class server {
                 let user = await this.db.findUserByEmail(payload.email);
                 if (!user) {
                     const googlePicture = await this.downloadGooglePicure(payload.picture, payload.sub)
-                    await this.db.insertGoogleUser(payload, googlePicture);
+                    const dbInsert = await this.db.insertGoogleUser(payload, googlePicture);
+                    if (typeof dbInsert !== 'boolean') {
+                        return reply.code(422).send({ error: 'unprocessable entity' });
+                    }
+                    if (!dbInsert) {
+                        return reply.code(422).send({ error: 'unprocessable entity' });
+                    }
                     user = await this.db.findUserByEmail(payload.email);
                 }
                 let email: string;
@@ -428,6 +442,7 @@ class server {
                     email = user.googleEmail;
                 }
                 req.session.user = {
+                    username: user.username,
                     email: email,
                     userId: user.id,
                     loginMethod: 'google',
@@ -507,7 +522,7 @@ class server {
                 if (userData.oldEmail === null) {
                     return reply.code(400).send({ error: 'wrongInfo' });
                 }
-                if (await this.db.updateUserInfo(
+                const dbUpdate = await this.db.updateUserInfo(
                     userData.oldEmail,
                     userData.newEmail,
                     userData.newPassword,
@@ -516,8 +531,13 @@ class server {
                     userData.pathToProfileP,
                     userData.oldPassword,
                     userData.oldUsername
-                ) === false) {
-                    return reply.code(404).send({ error: 'noUser' });
+                );
+                if (typeof dbUpdate !== 'boolean') {
+                    return reply.code(422).send({ error: 'Unprocessable Entity'})
+                } else {
+                    if (dbUpdate === false) {
+                        return reply.code(404).send({ error: 'noUser' });
+                    }
                 }
                 let newEmail = null;
                 if (userData.newEmail !== null && userData.newEmail !== userData.oldEmail && userData.newEmail !== '') {
@@ -527,7 +547,8 @@ class server {
                 }
 
                 req.session.user = {
-                    email: user.email,
+                    username: user.username,
+                    email: newEmail,
                     userId: user.id,
                     loginMethod: 'normal'
                 };
@@ -621,6 +642,7 @@ class server {
                 }
 
                 req.session.user = {
+                    username: user.username,
                     email: newEmail,
                     userId: user.id,
                     loginMethod: 'google'

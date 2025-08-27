@@ -7,7 +7,10 @@ export const routeFromPath: { [key: string]: string } = {
     '/profile': 'profile',
     '/login': 'login',
     '/register': 'register',
-    '/google': 'google'
+    '/google': 'google',
+    '/gameMenu': 'game',
+    '/settings': 'settings',
+    '/tournament': 'tournament'
 };
 
 export interface userInfo {
@@ -91,7 +94,10 @@ async function getErrorMessages(): Promise<ierrors> {
 
 export async function getFriends(): Promise<string | null> {
     const response = await fetch('/api/user/friends', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
 
     if (!response.ok) {
@@ -103,7 +109,10 @@ export async function getFriends(): Promise<string | null> {
 
 export async function getRequestedFriends(): Promise<string | null> {
     const respone = await fetch('/api/user/requested', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
     if (!respone.ok) {
         return null;
@@ -114,7 +123,10 @@ export async function getRequestedFriends(): Promise<string | null> {
 
 export async function getPendingFriends(): Promise<string | null> {
     const response = await fetch('/api/user/pending', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
     if (!response.ok) {
         return null;
@@ -127,6 +139,9 @@ export async function sendFriendRequest(user: searchUser): Promise<void> {
     const response = await fetch('/api/user/requested', {
         credentials:'include',
         method: 'POST',
+        headers: {
+            "x-internal": "true"
+        },
         body: user.email || user.googleEmail
     });
 
@@ -137,7 +152,10 @@ export async function sendFriendRequest(user: searchUser): Promise<void> {
 
 export async function searchUsers(query: string): Promise<searchUser[] | null> {
     const response = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
 
     if (!response.ok) {
@@ -152,7 +170,10 @@ export async function removeRequest(email:string): Promise<boolean> {
     const response = await fetch('/api/user/friendRequest', {
         method: 'DELETE',
         body: email,
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
     if (!response.ok) {
         console.error('failed to remove request');
@@ -165,7 +186,10 @@ export async function acceptFriendRequest(email:string): Promise<boolean> {
     const respone = await fetch('/api/user/acceptFriend', {
         method: 'POST',
         body: email,
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
     if (!respone.ok) {
         console.error('failed to accept friend request');
@@ -184,7 +208,10 @@ export function getCurrentUser(): string | null{
 
 export async function getCsrfToken(): Promise<string | null> {
     const response = await fetch('api/user/csrf-token', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
     if (response.ok) {
         const data = await response.json();
@@ -194,14 +221,22 @@ export async function getCsrfToken(): Promise<string | null> {
 }
 
 export async function getLogginServer(): Promise<string | null> {
-    const serverUser = await fetch('api/user/me')
+    const serverUser = await fetch('api/user/me', {
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
+    });
     const data = await serverUser.json();
     return data.user?.email;
 }
 
 export async function getLogginUserData(): Promise<userInfo | null> {
     const serverUser = await fetch('api/user/me/data', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
     });
     if (!serverUser.ok) {
         return null;
@@ -212,25 +247,30 @@ export async function getLogginUserData(): Promise<userInfo | null> {
 }
 
 export async function updateUserInfo(
-    oldEmail: string, 
-    oldUsername: string, 
-    oldPassword:string, 
+    oldEmail: string,
+    oldUsername: string,
+    oldPassword:string,
     formData: FormData
 ): Promise<void> {
     formData.append('oldEmail', oldEmail);
     formData.append('oldUsername', oldUsername);
     formData.append('oldPassword', oldPassword);
-    console.log(formData);
     const response = await fetch('api/user/update', {
         credentials: 'include',
         method: 'PATCH',
         body: formData,
         headers: {
-            'x-csrf-token': formData.get('_csrf') as string
+            'x-csrf-token': formData.get('_csrf') as string,
+            "x-internal": "true"
         }
     });
     const content = document.getElementById('error');
     if (!response.ok) {
+        const mainContent = document.getElementById('content');
+        const updateDiv = document.getElementById('secureUpdate');
+        if (mainContent && updateDiv) {
+            mainContent.removeChild(updateDiv)
+        }
         const errorData = await response.json();
         const errors = await getErrorMessages();
         let message = [];
@@ -267,11 +307,17 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
         method: 'PATCH',
         body: formData,
         headers: {
-            'x-csrf-token': formData.get('_csrf') as string
+            'x-csrf-token': formData.get('_csrf') as string,
+            "x-internal": "true"
         }
     });
     const content = document.getElementById('error');
     if (!response.ok) {
+        const mainContent = document.getElementById('content');
+        const updateDiv = document.getElementById('secureUpdate');
+        if (mainContent && updateDiv) {
+            mainContent.removeChild(updateDiv);
+        }
         const errorData = await response.json();
         const errors = await getErrorMessages();
         let message = [];
@@ -303,7 +349,12 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
 }
 
 export async function checkSession() {
-    const response = await fetch('/api/user/me');
+    const response = await fetch('/api/user/me', {
+        headers: {
+            "x-internal": "true"
+        },
+        credentials: 'include'
+    });
     const data = await response.json();
     isLoggedIn = data.loggedIn ? true : false;
     currentUser = data.user?.email ?? null;
@@ -316,8 +367,10 @@ export async function login(formData: FormData): Promise<void> {
         method: 'POST',
         body: formData,
         headers: {
-            'x-csrf-token': formData.get('_csrf') as string
-        }
+            'x-csrf-token': formData.get('_csrf') as string,
+            "x-internal": "true"
+        },
+        credentials: 'include'
     });
     const content = document.getElementById('error');
     if (!response.ok) {
@@ -341,7 +394,7 @@ export async function login(formData: FormData): Promise<void> {
             for (const error of messages) {
                 const paragraph = document.createElement('p');
                 paragraph.style.color = 'red';
-                
+
                 const text = document.createTextNode(error);
                 paragraph.appendChild(text);
                 content.appendChild(paragraph);
@@ -350,18 +403,20 @@ export async function login(formData: FormData): Promise<void> {
     } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
+        setGameSession();
         checkSession();
     }
 }
 
 export async function register(formData: FormData): Promise<void> {
-    console.log(formData);
     const response = await fetch('/api/user/register', {
         method: 'POST',
         body: formData,
         headers: {
-            'x-csrf-token': formData.get('_csrf') as string
-        }
+            'x-csrf-token': formData.get('_csrf') as string,
+            "x-internal": "true"
+        },
+        credentials: 'include'
     });
 
     const content = document.getElementById('error');
@@ -392,22 +447,29 @@ export async function register(formData: FormData): Promise<void> {
     } else {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
+        setGameSession();
         checkSession();
     }
 }
 
 export async function logout(): Promise<void> {
-    await fetch('/api/user/logout', { method: 'POST'});
+    await fetch('/api/user/logout', { method: 'POST', headers: {"x-internal": "true"} });
     isLoggedIn = false;
     currentUser = null;
     history.pushState({}, '', '/');
+    clearGameSession();
     checkSession();
 }
 
 let csrfToken: string | null = null;
 
 async function fetchCsrfToken() {
-    const res = await fetch('api/user/csrf-token', { credentials: 'include' });
+    const res = await fetch('api/user/csrf-token', { 
+        credentials: 'include', 
+        headers: {
+            "x-internal": "true"
+        }
+     });
     const data = await res.json();
     csrfToken = data.csrfToken;
 }
@@ -417,9 +479,10 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
 
     const response = await fetch ('api/user/google', {
         method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json', 
+        headers: {
+            'Content-Type': 'application/json',
             'x-csrf-token': csrfToken ?? '',
+            "x-internal": "true"
         },
         body: JSON.stringify({ idToken: request.credential }),
         credentials: 'include',
@@ -427,6 +490,7 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
     if (response.ok) {
         isLoggedIn = true;
         history.pushState({}, '', '/profile');
+        setGameSession();
         checkSession();
     } else {
         let errorMessage;
@@ -438,5 +502,80 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
             errorMessage = { error: text };
         }
         console.error('google login failed:', errorMessage);
+    }
+}
+
+async function getIdFromMe(): Promise<number | null> {
+    const response = await fetch('/api/user/me', {
+        headers: {
+            "x-internal": "true"
+        },
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        console.error('failed to get user ID');
+        return null;
+    }
+    const data = await response.json();
+    return data.user.userId || null;
+}
+async function getUsernameFromMeData(): Promise<string | null> {
+    const response = await fetch('/api/user/me/data', {
+        headers: {"x-internal": "true"},
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        console.error('failed to get user data');
+        return null;
+    }
+    const data = await response.json();
+    return data.user.username || null;
+}
+async function createPlayer(params: { id: number; username: string }): Promise<void> {
+    console.log('Creating player with params:', params);
+    const response = await fetch('/api/game/db/addPlayer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "x-internal": "true"
+        },
+        body: JSON.stringify(params),
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        console.error('failed to create player');
+    }
+}
+async function setGameSession(): Promise<void> {
+    const myId = await getIdFromMe();
+    const username = await getUsernameFromMeData();
+    if (!myId || !username) {
+        console.error('cannot set game session, missing user data', { myId, username });
+        return;
+    }
+    const response = await fetch('/api/game/setsession', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "x-internal": "true"
+        },
+        body: JSON.stringify({ username: username, id: myId }),
+        credentials: 'include'
+    });
+    if (!response.ok) {
+        console.error('failed to set game session');
+    }
+    await createPlayer({ id: myId, username: username });
+}
+async function clearGameSession(): Promise<void> {
+    const response = await fetch('/api/game/clearsession', {
+        method: 'POST',
+        headers: {
+            "x-internal": "true"
+        },
+        credentials: 'include'
+    });
+    if (!response.ok) {
+        console.error('failed to clear game session');
     }
 }

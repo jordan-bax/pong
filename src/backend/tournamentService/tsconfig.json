@@ -1,14 +1,13 @@
 {
     "compilerOptions": {
-        "target": "ES2024",
-        "module": "CommonJS",
+        "target": "esnext",
+        "module": "nodenext",
         "outDir": "./dist",
         "rootDir": "./",
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "strict": true,
-        "skipLibCheck": true,
-        "typeRoots": ["node_modules/@types"]
+        "rewriteRelativeImportExtensions": true,
+        "erasableSyntaxOnly": true,
+        "typeRoots": ["node_modules/@types"],
+        "moduleResolution": "NodeNext",
     },
-    "include": ["./*.ts"]
+    "include": ["./src", "./db", "./schemas/"]
 }

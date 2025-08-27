@@ -93,6 +93,7 @@ async function getUserNameData(){
     return userData.username; // Return the username
     
 }
+
 export async function startGame(gametype :string) : Promise<scoreInterface> {
     const playername = await getUserNameData();
     if (!playername) {

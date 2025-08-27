@@ -9,7 +9,7 @@ import { renderContent } from './contentRenderer.js';
 // 	notificationsSettings: string;
 // }
 // const  settingsTextKeys : settingsContent = {
-// 	languageSettings :'languageSettings', 
+// 	languageSettings :'languageSettings',
 // 	notificationsSettings: 'notificationsSettings'};
 
 // const settingsHeader: Headers<settingsContent>[] = [settingsTextKeys];
@@ -35,7 +35,7 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 			option.textContent = text;
 			languageDropdown.appendChild(option);
 		});
-		
+
 		// languageDropdown.style.display = 'flex';
 		// languageDropdown.style.position = 'absolute';
 		// languageDropdown.style.right = '20px';
@@ -137,6 +137,16 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 		createGameHistoryTable(content as HTMLIFrameElement);
 	};
 	dropdownContent.appendChild(option2);
+
+	const option3 = document.createElement('a');
+	option3.href = '/tournament';
+	option3.textContent = 'tournament';
+    option3.onclick = (e) => {
+        e.preventDefault();
+        history.pushState({}, '', '/tournament');
+        renderContent('tournament');
+    }
+	dropdownContent.appendChild(option3);
 
 	dropdown.appendChild(dropbtn);
 	dropdown.appendChild(dropdownContent);

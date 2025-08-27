@@ -54,6 +54,7 @@ export async function initializeDatabase() {
 	await db.run(`
 		CREATE TABLE IF NOT EXISTS game (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			type TEXT,
 			player1_id INTEGER,
 			player2_id INTEGER,
 			player1Score INTEGER NOT NULL,
@@ -77,9 +78,10 @@ export async function getGamesForPlayer(playerId: number): Promise<Game[]> {
 		WHERE g.player1_id = ? OR g.player2_id = ?
 		ORDER BY g.createdAt DESC
 	`, playerId, playerId);
-	
+	console.log('DB-- Fetching games for player ID:', playerId, 'Rows:', rows);
 	return rows.map(row => ({
 		id: row.id,
+		type: row.type,
 		player1: { id: row.player1_id, username: row.player1name },
 		player2: { id: row.player2_id, username: row.player2name },
 		player1Score: row.player1Score,
@@ -118,7 +120,7 @@ export async function createPlayer(id: number, username: string): Promise<player
 // export 
 export async function createGame(game: Game): Promise<Game> {
 	const db = await dbPromise;
-	const { player1, player2, player1Score, player2Score, winner } = game;
+	const { type, player1, player2, player1Score, player2Score, winner } = game;
 	if (player1.id === player2.id && player2.id == 2) {
 		throw new Error("Players must be different");
 	}
@@ -128,8 +130,9 @@ export async function createGame(game: Game): Promise<Game> {
 	var result : any;
 	if (!player2) {
 		result = await db.run(
-			`INSERT INTO game (player1_id, player1Score, player2Score, winner) 
-			 VALUES (?, ?, ?, ?)`,
+			`INSERT INTO game (type, player1_id, player1Score, player2Score, winner) 
+			 VALUES (?, ?, ?, ?, ?)`,
+			type,
 			player1.id,
 			player1Score,
 			player2Score,

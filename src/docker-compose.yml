@@ -1,6 +1,6 @@
 services:
   nginx:
-    build: 
+    build:
       context: ./
       dockerfile: backend/nginx/Dockerfile
     container_name: nginx
@@ -9,7 +9,7 @@ services:
     depends_on:
       - user
       - game
-      # - tournament
+      - tournament
       - page_content
     networks:
       - transcendanse
@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   user:
-    build: 
+    build:
       context: ./backend
       dockerfile: userService/Dockerfile
     container_name: user
@@ -32,9 +32,9 @@ services:
     networks:
       - transcendanse
     restart: unless-stopped
-    
+
   game:
-    build: 
+    build:
       context: ./backend/gameService
     container_name: game
     expose:
@@ -46,22 +46,22 @@ services:
     networks:
       - transcendanse
     restart: unless-stopped
-  
-  # tournament:
-  #   build: 
-  #     context: ./backend/tournamentService
-  #   container_name: tournament
-  #   expose:
-  #     - "3003"
-  #   volumes:
-  #     - tournament-db:/app/tournament.sqlite
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - transcendanse
-  #   restart: unless-stopped
+
+  tournament:
+    build:
+      context: ./backend/tournamentService
+    container_name: tournament
+    expose:
+      - "3003"
+    volumes:
+      - tournament-db:/app/tournament.sqlite
+    env_file:
+      - .env
+    networks:
+      - transcendanse
+    restart: unless-stopped
   notification:
-    build: 
+    build:
       context: ./backend/notificationService
       # dockerfile: Dockerfile
     container_name: notification
@@ -113,14 +113,20 @@ volumes:
       o: bind
       type: none
   game-db:
+    name: game
+    driver: local
+    driver_opts:
+      device: ~/data/game
+      o: bind
+      type: none
   notification-db:
-  # tournament-db:
-  #   name: tournament
-  #   driver: local
-  #   driver_opts:
-  #     device: ~/data/tournament
-  #     o: bind
-  #     type: none
+  tournament-db:
+    name: tournament
+    driver: local
+    driver_opts:
+      device: ~/data/tournament
+      o: bind
+      type: none
 
 networks:
   transcendanse:

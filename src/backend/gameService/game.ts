@@ -57,8 +57,8 @@ async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
 		return; // Exit the game loop if paused
 	}
 	ballmove(gamestate);
-	
-	if (use_ai && gamestate.player2.id && gamestate.player2.id <= GameTypeId.AI) {
+
+	if (use_ai && !(gamestate.player2.id === null) && gamestate.player2.id <= GameTypeId.AI) {
 		simpleAi(gamestate);
 	}
 	playerMoveCheck(gamestate.player1);
@@ -334,6 +334,7 @@ fastify.register(fastifyCookie, {
 });
 fastify.register(fastifySession, {
 	secret: sessionSecret, // Replace with a secure secret in production
+	cookieName: 'gameSession',
 	cookie: {
 		maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
 		secure: false, // Set to true if using HTTPS
@@ -357,9 +358,18 @@ async function getUserIdFromSession(req: any): Promise<number | null> {
 		}
 	});
 	if (user.ok) {
-		await user.json().then(data => {
+		await user.json().then(async data => {
 			console.log('User data:', data);
 			userId = data.user.userId; // Assuming the user object has an 'id' property
+			if (!userId) {
+				console.error('User ID not found in response data');
+				return null;
+			}
+			// await dbfunc.createPlayer(userId, 'data.user.username as string').then(() => {
+			// 	console.log('Player ensured in DB with ID:', userId);
+			// }).catch(err => {
+			// 	console.error('Error ensuring player in DB:', err);
+			// });
 		});
 	}
 	else {
@@ -388,7 +398,7 @@ async function getUserIdFromRequest(req: FastifyRequest): Promise<number | null>
 fastify.post('/start', async (req, reply) => {
 	var playid :number | null = null;
 	var online: boolean = false;
-	const { type, playername } = req.body as { type: string; playername: string };
+	var { type, playername } = req.body as { type: string; playername: string };
 	if (!req.session.player || !req.session.player.id) {
 		await getUserIdFromSession(req).then((userId) => {
 			if (userId) {
@@ -398,12 +408,14 @@ fastify.post('/start', async (req, reply) => {
 			} else {
 				playid = GameTypeId.UNKNOWN; // Default player ID for non-logged-in users
 				online = false;
+				playername = 'Guest';
 				console.error('User ID not found in session', playid);
 			}
 	});
 	} else {
 		playid = req.session.player.id; // Use the player ID from the session
 		online = req.session.player.loggedin || false; // Check if the player is logged in
+		playername = req.session.player.username || 'Guest';
 	}
 	
 	console.log('Starting game with AI:', type, 'Player Name:', playername);
@@ -695,11 +707,11 @@ function simplePadleCollisionPlayer2(ball: ballInterface, gamestate: gamestatein
 }
 
 fastify.post('/db/addPlayer', async (req, reply) => {
-	const { playername, playerid } = req.body as { playername: string; playerid: number };
-	console.log('Adding player to database:', playername, 'Player ID:', playerid);
+	const { username, id } = req.body as { username: string; id: number };
+	console.log('Adding player to database:', username, 'Player ID:', id);
 	try {
-		const result = await dbfunc.createPlayer( playerid, playername);
-		reply.send({ status: 'player added', playerId: result });
+		const result = await dbfunc.createPlayer(id, username);
+		reply.send({ status: 'player added', id: result });
 	} catch (error) {
 		console.error('Error adding player to database:', error);
 		reply.status(500).send({ error: 'Failed to add player' });
@@ -725,6 +737,7 @@ fastify.get('/db/getGamesForPlayer', async (req, reply) => {
 		const games = await dbfunc.getGamesForPlayer(playerid);
 		if (!games || games.length === 0) {
 			reply.status(404).send({ error: 'No games found for player' });
+			console.log('No games found for player ID:', playerid, 'Games:', games);
 			return;
 		}
 		console.error('Games fetched for player ID:', playerid, 'Number of games:', games);
@@ -805,6 +818,40 @@ fastify.get('/db/getGameStats', async (req, reply) => {
 		reply.status(500).send({ error: 'Failed to fetch game stats' });
 	}
 });
+const sessionBodySchema = {
+  	type: 'object',
+  	properties: {
+    username: { type: 'string' },
+    id: { type: 'number' },
+  },
+  required: ['username', 'id']
+};
+fastify.post('/setsession', { schema: { body: sessionBodySchema } }, async (req, reply) => {
+	const { username, id } = req.body as { username: string; id: number };
+	if (!username || !id) {
+		reply.status(400).send({ error: 'Username and ID are required' });
+		return;
+	}
+	req.session.player = {
+		username: username,
+		id: id,
+		player: 1, // Default to player 1
+		gameid: 0,
+		loggedin: true
+	};
+	if (!req.session.player) {
+		reply.status(500).send({ error: 'Failed to set session in set session' });
+		return;
+	}
+	console.log('Session set for user:', req.session.player);
+	reply.send({ status: 'session set', player: req.session.player });
+});
+
+fastify.post('/clearsession', async (req, reply) => {
+	req.session.player = undefined;
+	console.log('Session cleared');
+	reply.send({ status: 'session cleared' });
+});
 
 // To send to a specific user:
 async function sendNotificationToUser(userId: number, message: string)  {
@@ -833,6 +880,7 @@ const matchingBodySchema = {
   },
   required: ['playerid1', 'playerid2', 'gametype']
 };
+
 
 fastify.post('/matching', {schema:{body: matchingBodySchema} }, async (req, reply) => {
 	const { playerid1, playerid2, gametype } = req.body as { playerid1: number; playerid2: number; gametype: string };

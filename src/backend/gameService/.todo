@@ -6,12 +6,17 @@ TODO:
 
 [] fastify endpoint voor 2 users match 
 [] stuur terug gameid en in leave beide playid
+[] winning must record game
+[] hisory better info
+[] end game schreen for winning and losing 
+[] a loading / matching screen
 [] maak extra settings
-[] test dropdown naar echte veranderen 
 [] notify in settins aan uit
 [] setting taal niet varanderen van pagina 
 [] notify click for history
 [] notify backend
+[] maybe terminal game
+[x] test dropdown naar echte veranderen 
 [x] fastify endpoint voor notivications 
 [x] make notivications loop in frontend 
 [x] notivication interfall and display

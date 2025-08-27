@@ -61,7 +61,7 @@ function timediffrence(date1: Date, date2: Date): string {
 	if (minutes > 0) return `${minutes} minute(s) ago`;
 	return `${seconds} second(s) ago`;
 }
-function dodo(){
+export function dodo(){
 
 	if (notifications.length > 0) {
 		const notification = notifications.shift();

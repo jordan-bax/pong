@@ -80,6 +80,7 @@ class server {
             secret: sessionSecret,
             cookieName: 'UserInfo',
             cookie: {
+                httpOnly: true,
                 secure: false,
                 maxAge: 1000 * 60 * 60 * 24,
                 sameSite: 'strict'
@@ -88,7 +89,9 @@ class server {
         });
 
         await this.fastify.register(fastifyMultipart);
-        await this.fastify.register(csrfProtection);
+        await this.fastify.register(csrfProtection, {
+            sessionPlugin: '@fastify/session'
+        });
 
         this.registerRoutes();
     }
@@ -174,7 +177,7 @@ class server {
                 if (!email) {
                     return reply.code(401).send({ error: 'unauthorized' });
                 }
-                const user = await this.db.findUserByEmail(email)
+                const user = await this.db.getUserData(email)
                 if (user) {
                     return reply.send({ user });
                 } else {
@@ -191,7 +194,7 @@ class server {
             if (!user) {
                 return reply.code(404).send({ error: 'noUser' });
             }
-            const dbInfo = await this.db.findUserByEmail(user.email);
+            const dbInfo = await this.db.getUserData(user.email);
             if (!dbInfo) {
                 console.error('user in request but not database');
                 return reply.code(500).send({ error: 'serverError' })
@@ -213,7 +216,7 @@ class server {
             reply.header('content-type', mimeTypes);
             return reply.send(fs.createReadStream(imagePath));
         });
-        
+
         this.fastify.get('/friends', async (req, reply) => {
             const user = req.session.user;
             if (!user) {
@@ -267,6 +270,8 @@ class server {
             if (!setRequest) {
                 return reply.code(500).send({ error: 'serverError' });
             }
+            const friendData = await this.db.findUserByEmail(toEmail);
+            await this.sendNotificationToUser(friendData.id as number, 'new frient request');
             return reply.send({ success: true});
         });
 
@@ -294,7 +299,7 @@ class server {
             const deleteRequest = req.body as string | null;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
-            } 
+            }
             if (!deleteRequest) {
                 return reply.code(400).send({error: 'noBody' });
             }
@@ -348,7 +353,7 @@ class server {
                 };
                 return reply.send({ success: true });
             } catch (err) {
-                req.log.error('inserting new user error');
+                req.log.error(`inserting new user error: ${err}`);
                 return reply.code(500).send({ error: 'serverError' });
             }
         });
@@ -381,7 +386,7 @@ class server {
                 };
                 reply.send({ success: true });
             } catch (err) {
-                req.log.error('login error');
+                req.log.error(`login error: ${err}`);
                 return reply.code(500).send({ error: 'serverError' });
             }
         });
@@ -390,7 +395,7 @@ class server {
             if (!req.session.user) {
                 return reply.code(400).send({ error: 'noLogin' });
             }
-        
+
             delete req.session.user;
             return reply.send({ success: true });
         });
@@ -407,12 +412,12 @@ class server {
                     return reply.code(400).send({ error: 'googleToken' });
                 }
                 console.log('finding user');
-                let user = await this.db.findUserByEmail(payload.email)
+                let user = await this.db.findUserByEmail(payload.email);
                 if (!user) {
                     const googlePicture = await this.downloadGooglePicure(payload.picture, payload.sub)
                     await this.db.insertGoogleUser(payload, googlePicture);
+                    user = await this.db.findUserByEmail(payload.email);
                 }
-                user = await this.db.findUserByEmail(payload.email);
                 let email: string;
                 if (!user.email && !user.googleEmail) {
                     return reply.code(404).send({error: 'noUser' });
@@ -422,7 +427,7 @@ class server {
                 } else {
                     email = user.googleEmail;
                 }
-                req.session.user = { 
+                req.session.user = {
                     email: email,
                     userId: user.id,
                     loginMethod: 'google',
@@ -444,7 +449,7 @@ class server {
                 const payload = ticket.getPayload();
                 if (!payload || !payload.email) return reply.code(400).send({ error: 'googleToken' });
                 
-                const user = await this.db.findUserByEmail(payload.email);
+                const user = await this.db.getUserData(payload.email);
                 if (!user) {
                     return reply.code(404).send({ error: 'noUser' });
                 }
@@ -489,7 +494,7 @@ class server {
                 }
             }
             console.log('update userdata', userData);
-    
+
             let user: any;
             if (userData.oldEmail !== null) {
                 user = await this.db.findUserByEmail(userData.oldEmail);
@@ -514,7 +519,19 @@ class server {
                 ) === false) {
                     return reply.code(404).send({ error: 'noUser' });
                 }
-                
+                let newEmail = null;
+                if (userData.newEmail !== null && userData.newEmail !== userData.oldEmail && userData.newEmail !== '') {
+                    newEmail = userData.newEmail;
+                } else {
+                    newEmail = userData.oldEmail;
+                }
+
+                req.session.user = {
+                    email: user.email,
+                    userId: user.id,
+                    loginMethod: 'normal'
+                };
+
                 reply.send({ success: true });
             } catch (err) {
                 req.log.error('error updating user');
@@ -595,6 +612,20 @@ class server {
                     console.log('update user failed')
                     return reply.code(404).send({ error: 'noUser' });
                 }
+
+                let newEmail = null;
+                if (userData.newEmail !== null && userData.newEmail !== userData.googleEmail && userData.newEmail !== '') {
+                    newEmail = userData.newEmail;
+                } else {
+                    newEmail = userData.googleEmail;
+                }
+
+                req.session.user = {
+                    email: newEmail,
+                    userId: user.id,
+                    loginMethod: 'google'
+                };
+
                 return reply.send({ success: true });
             } catch (err) {
                 req.log.error('error updateing user');
@@ -605,6 +636,23 @@ class server {
         this.fastify.setNotFoundHandler((req, reply) => {
             return reply.code(404).send({ error: 'Not Found' });
         });
+    }
+
+    private async sendNotificationToUser(userId: number, message: string): Promise<void> {
+        const response = await fetch(`http://notification:3005/add?userId=${userId}`, {
+            method: 'POST',
+            credentials: 'include', // Include credentials for session management
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+        if (!response.ok) {
+            console.error('Failed to send notification:', response.statusText);
+        } else {
+            const data = await response.json();
+            console.log('Notification sent successfully:', data);
+        }
     }
 }
 

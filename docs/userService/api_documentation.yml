@@ -3,7 +3,10 @@ paths:
     get:
       summary: returns the user that have the given string somewhere in the username
       Parameters:
-        description: the query string on what to look up for
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        query:
+          description: the query string on what to look up for
       Responses:
         200:
           description: return with all the users who have a username with the query string in it
@@ -33,6 +36,8 @@ paths:
     get:
       summary: Retrieves the friends list of the logged in user;
       Parameters:
+        header_item: x-internal
+        description: header tag needed if going via frontend
       Responses:
         200:
           description: user has friends
@@ -61,6 +66,8 @@ paths:
     get:
       summary: Retrieves the users incoming friend requests
       Parameters:
+        header_item: x-internal
+        description: header tag needed if going via frontend
       Responses:
         200:
           description: the user has incoming friend requests
@@ -89,6 +96,8 @@ paths:
     get:
       summary: get the users current outgoing friend requests
       Parameters:
+        header_item: x-internal
+        description: header tag needed if going via frontend
       Responses:
         200:
           description: the user has outgoing friend requests
@@ -117,13 +126,16 @@ paths:
     post:
       summary: set friend request
       Parameters: 
-        description: info of the user to add
-        content:
-          string:
-            schema:
-              type: string
-              items: 
-                email: email of user
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        body:
+          description: info of the user to add
+          content:
+            string:
+              schema:
+                type: string
+                items: 
+                  email: email of user
       Responses:
         200:
           description: user has been send a friend request
@@ -161,6 +173,8 @@ paths:
     get:
       summary: Retrieves data if the current user is logged in and known server side
       Parameters:
+        header_item: x-internal
+        description: header tag needed if going via frontend
       Responses:
         200:
           description: user is logged in and known server side
@@ -183,13 +197,16 @@ paths:
     get:
       summary: Retrieves all data about the current logged in user 
       Parameters:
-        description: extra info to get everything from the current user
-        content:
-          RequestCredentials:
-            schema:
-              type: RequestCredentials
-              items:
-                credentials: RequestCredentials
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        query:
+          description: extra info to get everything from the current user
+          content:
+            RequestCredentials:
+              schema:
+                type: RequestCredentials
+                items:
+                  credentials: RequestCredentials
       Responses:
         200:
           description: All data of the logged in user
@@ -227,6 +244,8 @@ paths:
     get:
       summary: gives the server csrf token
       Parameters:
+        header_item: x-internal
+        description: header tag needed if going via frontend
       Responses:
         200:
           description: the string holding the csrf token
@@ -240,6 +259,8 @@ paths:
     get:
       summary: gets the profile picture of the user
       Parameters:
+        header_item: x-internal
+        description: header tag needed if going via frontend
       Responses:
       200:
         description: gives a stream to the user profile picture
@@ -268,17 +289,20 @@ paths:
     post:
       summary: registers a user and make it known by the server 
       Parameters:
-        description: the data should come from the form itself
-        content:
-          multipart/form-data:
-            schema:
-              type: multipart/form-data
-              items:
-                _csrf: string with csrfToken
-                username: string with username
-                password: sting with password
-                email: string with email
-                profilePicture: file of profilePicture (optional)
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        body:
+          description: the data should come from the form itself
+          content:
+            multipart/form-data:
+              schema:
+                type: multipart/form-data
+                items:
+                  _csrf: string with csrfToken
+                  username: string with username
+                  password: sting with password
+                  email: string with email
+                  profilePicture: file of profilePicture (optional)
       Responses:
         200:
           description: user registration success
@@ -309,15 +333,18 @@ paths:
     post:
       summary: logs the user in and make it known server side
       Parameters:
-        description: the data should come from the form itself
-        content:
-          multipart/form-data:
-            schema:
-              type: multipart/form-data
-              items:
-                _csrf: string with csrf token
-                email: string with email
-                password: string with password
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        body:
+          description: the data should come from the form itself
+          content:
+            multipart/form-data:
+              schema:
+                type: multipart/form-data
+                items:
+                  _csrf: string with csrf token
+                  email: string with email
+                  password: string with password
       Responses:
         200:
           description: user loggin success
@@ -355,6 +382,8 @@ paths:
     post:
       summary: logs user out and make the server forget the user
       Parameters:
+        header_item: x-internal
+        description: header tag needed if going via frontend
         content:
           csrfToken:
             type: string
@@ -381,14 +410,17 @@ paths:
     post:
       summary: login via google account
       Parameters:
-        description: the client-id for google
-        content:
-          application/json:
-            schema:
-              type: object
-              items:
-                idToken: string with google client-id
-                credentials: RequestCredentials
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        body:
+          description: the client-id for google
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  idToken: string with google client-id
+                  credentials: RequestCredentials
       Responses:
         200:
           description: user login success
@@ -418,18 +450,21 @@ paths:
     post:
       summary: checks if user is logged in via google
       Parameters:
-        description: should come from the formdata
-        content:
-          multipart/form-data:
-            schema:
-              type: multipart/form-data and RequestCredentials
-              items:
-                _csrf: string with csrf token
-                newUsername: string of username (optional)
-                newEmail: string of email (optional)
-                newPassword: string of password (optional)
-                newProfilePicture: file of new profilePicture (optional)
-                credentials: RequestCredentials
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        body:
+          description: should come from the formdata
+          content:
+            multipart/form-data:
+              schema:
+                type: multipart/form-data and RequestCredentials
+                items:
+                  _csrf: string with csrf token
+                  newUsername: string of username (optional)
+                  newEmail: string of email (optional)
+                  newPassword: string of password (optional)
+                  newProfilePicture: file of new profilePicture (optional)
+                  credentials: RequestCredentials
       Responses:
         200:
           description: user info update success
@@ -467,18 +502,21 @@ paths:
     patch:
       summary: updates data from current user
       Parameters:
-        description: should come from the formdata
-        content:
-          multipart/form-data:
-            schema:
-              type: multipart/form-data and RequestCredentials
-              items:
-                _csrf: string with csrf token
-                newUsername: string of username (optional)
-                newEmail: string of email (optional)
-                newPassword: string of password (optional)
-                newProfilePicture: file of new profile picture (optional)
-                credentials: RequestCredentials
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        body:
+          description: should come from the formdata
+          content:
+            multipart/form-data:
+              schema:
+                type: multipart/form-data and RequestCredentials
+                items:
+                  _csrf: string with csrf token
+                  newUsername: string of username (optional)
+                  newEmail: string of email (optional)
+                  newPassword: string of password (optional)
+                  newProfilePicture: file of new profile picture (optional)
+                  credentials: RequestCredentials
       Responses:
         200:
           description: user info update success
@@ -517,16 +555,19 @@ paths:
     patch:
       summary: updates user data for users that made an account via google
       Parameters:
-        description:
-        content:
-          multipart/form-data:
-            schema:
-              type: multipart/form-data;
-              items:
-                newUsername: string of username (optional)
-                newEmail: string of email (optional)
-                newPassword: string of password (optional)
-                newProfilePicture: file of new profile picture
+        header_item: x-internal
+        description: header tag needed if going via frontend
+        body:
+          description:
+          content:
+            multipart/form-data:
+              schema:
+                type: multipart/form-data;
+                items:
+                  newUsername: string of username (optional)
+                  newEmail: string of email (optional)
+                  newPassword: string of password (optional)
+                  newProfilePicture: file of new profile picture
       Responses:
         200:
           description: user info update success

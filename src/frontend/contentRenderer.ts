@@ -1,8 +1,10 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser } from "./routing.js";
 import { openSettings } from "./settings.js";
+import {renderTournament} from "./renderTournament.js"
+import { listenForNotifications, dodo } from "./notifications.js";
 
 declare global {
     interface Window {
@@ -42,7 +44,7 @@ function queryStringBuilder(language: string, array: string[]): string {
     output.append('language', language);
     array.forEach(tag => output.append('textKey', tag));
     return output.toString();
-    
+
 }
 
 function replacePlaceholders(original: string, values: Record<string, string>) {
@@ -66,7 +68,7 @@ function setupSearchUsers(): HTMLDivElement {
     const searchDiv = document.createElement('div');
     searchDiv.id = 'searchDiv';
     searchDiv.style.display = 'grid';
-    
+
     const input = document.createElement('input');
     input.type = 'text';
     input.name = 'userSearch';
@@ -82,7 +84,7 @@ function setupSearchUsers(): HTMLDivElement {
         if (!query) {
             return;
         }
-        
+
         try {
             const users = await searchUsers(query);
             await renderResult(users);
@@ -257,7 +259,6 @@ async function pendingList(): Promise<HTMLTableRowElement> {
             removeRequestButton.style.background = 'none';
             removeRequestButton.style.border = 'none'
             removeRequestButton.onclick = async (e) => {
-                console.log('user in eventListener is', user);
                 if (user[0].email) {
                     await removeRequest(user[0].email);
                 }
@@ -280,7 +281,6 @@ async function pendingList(): Promise<HTMLTableRowElement> {
         removeRequestButton.style.background = 'none';
         removeRequestButton.style.border = 'none';
         removeRequestButton.onclick = async (e) => {
-            console.log('user in eventListener is', user);
             if (user[0].email) {
                 await removeRequest(user[0].email);
             }
@@ -421,13 +421,14 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
     emailInput.id = 'email';
     emailInput.name = 'email';
     emailInput.required = true;
+    emailInput.autocomplete = 'email';
 
     table.appendChild(createRow(emailLabel, emailInput));
 
     const passwordLabel = document.createElement('label');
     passwordLabel.textContent = text.passwordText;
     passwordLabel.setAttribute('for', 'password');
-    
+
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
     passwordInput.id = 'password';
@@ -444,7 +445,7 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
     submitButton.style.marginLeft = ' 10px';
     submitButton.textContent = text.loginButtonText;
     submitButton.id = 'login-btn';
-    
+
     const errorDiv = document.createElement('div');
     errorDiv.id = 'error';
 
@@ -514,7 +515,7 @@ async function renderRegister(text: content): Promise<HTMLFormElement> {
 
     const passwordLabel = document.createElement('label');
     passwordLabel.textContent = text.passwordText;
-    passwordLabel.setAttribute('for', 'passwrod');
+    passwordLabel.setAttribute('for', 'password');
 
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
@@ -630,7 +631,7 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     });
 
     contentDiv.appendChild(overlayGoogleLogin);
-    
+
     const exitButton = document.createElement('button');
     exitButton.id = 'exit-btn';
     exitButton.textContent = text.exitButtonText;
@@ -648,14 +649,20 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
 async function handleGoogleCheck(request:{ idToken: string, user: userInfo}) {
     const formInfo = document.getElementById('profileForm') as HTMLFormElement;
     const formData = new FormData(formInfo);
-    const response = await fetch('api/user/csrf-token', {credentials: 'include'});
+    const response = await fetch('api/user/csrf-token', {
+        credentials: 'include',
+        headers: {
+            "x-internal": "true"
+        }
+    });
     const data = await response.json();
     const csrf = data.csrfToken;
     const googleResponse = await fetch('api/user/google-check', {
         method: 'POST',
         headers: {
             'x-csrf-token': csrf,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            "x-internal": "true"
         },
         body: JSON.stringify({idToken: request.idToken}),
         credentials: 'include',
@@ -683,7 +690,21 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
     if (!user) {
         return null;
     }
-
+    const response = await fetch('/api/user/me', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'x-internal': 'true'
+        }
+    });
+    let data: any = null;
+    if (response.ok) {
+        data = await response.json();
+    }
+    if (data) {
+        await listenForNotifications(data.user.userId as number);
+        dodo();
+    }
     const profileForm = document.createElement('form');
     profileForm.style.alignSelf = 'center';
     profileForm.id = 'profileForm';
@@ -778,7 +799,10 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
 async function renderProfilePicture(): Promise<HTMLImageElement | null> {
     try {
         const respone = await fetch('api/user/profile-picture', {
-            credentials: 'include'
+            credentials: 'include',
+            headers: {
+                "x-internal": "true"
+            }
         });
         if (!respone.ok) {
             if (respone.status == 404) {
@@ -862,6 +886,9 @@ export async function renderContent (route: string): Promise<void> {
         case 'settings':
             content.textContent = 'Settings page is under construction.';
             openSettings();
+            break;
+        case 'tournament':
+            renderTournament();
             break;
         default:
             content.textContent = textData.notFoundText;

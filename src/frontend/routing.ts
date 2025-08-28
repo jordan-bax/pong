@@ -505,7 +505,7 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
     }
 }
 
-async function getIdFromMe(): Promise<number | null> {
+export async function getIdFromMe(): Promise<number | null> {
     const response = await fetch('/api/user/me', {
         headers: {
             "x-internal": "true"

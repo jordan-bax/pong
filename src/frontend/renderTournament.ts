@@ -1,10 +1,13 @@
+import { getIdFromMe } from './routing.js'
+
 export async function renderTournament() {
-    const userID: number | null = await getID()
-    if (userID === null) {
+    const userID: number | null = await getIdFromMe()
+    if (userID == null) {
         console.log("moet ingeloged zijn om dit te doen")
         return
     }
 
+    console.log("userID: ", userID);
     const content = document.getElementById("content") as HTMLDivElement;
     if (!content) {
         console.error("Content element not found");
@@ -97,12 +100,12 @@ async function tournament(content: HTMLDivElement, userID: number) {
     const div = createDiv();
     const br = document.createElement('br')
 
-    const idle_tb: any = await idle_table(userID)
-    // const done_tb = await done_table()
+    const tours_tb: any = await tours(userID)
+    if (tours_tb === null) {
+        return;
+    }
 
-    div.appendChild(idle_tb)
-    div.appendChild(br)
-    // div.appendChild(done_tb)
+    div.appendChild(tours_tb)
 
     content.appendChild(div)
 }
@@ -137,8 +140,179 @@ function createDiv() {
     return div
 }
 
-async function idle_table(userID: number) {
-    const resp = await fetch('api/tournament/idle')
+// interface Tournament {
+//     id: number;
+//     name: string;
+//     rounds: number;
+//     isRunning: boolean;
+//     isFinished: boolean;
+//     lockTime: number;
+//     playerCount: number;
+//     maxPlayers: number;
+//     players: number[];
+//     winner: number;
+// }
+//
+// interface ToursDict {
+//     finished: Tournament[];
+//     running: Tournament[];
+//     joinable: Tournament[];
+// }
+//
+// function createTournamentTables(data: Tournament[], userId: number): HTMLDivElement {
+//     let toursDict: ToursDict = {
+//         finished: [],
+//         running: [],
+//         joinable: []
+//     };
+//
+//     for (let tournament of data) {
+//         if (tournament.isFinished) {
+//             toursDict.finished.push(tournament);
+//         } else if (tournament.isRunning) {
+//             toursDict.running.push(tournament);
+//         } else {
+//             toursDict.joinable.push(tournament);
+//         }
+//     }
+//
+//     const div = document.createElement('div');
+//     div.className = 'tables-container';
+//
+//     // Define table order and properties
+//     const tableTypes: { key: keyof ToursDict, title: string, icon: string }[] = [
+//         { key: 'finished', title: 'Finished Tournaments', icon: '🏆' },
+//         { key: 'running', title: 'Running Tournaments', icon: '⚡' },
+//         { key: 'joinable', title: 'Joinable Tournaments', icon: '✅' }
+//     ];
+//
+//     // Create tables in the specified order
+//     for (let type of tableTypes) {
+//         if (toursDict[type.key].length === 0) continue;
+//
+//         const section = document.createElement('div');
+//         section.className = 'table-section';
+//
+//         // Create table title
+//         const title = document.createElement('div');
+//         title.className = `table-title ${type.key}`;
+//         title.innerHTML = `<span class="icon">${type.icon}</span> ${type.title}`;
+//         section.appendChild(title);
+//
+//         // Create table
+//         const table = document.createElement('table');
+//
+//         // Create headers based on tournament type
+//         table.appendChild(createHeader(type.key));
+//
+//         // Add rows for each tournament
+//         for (let tournament of toursDict[type.key]) {
+//             const isInTour = tournament.players.includes(userId);
+//             table.appendChild(createRow(tournament, isInTour, userId, type.key));
+//         }
+//
+//         section.appendChild(table);
+//         div.appendChild(section);
+//     }
+//
+//     return div;
+// }
+//
+// function createHeader(type: keyof ToursDict): HTMLTableRowElement {
+//     const tr = document.createElement('tr');
+//
+//     // Define headers for each table type
+//     const headers: Record<keyof ToursDict, string[]> = {
+//         finished: ['Status', 'ID', 'Name', 'Players', 'Rounds', 'Lock Time', 'Winner', 'Actions'],
+//         running: ['Status', 'ID', 'Name', 'Players', 'Rounds', 'Lock Time', 'Actions'],
+//         joinable: ['Status', 'ID', 'Name', 'Players', 'Rounds', 'Lock Time', 'Actions']
+//     };
+//
+//     for (let headerText of headers[type]) {
+//         const th = document.createElement('th');
+//         th.textContent = headerText;
+//         tr.appendChild(th);
+//     }
+//
+//     return tr;
+// }
+//
+// function createRow(tournament: Tournament, isInTour: boolean, userId: number, type: keyof ToursDict): HTMLTableRowElement {
+//     const tr = document.createElement('tr');
+//
+//     // Status badge
+//     const statusTd = document.createElement('td');
+//     const statusBadge = document.createElement('span');
+//     statusBadge.className = `status-badge status-${type}`;
+//     statusBadge.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+//     statusTd.appendChild(statusBadge);
+//     tr.appendChild(statusTd);
+//
+//     // ID
+//     const idTd = document.createElement('td');
+//     idTd.textContent = tournament.id.toString();
+//     tr.appendChild(idTd);
+//
+//     // Name
+//     const nameTd = document.createElement('td');
+//     nameTd.textContent = tournament.name;
+//     tr.appendChild(nameTd);
+//
+//     // Players
+//     const playersTd = document.createElement('td');
+//     playersTd.textContent = `${tournament.playerCount}/${tournament.maxPlayers}`;
+//     tr.appendChild(playersTd);
+//
+//     // Rounds
+//     const roundsTd = document.createElement('td');
+//     roundsTd.textContent = tournament.rounds.toString();
+//     tr.appendChild(roundsTd);
+//
+//     // Lock Time
+//     const lockTimeTd = document.createElement('td');
+//     lockTimeTd.textContent = formatDateTime(tournament.lockTime);
+//     tr.appendChild(lockTimeTd);
+//
+//     // Winner (for finished tournaments)
+//     if (type === 'finished') {
+//         const winnerTd = document.createElement('td');
+//         winnerTd.textContent = tournament.winner ? `Player ${tournament.winner}` : 'N/A';
+//         tr.appendChild(winnerTd);
+//     }
+//
+//     // Actions
+//     const actionsTd = document.createElement('td');
+//     const button = document.createElement('button');
+//     button.className = 'action-btn';
+//
+//     if (type === 'finished') {
+//         button.textContent = 'View Results';
+//         button.classList.add('view-btn');
+//         button.addEventListener('click', () => {
+//             alert(`Viewing results of tournament: ${tournament.name}`);
+//         });
+//     } else if (isInTour) {
+//         button.textContent = 'Leave';
+//         button.classList.add('leave-btn');
+//         button.addEventListener('click', async () => {
+//             await leaveTour(tournament.id, userId);
+//         });
+//     } else {
+//         button.textContent = 'Join';
+//         button.classList.add('join-btn');
+//         button.addEventListener('click', async () => {
+//             await joinTour(tournament.id, userId);
+//         });
+//     }
+//
+//     actionsTd.appendChild(button);
+//     tr.appendChild(actionsTd);
+//
+//     return tr;
+// }
+
+async function tours(userID: number) {
+    const resp = await fetch('api/tournament/tours')
     if (resp.status != 200) {
         console.log("error", resp)
         return
@@ -151,7 +325,47 @@ async function idle_table(userID: number) {
         return
     }
 
-    function create_header() {
+    console.log(data)
+
+    let toursDict = Object()
+    for (let index = 0; index < data.length; index++) {
+        if (data[index].isFinished) {
+            if (!toursDict['finished']) {
+                toursDict['finished'] = []
+            }
+
+            toursDict['finished'].push(data[index])
+        } else if (data[index].isRunning) {
+            if (!toursDict['running']) {
+                toursDict['running'] = []
+            }
+
+            toursDict['running'].push(data[index])
+        } else {
+            if (!toursDict['joinable']) {
+                toursDict['joinable'] = []
+            }
+
+            toursDict['joinable'].push(data[index])
+        }
+    }
+
+
+    const div = document.createElement('div')
+    for (const [key, value] of Object.entries(toursDict)) {
+        const table = document.createElement('table')
+        table.appendChild(createHeader())
+
+        for (let index = 0; index < toursDict[key].length; index++) {
+            const in_tour = true ? toursDict[key][index].players.includes(userID) : false
+            table.appendChild(createRow(toursDict[key][index], in_tour, userID))
+        }
+
+        div.appendChild(table)
+    }
+    console.log(toursDict)
+
+    function createHeader() {
         const tr = document.createElement('tr')
         const names = ['id', 'name', 'players count', 'rounds', 'lockTime', 'action']
 
@@ -165,8 +379,8 @@ async function idle_table(userID: number) {
         return tr
     }
 
-    // TODO: quick fix should replace any with type
-    function create_row(element: any, is_in_tour: boolean, userID: number) {
+    // // TODO: quick fix should replace any with type
+    function createRow(element: any, is_in_tour: boolean, userID: number) {
         const tr = document.createElement('tr')
         const keys = ['id', 'name', 'playerCount', 'rounds', 'lockTime', 'action']
         const button = document.createElement('button')
@@ -183,13 +397,13 @@ async function idle_table(userID: number) {
                     button.textContent = 'leave'
                     button.className = `leave_${element['id']}`;
                     button.addEventListener('click', async () => {
-                        await leave_tour(element['id'], userID)
+                        await leaveTour(element['id'], userID)
                     })
                 } else {
                     button.textContent = 'join'
                     button.className = `join_${element['id']}`;
                     button.addEventListener('click', async () => {
-                        await join_tour(element['id'], userID)
+                        await joinTour(element['id'], userID)
                     })
                 }
                 td.appendChild(button)
@@ -205,18 +419,7 @@ async function idle_table(userID: number) {
         return tr
     }
 
-    const table = document.createElement('table')
-    table.className = "available_tours"
-    const header = create_header()
-    table.appendChild(header)
-
-    for (const element of data) {
-        const in_tour = true ? element.players.includes(userID) : false
-        const row = create_row(element, in_tour, userID)
-        table.appendChild(row)
-    }
-
-    return table
+    return div
 }
 
 function formatDateTime(timestamp: number): string {
@@ -232,25 +435,7 @@ function formatDateTime(timestamp: number): string {
     return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
 }
 
-async function getID() {
-    const response = await fetch('api/user/me/data', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-            'x-internal': 'true'
-        }
-    });
-
-    if (!response.ok) {
-        return null
-    }
-
-    const data = await response.json();
-    return data.user.id
-
-}
-
-async function join_tour(tourID: number, userID: number) {
+async function joinTour(tourID: number, userID: number) {
     try {
         const resp = await fetch('/api/tournament/join', {
             method: "POST",
@@ -272,7 +457,7 @@ async function join_tour(tourID: number, userID: number) {
     }
 }
 
-async function leave_tour(tourID: number, userID: number) {
+async function leaveTour(tourID: number, userID: number) {
     try {
         const resp = await fetch('/api/tournament/leave', {
             method: "POST",

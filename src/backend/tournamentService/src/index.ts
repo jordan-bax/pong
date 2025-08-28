@@ -23,6 +23,7 @@ server.get('/tournament/:id',
             const tournament = await tournamentObj.getByID(Number(id))
             reply.status(200).send(tournament)
         } catch (error) {
+            console.error('Get tournament by ID error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {
@@ -41,8 +42,8 @@ server.get('/user/:id',
             const tournament = await tournamentObj.getUserTours(Number(id))
             reply.status(200).send(tournament)
         } catch (error) {
+            console.error('Get users tournament by ID error:', error)
             if (error instanceof DBError) {
-                console.log("endpoint", error)
                 reply.status(500).send({ error: "Internal server error" })
             } else {
                 reply.status(400).send({
@@ -59,6 +60,7 @@ server.get('/idle',
             const tournament = await tournamentObj.idle()
             reply.status(200).send(tournament)
         } catch (error) {
+            console.error('Get all idle tours error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {
@@ -76,6 +78,7 @@ server.get('/running',
             const tournament = await tournamentObj.running()
             reply.status(200).send(tournament)
         } catch (error) {
+            console.error('Get all running tours error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {
@@ -93,6 +96,7 @@ server.get('/finished',
             const tournament = await tournamentObj.finished()
             reply.status(200).send(tournament)
         } catch (error) {
+            console.error('Get all finished tours error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {
@@ -110,6 +114,7 @@ server.get('/tours',
             const tournament = await tournamentObj.allTournaments()
             reply.status(200).send(tournament)
         } catch (error) {
+            console.error('Get all tours error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {
@@ -139,6 +144,7 @@ server.post('/create',
 
             reply.status(201).send(tournament)
         } catch (error) {
+            console.error('Create tournament error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {
@@ -161,6 +167,7 @@ server.post('/join',
             await tournamentObj.join(tournamentID, userID)
             reply.status(201).send({ 'tournamentID': tournamentID })
         } catch (error) {
+            console.error('join tournament error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {
@@ -184,6 +191,7 @@ server.post('/leave',
             reply.status(201).send({ 'tournamentID': tournamentID })
         } catch (error) {
             if (error instanceof DBError) {
+            console.error('leave tournament error:', error)
                 reply.status(500).send({ error: "Internal server error" })
             } else {
                 reply.status(400).send({
@@ -213,6 +221,7 @@ server.post('/done',
 
             reply.status(201).send({ 'message': 'OK' })
         } catch (error) {
+            console.error('done tournament error:', error)
             if (error instanceof DBError) {
                 reply.status(500).send({ error: "Internal server error" })
             } else {

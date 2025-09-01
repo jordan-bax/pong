@@ -595,6 +595,83 @@ class UserDatabase {
         }
     }
 
+    async setLoggedIn(email: string, loginStatus: number): Promise<void> {
+        if (!this.db) {
+            throw new Error('database is null');
+        }
+
+        try {
+            await this.db.exec('BOGIN TRANSACTION')
+            const rows = await this.db.run(`
+                UPDATE user
+                SET (isLoggedIn) 
+                VALUES (?) 
+                WHERE email = ? OR googleEmail = ?;`,
+                [loginStatus, email, email]);
+            if (rows.changes !== 1) {
+                await this.db.exec('ROLLBACK');
+                return;
+            }
+            await this.db.exec('COMMIT');
+        } catch (err) {
+            console.error(`sql errror ${err}`);
+            await this.db.exec('ROLLBACK');
+            return;
+        }
+    }
+
+    async getLoggedIn(email: string): Promise<string | null> {
+        if (!this.db) {
+            throw new Error('databaes is null');
+        }
+
+        const rows = await this.db.all(`
+            SELECT * FROM users 
+            WHERE isLoggedIn = 1 AND (email != ? OR googleEMail != ?)`,
+            [email, email]
+        );
+        if (rows.length === 0) {
+            return null;
+        }
+        return rows.join(',');
+    }
+
+    async getLoggedInFriends(email: string): Promise<string | null> {
+        const friends = await this.getFriends(email);
+        if (!friends) {
+            return null;
+        }
+
+        if (!this.db) {
+            throw new Error('db is null');
+        }
+        
+        let friendArray: string[] = [];
+        if (friends.includes(',')) {
+            friendArray = friends.split(',');
+        } else {
+            friendArray[0] = friends;
+        }
+        let loggedInFriends: string[] = [];
+        for (const friend of friendArray) {
+            try {
+                const row = await this.db.get(`
+                    SELECT * FROM users
+                    WHERE (email = ? OR googleEmail = ?)
+                    AND isLoggedIn = 1;`,
+                    [friend, friend]);
+                if (row !== undefined) {
+                    loggedInFriends.push(friend);
+                }
+            } catch (err) {
+                console.error(`error on getting online friends ${err}`);
+                return null;
+            }
+        }
+
+        return loggedInFriends.join(',');
+    }
+
     async seedDatabase(): Promise<void> {
         if (!this.db) {
             throw new Error('database is null');
@@ -611,10 +688,10 @@ class UserDatabase {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
             );
 
-            let password = await bcrypt.hash('admin', 10);
+            let password = await bcrypt.hash('1!AdminAdmin', 10);
             await statement.run(3, 'Alice', password, 'aa@mail.com', null, null, 'bt@mail.com', null);
 
-            password = await bcrypt.hash('test', 10);
+            password = await bcrypt.hash('1!TestTest1!', 10);
             await statement.run(4, 'bob', password, 'bt@mail.com', null, null, 'aa@mail.com', null);
 
             await statement.finalize();
@@ -626,10 +703,57 @@ class UserDatabase {
                 }
             });
             await this.db.exec('COMMIT');
+            let gameSeed = await this.setGames({id: 3, username: 'Alice'}, {id: 2, username: 'local'}, '0');
+
+            if (typeof gameSeed === 'string') {
+                console.error(gameSeed);
+            }
+            gameSeed = await this.setGames({id: 4, username: 'bob'}, {id: 2, username: 'local'}, '1');
+            if (typeof gameSeed === 'string') {
+                console.error(gameSeed);
+            }
         } catch (err) {
             this.db.exec('ROLLBACK');
             console.error('error seeding database', err);
         }
+    }
+
+    private async setGames(user1: {id: number, username: string}, user2: {id: number, username: string}, gameId: string): Promise<boolean | string> {
+        const response = await fetch('http://game:3002/db/addPlayer', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: user1.username,
+                id: user1.id
+            })
+        });
+        if (!response.ok) {
+            return `adding player failed ${response.statusText}`;
+        }
+        const gameResponse = await fetch ('http://game:3002/db/addGame', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                player1: user1,
+                player2: user2,
+                player1Score: 11,
+                player2Score: 4,
+                winner: user1.username,
+                gameID: gameId,
+                gametype: 'local'
+            })
+        });
+
+        if (!gameResponse.ok) {
+            return `adding game failed: ${gameResponse.statusText}`;
+        }
+        return true;
     }
 
     private async isEmailUnique(email: string, id?: number): Promise<boolean> {
@@ -670,7 +794,8 @@ class UserDatabase {
                 pathToProfilePicture TEXT,
                 friends TEXT,
                 pendingFriends TEXT,
-                requestedFriends TEXT
+                requestedFriends TEXT,
+                isLoggedIn NUMERIC DEFAULT 0
                 CHECK (
                     email IS NOT NULL AND email <> ''
                     OR googleEmail IS NOT NULL AND googleEmail <> ''

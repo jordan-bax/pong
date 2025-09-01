@@ -144,6 +144,17 @@ class server {
     }
 
     private async registerRoutes() {
+        this.fastify.get('/getLoggedInFriends', async (req, reply) => {
+            if (!req.session.user) {
+                return reply.code(401).send({ error: 'unauthorized' });
+            }
+            const loggedInFriends = await this.db.getLoggedInFriends(req.session.user.email);
+            if (loggedInFriends === null) {
+                return reply.code(404).send({ error: 'noOnlineFriends' });
+            }
+            return reply.send(loggedInFriends);
+        })
+
         this.fastify.get('/search', async (req, reply) => {
             if (!req.session.user) {
                 return reply.code(401).send({ error: 'unauthorized' });

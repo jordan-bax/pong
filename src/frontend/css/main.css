@@ -141,3 +141,19 @@ th {
 .navBar {
     display: flex;
 }
+
+.winLoss {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 500px;
+    background-color: inherit;
+}
+
+.gameBreakdownDiv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    background-color: inherit;
+}

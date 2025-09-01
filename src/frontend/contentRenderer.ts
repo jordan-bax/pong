@@ -1,7 +1,7 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser } from "./routing.js";
+import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser, getLogginServer } from "./routing.js";
 import { openSettings } from "./settings.js";
 import {renderTournament} from "./renderTournament.js"
 import { listenForNotifications, dodo } from "./notifications.js";
@@ -843,39 +843,34 @@ interface gamaData {
 
 async function renderGameData(): Promise<HTMLDivElement | null> {
     try {
-        // TODO once game service works again test this
-        // const user = await fetch('api/user/me', {
-        //     credentials: 'include',
-        //     method: 'GET',
-        //     headers: {
-        //         'x-internal': 'true'
-        //     }
-        // });
-        // if (!user.ok) {
-        //     if (user.status === 404) return null;
-        //     throw new Error('failed to get userID');
-        // }
-        // const userId = await user.json();
-        // const response = await fetch(`api/game/db/getGameStats?${userId.user.userId}`, {
-        //     credentials: 'include',
-        //     method: 'GET'
-        // });
-        // if (!response.ok) {
-        //     if (response.status === 404) return null;
-        //     throw new Error('Failed to get game data from user');
-        // }
-        // const data = await response.json();
+        const user = await fetch('/api/user/me', {
+            credentials: 'include',
+            method: 'GET',
+            headers: {
+                'x-internal': 'true'
+            }
+        });
+        if (!user.ok) {
+            if (user.status === 404) return null;
+            throw new Error('failed to get userID');
+        }
+        const userId = await user.json();
+        const response = await fetch(`/api/game/db/getGameStats?playerid=${userId.user.userId}`, {
+            credentials: 'include',
+            method: 'GET'
+        });
+        if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error('Failed to get game data from user');
+        }
+        const data = await response.json();
         const gameDataDiv = document.createElement('div');
-        // const played = data.gamesPlayed;
-        // const won = data.gamesWon;
-        const played = 20;
-        const won = 4;
+        const played = data.gamesPlayed;
+        const won = data.gamesWon;
+        // const played = 20;
+        // const won = 4;
         
-        gameDataDiv.style.display = 'flex';
-        gameDataDiv.style.justifyContent = 'center';
-        gameDataDiv.style.alignItems = 'center';
-        gameDataDiv.style.height = '500px';
-        gameDataDiv.style.background = '#fff';
+        gameDataDiv.className = 'winLoss';
 
         const size = 250;
         const strokeWidth = 20;
@@ -944,6 +939,7 @@ interface kindOfGames {
     friends: number,
     ai: number,
     tournaments: number;
+    local: number;
 };
 
 function makeBar(value: number, maxValue: number, charHeight: number, padding: number, index: number, height: number, barWidth: number): SVGRectElement {
@@ -982,33 +978,81 @@ function makeLabel(name: string, padding: number, index: number, height: number,
     return label;
 }
 
-async function gameDataBrakedown(): Promise<HTMLDivElement> {
-    const gameDataBrakedownDiv = document.createElement('div');
-    gameDataBrakedownDiv.style.display = 'flex';
-    gameDataBrakedownDiv.style.justifyContent = 'center';
-    gameDataBrakedownDiv.style.alignItems = 'center';
-    gameDataBrakedownDiv.style.height = '200px';
-    gameDataBrakedownDiv.style.background = '#fff';
+interface Game {
+	id: number | null; // Game ID, can be null for new games
+	type?: string; // Optional type field for future use
+	player1: player;
+	player2: player;
+	player1Score: number;
+	player2Score: number;
+	winner: string;
+	createdAt: Date | null; // Date when the game was created, can be null for new games
+}
 
+async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
+    const gameDataBrakedownDiv = document.createElement('div');
+    gameDataBrakedownDiv.className = 'gameBreakdownDiv';
     const width = 500;
     const height = 300;
     const padding = 50;
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', width.toString());
-    svg.setAttribute('height', height.toString());
-    svg.style.background = '#fff';
+    svg.setAttribute('height', height.toString());;
     gameDataBrakedownDiv.appendChild(svg);
 
-    // TODO change to data from game and tournaments
-    const data: kindOfGames = {
-        random: 12,
-        friends: 8,
-        ai: 15,
-        tournaments: 4
+    // TODO check if tournament data is used
+    const user = await getLogginUserData();
+
+    if (user === null) return null;
+    const friend = await getFriends();
+    if (friend === null) return null;
+    const gameResponse = await fetch('/api/game/db/getGamesForPlayer', {
+        credentials: 'include',
+        method: 'GET'
+    });
+    if (!gameResponse.ok) {
+        throw new Error('failed to get game data');
+    }
+
+    const gameData = await gameResponse.json() as Game[]
+
+    let data: kindOfGames = {
+        random: 0,
+        friends: 0,
+        ai: 0,
+        tournaments: 0,
+        local: 0,
     };
-    const max = Math.max(data.random, data.friends, data.ai, data.tournaments);
-    const barWidth = (width - padding * 2) / 4;
+
+    gameData.forEach((game) => {
+        let flag = false;
+        if (game.player2.userId === 0) {
+            ++data.ai;
+            flag = true;
+        }
+        else if (game.player2.userId === 1) {
+            ++data.random;
+            flag = true
+        }
+        else if (game.player2.userId === 2) {
+            ++data.local;
+            flag = true;
+        }
+        if (game.type === 'tournament') {
+            ++data.tournaments;
+            flag = true;
+        }
+        if (friend.includes(game.player2.username)) {
+            ++data.friends;
+            flag = true;
+        }
+        if (!flag) {
+            ++data.random;
+        }
+    })
+    const max = Math.max(data.random, data.friends, data.ai, data.tournaments, data.local);
+    const barWidth = (width - padding * 2) / 5;
     const charHeigth = height - padding * 2;
 
     let bar = makeBar(data.random, max, charHeigth, padding, 0, height, barWidth);
@@ -1035,6 +1079,13 @@ async function gameDataBrakedown(): Promise<HTMLDivElement> {
     bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
     valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
     label = makeLabel('tournaments', padding, 3, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
+
+    bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
+    valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
+    label = makeLabel('local', padding, 4, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
     svg.appendChild(label);

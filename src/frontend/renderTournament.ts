@@ -37,54 +37,42 @@ export async function renderTournament() {
     content.innerHTML = ""
     const div = document.createElement("div")
 
-    // Create container for the create tournament button and form
     const createTournamentContainer = document.createElement("div")
     createTournamentContainer.className = "create-tournament-container"
 
-    // Create the button to show the form
     const showFormButton = document.createElement("button")
     showFormButton.textContent = "Create New Tournament"
     showFormButton.className = "show-form-btn"
     showFormButton.addEventListener("click", () => {
-        // Hide the button and show the form
         showFormButton.style.display = "none"
         createTournamentFormContainer.style.display = "block"
     })
 
-    // Create container for the form (initially hidden)
     const createTournamentFormContainer = document.createElement("div")
     createTournamentFormContainer.style.display = "none"
 
-    // Create the form inside the container
     await createTournamentForm(createTournamentFormContainer, userID, () => {
-        // On successful submission, hide the form and show the button again
         createTournamentFormContainer.style.display = "none"
         showFormButton.style.display = "block"
     })
 
-    // Add button and form to the container
     createTournamentContainer.appendChild(showFormButton)
     createTournamentContainer.appendChild(createTournamentFormContainer)
 
-    // Add the container to the main div
     div.appendChild(createTournamentContainer)
     div.appendChild(document.createElement('br'))
 
-    // Load tournament data initially
     await loadTournamentData(div, userID);
 
-    // Set up interval to refresh tournament data every 30 seconds
     refreshIntervalId = window.setInterval(async () => {
         await loadTournamentData(div, userID);
-    }, 30000); // 30 seconds
+    }, 30000);
 
     content.appendChild(div)
 
-    // Set up cleanup when user navigates away
     window.addEventListener('beforeunload', cleanupIntervals);
 }
 
-// Function to load tournament data (extracted from the original renderTournament)
 async function loadTournamentData(container: HTMLDivElement, userID: number) {
     let toursDict: ToursDict = {
         finished: [],
@@ -114,7 +102,6 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
         }
     }
 
-    // Remove existing tournament tables if they exist
     const existingTablesContainer = container.querySelector('.tables-container');
     if (existingTablesContainer) {
         container.removeChild(existingTablesContainer);
@@ -157,7 +144,6 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
     container.appendChild(tablesContainer)
 }
 
-// Cleanup function to clear intervals
 function cleanupIntervals() {
     if (refreshIntervalId !== null) {
         window.clearInterval(refreshIntervalId);
@@ -165,14 +151,11 @@ function cleanupIntervals() {
     }
 }
 
-// Add this event listener to clean up when the page is being unloaded
 window.addEventListener('beforeunload', cleanupIntervals);
 
-// Modified version of createTournament that only creates the form
-async function createTournamentForm(
-    container: HTMLDivElement,
-    userID: number,
-    onSuccess: () => void
+async function createTournamentForm( container: HTMLDivElement,
+                                    userID: number,
+                                    onSuccess: () => void
 ) {
     container.innerHTML = ""
     const form = document.createElement("form")
@@ -186,12 +169,10 @@ async function createTournamentForm(
     playersField.forEach(field => form.appendChild(field))
     lockField.forEach(field => form.appendChild(field))
 
-    // Add a cancel button
     const cancelButton = document.createElement("button")
     cancelButton.type = "button"
     cancelButton.textContent = "Cancel"
     cancelButton.addEventListener("click", () => {
-        // Hide the form and show the button again
         onSuccess()
     })
     form.appendChild(cancelButton)
@@ -222,9 +203,7 @@ async function createTournamentForm(
             if (result !== 201) {
                 console.log("error it", result)
             } else {
-                // Call the success callback to hide the form
                 onSuccess()
-                // Refresh the tournament list
                 if (refreshIntervalId !== null) {
                     window.clearInterval(refreshIntervalId);
                 }

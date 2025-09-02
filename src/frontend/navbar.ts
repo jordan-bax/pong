@@ -47,17 +47,6 @@ export async function renderNavbar(): Promise<void> {
         renderContent('home');
     };
     navbar.appendChild(homeLink);
-
-    let gameLink = document.createElement('a');
-    gameLink.href = '/gameMenu';
-    gameLink.textContent = navbarText.gameNavbarText;
-    gameLink.className = 'btn navItem';
-    gameLink.onclick = (e) => {
-        e.preventDefault();
-        history.pushState({}, '', '/gameMenu');
-        renderContent('game');
-    };
-    navbar.appendChild(gameLink);
     
     dropdowngamemenu(navbar);
     

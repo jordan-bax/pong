@@ -1,5 +1,5 @@
 export interface gamestateinterface {
-	gameID: string;
+	gameID: number;
 	gameActive: boolean;
 	gamePause: boolean;
 	gametype: string;
@@ -7,7 +7,13 @@ export interface gamestateinterface {
 	player2: pcInterface;
 	ball: ballInterface;
 }
-
+export interface basicinfo {
+	paddelspeed: number;
+	ball_dx: number;
+	ball_dy: number;
+	ball_speed: number;
+	ball_staticSpeed: number;
+}
 export interface gameWallsInterface {
 	width: number;
 	height: number;
@@ -22,7 +28,8 @@ export interface scoreInterface {
 	player2Name: string;
 }
 export interface pcInterface {
-	id: string | null; // Use string or null for player ID
+	id: number | null; // Use string or null for player ID
+	active: boolean;
 	name: string;
 	x: number;
 	y: number;
@@ -53,6 +60,7 @@ export const gameWall: gameWallsInterface = {
 };
 export var player1Template: pcInterface = {
 	id: null,
+	active: false,
 	name: "Player 1",
 	x: 2,
 	y: 50,
@@ -63,6 +71,7 @@ export var player1Template: pcInterface = {
 };
 export var player2Template: pcInterface = {
 	id: null,
+	active: false,
 	name: "Player 2",
 	x: 198,
 	y: 50,

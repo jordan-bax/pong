@@ -46,6 +46,7 @@ export async function initializeDatabase() {
 	await db.run(`
 		CREATE TABLE IF NOT EXISTS player (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			playerid INTEGER UNIQUE,
 			username TEXT UNIQUE NOT NULL
 		)
 	`);
@@ -121,6 +122,7 @@ export async function createPlayer(id: number, username: string): Promise<player
 export async function createGame(game: Game): Promise<Game> {
 	const db = await dbPromise;
 	const { type, player1, player2, player1Score, player2Score, winner } = game;
+	console.log('Creating game with data:', game);
 	if (player1.id === player2.id && player2.id == 2) {
 		throw new Error("Players must be different");
 	}
@@ -141,8 +143,9 @@ export async function createGame(game: Game): Promise<Game> {
 	}
 	else {
 	result = await db.run(
-		`INSERT INTO game (player1_id, player2_id, player1Score, player2Score, winner) 
-		 VALUES (?, ?, ?, ?, ?)`,
+		`INSERT INTO game (type, player1_id, player2_id, player1Score, player2Score, winner) 
+		 VALUES (?, ?, ?, ?, ?, ?)`,
+		type,
 		player1.id,
 		player2.id,
 		player1Score,

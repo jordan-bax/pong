@@ -1,4 +1,4 @@
-import {createNewTable1} from './Tables';
+// import {createNewTable1} from './Tables';
 import { getLanguage, setLanguage } from "./index.js";
 import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
 import { setNotifications } from './notifications';
@@ -113,6 +113,12 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 	const dropbtn = document.createElement('button');
 	dropbtn.className = 'dropbtn';
 	dropbtn.textContent = 'Game Menu';
+	dropbtn.onclick = (e) => {
+		e.preventDefault();
+		console.log('Pong option clicked');
+		history.pushState({}, '', '/gameMenu');
+		renderContent('game');
+	};
 
 	const dropdownContent = document.createElement('div');
 	dropdownContent.className = 'dropdown-content';
@@ -134,7 +140,9 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 	option2.onclick = (e) => {
 		e.preventDefault();
 		console.log('Game history option clicked');
-		createGameHistoryTable(content as HTMLIFrameElement);
+		
+		history.pushState({}, '', '/gameHistory');
+		renderContent('history');
 	};
 	dropdownContent.appendChild(option2);
 

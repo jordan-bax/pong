@@ -10,7 +10,8 @@ export const routeFromPath: { [key: string]: string } = {
     '/google': 'google',
     '/gameMenu': 'game',
     '/settings': 'settings',
-    '/tournament': 'tournament'
+    '/tournament': 'tournament',
+    '/gameHistory': 'history'
 };
 
 export interface userInfo {
@@ -505,7 +506,7 @@ export async function handleGoogleCredentials(request:{ credential: string}): Pr
     }
 }
 
-async function getIdFromMe(): Promise<number | null> {
+export async function getIdFromMe(): Promise<number | null> {
     const response = await fetch('/api/user/me', {
         headers: {
             "x-internal": "true"
@@ -519,7 +520,7 @@ async function getIdFromMe(): Promise<number | null> {
     const data = await response.json();
     return data.user.userId || null;
 }
-async function getUsernameFromMeData(): Promise<string | null> {
+export async function getUsernameFromMeData(): Promise<string | null> {
     const response = await fetch('/api/user/me/data', {
         headers: {"x-internal": "true"},
         credentials: 'include',

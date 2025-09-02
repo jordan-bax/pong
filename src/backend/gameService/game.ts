@@ -47,6 +47,7 @@ var ai_var: aiInterface = {
 var ballSpeed: number;
 let games: Array<gamestateinterface|null> = [];
 let matching: Array<gamestateinterface|null> = [];
+let invited: Array<gamestateinterface|null> = [];
 var fps: number = 30; // Default frames per second
 startGame(); // Start the game loop
 async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
@@ -78,25 +79,42 @@ async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
 //     } while (games.some(game => game && game.gameID === id));
 //     return id;
 // }
-function lastId(): number {
-	if (games.length === 0 && matching.length === 0) {
-		return 1;
+function lastIdInArray(arr: Array<gamestateinterface | null>): number {
+	if (arr.length === 0) {
+		return 0;
 	}
-	// Find the highest game ID in the games array
-	const maxId = games.reduce((max, game) => {
+	// Find the highest game ID in the array
+	return arr.reduce((max, game) => {
 		if (game && game.gameID > max) {
 			return game.gameID;
 		}
 		return max;
 	}, 0);
-	const maxMatchingId = matching.reduce((max, game) => {
-		if (game && game.gameID > max) {
-			return game.gameID;
-		}
-		return max;
-	}, 0);
+}
 
-	return Math.max(maxId, maxMatchingId);
+async function lastId(): Promise<number> {
+	if (games.length === 0 && matching.length === 0 && invited.length === 0) {
+		var gameid = await dbfunc.getLastGameId(); // Get the last game ID from the database of finished games
+		if (gameid === null) {
+			gameid = 0; // Start with 0 if no games exist
+		}
+		return gameid;
+	}
+	// const maxId = games.reduce((max, game) => {
+	// 	if (game && game.gameID > max) {
+	// 		return game.gameID;
+	// 	}
+	// 	return max;
+	// }, 0);
+	// const maxMatchingId = matching.reduce((max, game) => {
+	// 	if (game && game.gameID > max) {
+	// 		return game.gameID;
+	// 	}
+	// 	return max;
+	// }, 0);
+	const maxId = Math.max(0, lastIdInArray(games), lastIdInArray(invited), lastIdInArray(matching));
+
+	return maxId;
 }
 
 async function makeNewGame(type: string, playername: string, playerid: number): Promise<gamestateinterface > {
@@ -104,11 +122,9 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 	// const gameid = generateUniqueGameId(); // Generate a unique game ID
 	
 
-	var gameid = await dbfunc.getLastGameId();
-	if (gameid === null) {
-		gameid = 1; // Start with 1 if no games exist
-	}
-	gameid = Math.max(lastId(), gameid);
+
+	const gameid = await lastId().then(id => id + 1); // Increment the last game ID
+
 	var player2Id: number | null = null;
 	switch (type) {
 		case 'ai':
@@ -126,7 +142,7 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 		default:
 			throw new Error('Invalid game type');
 	}
-	gameid++;
+	// gameid++;
 	var newGame: gamestateinterface = {
 		player1: {...player1Template, id: playerid, name: playername},
 		player2: {...player2Template, id: player2Id, name: 'Player 2'},
@@ -870,6 +886,15 @@ async function sendNotificationToUser(userId: number, message: string)  {
 		console.log('Notification sent successfully:', data);
 	}
 }
+
+fastify.get('/getopengames', async (req, reply) => {
+	var id = await getUserIdFromRequest(req);
+	if (!id) {
+		id = GameTypeId.UNKNOWN; // Default player ID for unknown users
+	}
+	const openGames = invited.filter(game => game?.player1.id == id || game?.player2.id == id);
+	reply.send(openGames);
+});
 const matchingBodySchema = {
   type: 'object',
   properties: {
@@ -881,15 +906,36 @@ const matchingBodySchema = {
   required: ['playerid1', 'playerid2', 'gametype']
 };
 
-
-fastify.post('/matching', {schema:{body: matchingBodySchema} }, async (req, reply) => {
+async function getUserNameById(userId: number): Promise<string> {
+	const player = await dbfunc.getPlayerById(userId);
+	if (player) {
+		return player.username;
+	}
+	return 'Guest';
+}
+fastify.post('/preparegame', {schema:{body: matchingBodySchema} }, async (req, reply) => {
 	const { playerid1, playerid2, gametype } = req.body as { playerid1: number; playerid2: number; gametype: string };
 	console.log('Matching players:', playerid1, playerid2, 'Game type:', gametype);
 	// Implement your matching logic here
-	const gameid = lastId() + 1; // Generate a new game ID
+	if (playerid1 === undefined || playerid2 === undefined || !gametype) {
+		reply.status(400).send({ error: 'Invalid player IDs or game type' });
+		return;
+	}
+	if (playerid1 === playerid2) {
+		reply.status(400).send({ error: 'Player IDs must be different' });
+		return;
+	}
+	const player1Name = await getUserNameById(playerid1);
+	const player2Name = await getUserNameById(playerid2);
+	console.log('Player names:', player1Name, player2Name);
+	// if (player1Name === 'Guest' || player2Name === 'Guest') {
+	// 	reply.status(400).send({ error: 'One or both player IDs are invalid' });
+	// 	return;
+	// }
+	const gameid = await lastId().then(id => id + 1); // Generate a new game ID
 	const newGame: gamestateinterface = {
-		player1: {...player1Template, id: playerid1, name: 'Player 1'},
-		player2: {...player2Template, id: playerid2, name: 'Player 2'},
+		player1: {...player1Template, id: playerid1, name: player1Name},
+		player2: {...player2Template, id: playerid2, name: player2Name},
 		ball: {...ballvarTemplate, speed: ballSpeed},
 		gameActive: true,
 		gamePause: true,
@@ -897,7 +943,7 @@ fastify.post('/matching', {schema:{body: matchingBodySchema} }, async (req, repl
 		gametype: gametype,
 	};
 	console.log('New game created for matching:', newGame);
-	matching.push(newGame); // Add the new game to the matching array
+	invited.push(newGame); // Add the new game to the invited array
 	if (gametype == 'ranking')
 	{
 		if (playerid1 > 0)
@@ -915,17 +961,22 @@ fastify.post('/matching', {schema:{body: matchingBodySchema} }, async (req, repl
 
 });
 
+async function prepareDatabase() {
+	await dbfunc.initializeDatabase().catch(console.error);
+
+	await dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
+	await dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
+	await dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
+	console.log('Database prepared');
+}
+
 fastify.listen({host: "0.0.0.0", port: 3002 }, err => {
 	// seedDatabase();
 	if (err) {
 		fastify.log.error((err));
 		process.exit(1);
 	}
-	dbfunc.initializeDatabase().catch(console.error);
-
-	dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
-	dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
-	dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
+	prepareDatabase().catch(console.error);
 	addNotification('Server started on port 3002');
 });
 

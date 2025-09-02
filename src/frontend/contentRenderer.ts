@@ -5,6 +5,7 @@ import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoo
 import { openSettings } from "./settings.js";
 import {renderTournament} from "./renderTournament.js"
 import { listenForNotifications, dodo } from "./notifications.js";
+import { createGameHistoryTable } from "./gameHistoryTable.js";
 
 declare global {
     interface Window {
@@ -1108,15 +1109,18 @@ export async function renderContent (route: string): Promise<void> {
             content.appendChild(registerForm);
             break;
         case 'game':
-            content.textContent = 'Game page is under construction.';
+            // content.textContent = 'Game page is under construction.';
             pongbutton();
             break;
         case 'settings':
-            content.textContent = 'Settings page is under construction.';
+            // content.textContent = 'Settings page is under construction.';
             openSettings();
             break;
         case 'tournament':
             renderTournament();
+            break;
+        case 'history':
+            createGameHistoryTable(content as HTMLIFrameElement);
             break;
         default:
             content.textContent = textData.notFoundText;

@@ -1,4 +1,5 @@
-import {startGame} from './renderPong.js';
+import {quickjoin} from './renderPong.js';
+import { joinGame } from './joingame.js';
 import { createGameHistoryTable } from './gameHistoryTable.js';
 // import {  } from './sharedValuesPong.js';
 import {setNotifications} from './notifications.js';
@@ -112,12 +113,20 @@ function createCenterButtons(){
 	container.appendChild(test);
 
 	const online = document.createElement('button');
-	online.textContent = 'online';
+	online.textContent = 'quick join';
 	online.style.fontSize = '1.2em';
 	online.style.padding = '10px 20px';
 	online.onclick = () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		nextFunction( () => startGame('online') );
+		nextFunction( () => quickjoin('online') );
+	};
+	const joingame = document.createElement('button');
+	joingame.textContent = 'join game';
+	joingame.style.fontSize = '1.2em';
+	joingame.style.padding = '10px 20px';
+	joingame.onclick = () => {
+		frame?.removeChild(container); // Remove the container before starting the game
+		joinGame('joingame');
 	};
 	const button1 = document.createElement('button');
 	button1.textContent = 'local';
@@ -125,7 +134,7 @@ function createCenterButtons(){
 	button1.style.padding = '10px 20px';
 	button1.onclick = () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		nextFunction( () => startGame('local') );
+		nextFunction( () => quickjoin('local') );
 	};
 
 	const button2 = document.createElement('button');
@@ -134,25 +143,26 @@ function createCenterButtons(){
 	button2.style.padding = '10px 20px';
 	button2.onclick = () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		nextFunction( () => startGame('ai') );
+		nextFunction( () => quickjoin('ai') );
 	};
 	
-	const input = document.createElement('input');
-	input.type = 'number';
-	input.placeholder = 'how many fps?';
-	input.style.fontSize = '1.2em';
-	input.style.padding = '10px 20px';
+	// const input = document.createElement('input');
+	// input.type = 'number';
+	// input.placeholder = 'how many fps?';
+	// input.style.fontSize = '1.2em';
+	// input.style.padding = '10px 20px';
 
-	input.addEventListener('input', () => {
-		fps = parseInt(input.value) || 10; // Update fps based on input value, default to 10 if invalid
-		// You can access the input value with input.value
-		console.log('Input value:', input.value, 'FPS:', fps);
-	});
+	// input.addEventListener('input', () => {
+	// 	fps = parseInt(input.value) || 10; // Update fps based on input value, default to 10 if invalid
+	// 	// You can access the input value with input.value
+	// 	console.log('Input value:', input.value, 'FPS:', fps);
+	// });
 
 	container.appendChild(online);
+	container.appendChild(joingame);
 	container.appendChild(button1);
 	container.appendChild(button2);
-	container.appendChild(input);
+	// container.appendChild(input);
 	if (!frame) {
 		console.error('Content frame not found');
 		return;
@@ -161,7 +171,7 @@ function createCenterButtons(){
 	// document.body.appendChild(container);
 }
 
-function nextFunction(callback: () => void): void {
+export function nextFunction(callback: () => void): void {
 	const navbar = document.getElementById('navbar');
 	const content = document.getElementById('content');
 	if (!navbar || !content) {

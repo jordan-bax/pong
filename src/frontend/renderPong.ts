@@ -94,12 +94,9 @@ async function getUserNameData(){
     
 }
 
-export async function startGame(gametype :string) : Promise<scoreInterface> {
-    const playername = await getUserNameData();
-    if (!playername) {
-        console.error('Failed to get player name, cannot start game');
-        return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the player name is not available
-    }
+
+export async function quickjoin(gametype :string): Promise<void> {
+    // window.location.href = '/pong/quickjoin'; // Redirect to the quick join page
     console.log('Starting game with AI:', gametype);
     const gameinfo = await fetch('/api/game/start', {
         method: 'POST',
@@ -107,14 +104,55 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ type: gametype, playername: playername }) // your data here
+        body: JSON.stringify({ type: gametype }) // your data here
     });
     g_gametype = gametype; // Store the game type for later use
     console.log('Game started with ID:',  'outher data:', gameinfo);
     if (!gameinfo.ok) {
         console.error('Failed to start game:', gameinfo.statusText);
-        return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the fetch fails
+        return; // Return empty scores if the fetch fails
     }
+    console.log('Game successfully started, launching game interface...');
+    await startGame(gametype);
+    return;
+}
+async function endschreen(winner: string, player1Score: number, player2Score: number): Promise<void> {
+    const endScreen = document.createElement('div');
+    endScreen.style.position = 'absolute';
+    endScreen.style.width = '100%';
+    endScreen.style.height = '100%';
+    endScreen.style.backgroundColor = 'black'; // Set the background color to black
+    endScreen.style.color = 'white'; // Set the text color to white
+    endScreen.style.display = 'flex';
+    endScreen.style.flexDirection = 'column';
+    endScreen.style.justifyContent = 'center';
+    endScreen.style.alignItems = 'center';
+    endScreen.style.fontSize = '24px';
+    endScreen.innerHTML = `
+        <h1>${winner} wins!</h1>
+        <p>Final Score: ${player1Score} - ${player2Score}</p>
+        <button id="restartButton">Restart Game</button>
+        <button id="exitButton">Exit to Main Menu</button>
+    `;
+    document.body.appendChild(endScreen);
+
+    document.getElementById('restartButton')?.addEventListener('click', () => {
+        document.body.removeChild(endScreen);
+        startGame(g_gametype); // Restart the game with the same game type
+    });
+
+    document.getElementById('exitButton')?.addEventListener('click', () => {
+        window.location.href = '/pong'; // Redirect to the main menu
+    });
+} 
+
+export async function startGame(gametype :string) : Promise<scoreInterface> {
+    // const playername = await getUserNameData();
+    // if (!playername) {
+    //     console.error('Failed to get player name, cannot start game');
+    //     return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the player name is not available
+    // }
+    console.log('Starting game with type:', gametype);
     const delay: number = gamespeed(); // Set the initial delay based on the game speed
     let lastFrame: HTMLDivElement | null = null;
     var background = makeBackground();

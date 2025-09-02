@@ -202,6 +202,7 @@ export const getToursSchema = {
                     id: { type: 'number' },
                     name: { type: 'string' },
                     rounds: { type: 'number' },
+                    round: {type: 'number'},
                     isRunning: { type: 'boolean' },
                     isFinished: { type: 'boolean' },
                     lockTime: { type: 'number' },

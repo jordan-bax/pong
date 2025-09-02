@@ -1,8 +1,8 @@
-import { TournamentDB } from "./tournamentDB"
+import { TourDB } from "./tournamentDB"
 
-const db = new TournamentDB
+const db = new TourDB
 
-class TournamentService {
+class TourService {
     private checkInterval: NodeJS.Timeout | null
     private isChecking: boolean
 
@@ -11,13 +11,13 @@ class TournamentService {
         this.isChecking = false
     }
 
-    async init() {
+    async init(dbPath: string) {
         if (this.checkInterval === null) {
-            this.checkInterval = setInterval(() => this.checkTournaments(), 1000)
+            this.checkInterval = setInterval(() => this.checkTours(), 1000)
         }
 
         try {
-            await db.initDB('./db/tournament.sqlite')
+            await db.initDB(dbPath)
         } catch (error) {
             console.error(error)
             throw error
@@ -148,9 +148,9 @@ class TournamentService {
         }
     }
 
-    async allTournaments() {
+    async allTours() {
         try {
-            let tours = await db.allTournaments()
+            let tours = await db.allTours()
             return tours
         } catch (error) {
             console.error(error)
@@ -307,7 +307,7 @@ class TournamentService {
         }
     }
 
-    private async checkTournaments() {
+    private async checkTours() {
         if (this.isChecking) {
             return
         }
@@ -333,8 +333,8 @@ class TournamentService {
             for (let index = 0; index < runningTours.length; index++) {
                 const roundDone = await db.roundDone(runningTours[index].id)
                 if (roundDone) {
-                    const tournamentDone = await db.isTourDone(runningTours[index].id)
-                    if (!tournamentDone) {
+                    const tourDone = await db.isTourDone(runningTours[index].id)
+                    if (!tourDone) {
                         await db.nextMatches(runningTours[index].id)
                         await this.match(runningTours[index].id)
                     }
@@ -348,4 +348,4 @@ class TournamentService {
     }
 }
 
-export default TournamentService
+export default TourService

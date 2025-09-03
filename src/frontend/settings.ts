@@ -28,7 +28,7 @@ function createRow(leftContent: any, rightContent: any): HTMLTableRowElement {
 async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 	const language = await getLanguage();
 	const languageDropdown = document.createElement('select');
-		const options = ['NL', 'EN'];
+		const options = ['NL', 'EN', 'DE'];
 		options.forEach((text, index) => {
 			const option = document.createElement('option');
 			option.value  = options[index];
@@ -47,11 +47,11 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 				option.selected = false;
 			}
 		})
-		languageDropdown.addEventListener('change', (event) => {
+		languageDropdown.addEventListener('change',async (event) => {
 			const target = event.target as HTMLSelectElement;
-			setLanguage(target.value);
-			checkSession();
-			openSettings(); // Refresh settings after changing language
+			await setLanguage(target.value);
+			await checkSession();
+			await openSettings(); // Refresh settings after changing language
 		})
 	const languagetext = document.createElement('div');
 	languagetext.textContent = 'Language Settings:';

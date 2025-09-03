@@ -174,7 +174,7 @@ class server {
             }
             const query = (req.query as {q?: string}).q?.toLocaleLowerCase();
             if (typeof query === 'undefined' || query === '') {
-                return reply.code(400).send({ error: 'Missing query' });
+                return reply.code(400).send({ error: 'missingQuery' });
             }
 
             const users = await this.db.getUsers(query, req.session.user.email);
@@ -302,7 +302,7 @@ class server {
         this.fastify.post('/heartbeat', async (req, reply) => {
             const user = req.session.user;
             if (!user) {
-                return reply.code(401).send({error: 'unatauthorized' });
+                return reply.code(401).send({error: 'unauthorized' });
             }
             this.db.setLoggedStatus(user.email, Date.now());
         })
@@ -374,10 +374,10 @@ class server {
             try {
                 const dbInsert = await this.db.insertUserIntoDatabase(userData.username, hash, userData.email, null, userData.pathToProfileP);
                 if (typeof dbInsert !== 'boolean'){
-                    return reply.code(422).send({ error: 'unprocessable Entity' });
+                    return reply.code(422).send({ error: 'unprocessableEntity' });
                 }
                 if (!dbInsert) {
-                    return reply.code(422).send({ error: 'unprocessable Entity' });
+                    return reply.code(422).send({ error: 'unprocessableEntity' });
                 }
                 const user = await this.db.findUserByEmail(userData.email);
                 if (!user) {
@@ -457,10 +457,10 @@ class server {
                     const googlePicture = await this.downloadGooglePicure(payload.picture, payload.sub)
                     const dbInsert = await this.db.insertGoogleUser(payload, googlePicture);
                     if (typeof dbInsert !== 'boolean') {
-                        return reply.code(422).send({ error: 'unprocessable entity' });
+                        return reply.code(422).send({ error: 'unprocessableEntity' });
                     }
                     if (!dbInsert) {
-                        return reply.code(422).send({ error: 'unprocessable entity' });
+                        return reply.code(422).send({ error: 'unprocessableEntity' });
                     }
                     user = await this.db.findUserByEmail(payload.email);
                 }
@@ -565,7 +565,7 @@ class server {
                     userData.oldUsername
                 );
                 if (typeof dbUpdate !== 'boolean') {
-                    return reply.code(422).send({ error: 'Unprocessable Entity'})
+                    return reply.code(422).send({ error: 'unprocessableEntity'})
                 } else {
                     if (dbUpdate === false) {
                         return reply.code(404).send({ error: 'noUser' });

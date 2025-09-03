@@ -49,7 +49,7 @@ export async function setLanguage(language: string): Promise<void> {
 }
 
 export async function getLanguage(): Promise<string>{
-    await fetch('api/page_content/language', {
+    const lang = await fetch('api/page_content/language', {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -62,5 +62,6 @@ export async function getLanguage(): Promise<string>{
         return language;
     })
     .catch(() => {});
+    if (lang) return lang;
     return 'en';
 }

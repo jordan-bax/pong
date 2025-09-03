@@ -1,7 +1,7 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, googleUserUpdate, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser, getLogginServer } from "./routing.js";
+import { getLoggin, login, updateUserInfo, handleGoogleCheck, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser, getLogginServer } from "./routing.js";
 import { openSettings } from "./settings.js";
 import {renderTournament} from "./renderTournament.js"
 import { listenForNotifications, dodo } from "./notifications.js";
@@ -193,6 +193,24 @@ async function renderFriendLists(): Promise<HTMLTableElement> {
     return friendLists;
 }
 
+function addOnlineCircle(status: number, username: string | null) {
+    const statusCircle = document.createElement('div');
+
+    statusCircle.className = 'statusCircle';
+    if (typeof username === 'string') {
+        statusCircle.id = `statusCircle${username}`;
+    } else {
+        statusCircle.id = '';
+    }
+    if (status === 1) {
+        statusCircle.style.backgroundColor = 'green';
+    } else {
+        statusCircle.style.backgroundColor = 'transparent';
+    }
+
+    return statusCircle;
+}
+
 async function friendsList(): Promise<HTMLTableRowElement> {
     const listRow = document.createElement('tr');
     const title = document.createElement('td');
@@ -214,8 +232,9 @@ async function friendsList(): Promise<HTMLTableRowElement> {
             }
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
-            // TODO add online status
+            const online = addOnlineCircle(user[0].isLoggedIn, user[0].username);
             list.appendChild(listItem);
+            listItem.appendChild(online);
         });
     } else {
         const user = await searchUsers(friends);
@@ -225,7 +244,9 @@ async function friendsList(): Promise<HTMLTableRowElement> {
         if (user.length) {
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
+            const online = addOnlineCircle(user[0].isLoggedIn, user[0].username);
             list.appendChild(listItem);
+            listItem.appendChild(online);
         }
     }
     data.appendChild(list);
@@ -647,42 +668,6 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     return passwordOverlay;
 }
 
-async function handleGoogleCheck(request:{ idToken: string, user: userInfo}) {
-    const formInfo = document.getElementById('profileForm') as HTMLFormElement;
-    const formData = new FormData(formInfo);
-    const response = await fetch('api/user/csrf-token', {
-        credentials: 'include',
-        headers: {
-            "x-internal": "true"
-        }
-    });
-    const data = await response.json();
-    const csrf = data.csrfToken;
-    const googleResponse = await fetch('api/user/google-check', {
-        method: 'POST',
-        headers: {
-            'x-csrf-token': csrf,
-            'Content-Type': 'application/json',
-            "x-internal": "true"
-        },
-        body: JSON.stringify({idToken: request.idToken}),
-        credentials: 'include',
-    });
-    if (googleResponse.ok) {
-        googleUserUpdate(formData);
-    } else {
-        let errorMessage;
-        const cloned = googleResponse.clone();
-        try {
-            errorMessage = await cloned.json();
-        } catch (err) {
-            const text = await cloned.text();
-            errorMessage = { error: text };
-        }
-        console.error('google login failed:', errorMessage);
-    }
-}
-
 async function renderProfileData(text: content): Promise<HTMLFormElement | null> {
     if (!getLoggin()) {
         return null;
@@ -691,21 +676,24 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
     if (!user) {
         return null;
     }
-    const response = await fetch('/api/user/me', {
+    await fetch('/api/user/me', {
         method: 'GET',
         credentials: 'include',
         headers: {
             'x-internal': 'true'
         }
-    });
-    let data: any = null;
-    if (response.ok) {
-        data = await response.json();
-    }
-    if (data) {
-        await listenForNotifications(data.user.userId as number);
-        dodo();
-    }
+    })
+    .then( async (response) => {
+        let data: any = null;
+        if (response.ok) {
+            data = await response.json();
+        }
+        if (data) {
+            await listenForNotifications(data.user.userId as number);
+            dodo();
+        }
+    })
+    .catch(() => {});
     const profileForm = document.createElement('form');
     profileForm.style.alignSelf = 'center';
     profileForm.id = 'profileForm';
@@ -804,41 +792,36 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
             headers: {
                 "x-internal": "true"
             }
-        });
-        if (!respone.ok) {
-            if (respone.status == 404) {
-                return null;
+        })
+        .then(async (response) => {
+            if (!response.ok) {
+                if (response.status == 404) return null;
+                throw new Error(`Failed to load image:${response.statusText}`);
             }
-            throw new Error(`Failed to load image:${respone.statusText}`);
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+            const imgElement = document.createElement('img');
+            imgElement.src = imageUrl;
+            imgElement.alt = 'Profile Picture';
+            imgElement.style.width = '10%';
+            imgElement.style.aspectRatio = '1/1';
+            imgElement.id = 'profilePicture';
+            return imgElement;
+        })
+        .catch(() => {});
+        if (respone) {
+            return respone;
         }
-        const blob = await respone.blob();
-        const imageUrl = URL.createObjectURL(blob);
-        const imgElement = document.createElement('img');
-        imgElement.src = imageUrl;
-        imgElement.alt = 'Profile Picture';
-        imgElement.style.width = '10%';
-        imgElement.style.aspectRatio = '1/1';
-        imgElement.id = 'profilePicture';
-        return imgElement;
     } catch (err) {
         console.error('Error loading profile picture', err);
         return null;
     }
+    return null;
 }
 
 interface player {
     userId: number;
     username: string;
-}
-
-interface gamaData {
-    player1: player;
-    player2: player;
-    player1Score: number;
-    player2Score: number;
-    winner: string;
-    gameID: string;
-    gameType: string;
 }
 
 async function renderGameData(): Promise<HTMLDivElement | null> {
@@ -849,85 +832,95 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
             headers: {
                 'x-internal': 'true'
             }
-        });
-        if (!user.ok) {
-            if (user.status === 404) return null;
-            throw new Error('failed to get userID');
+        })
+        .then(async (user) => {
+            if (!user.ok) {
+                if (user.status === 404) return null;
+                throw new Error('failed ot get userID');
+            }
+            const userId = await user.json();
+            const playser = await fetch(`/api/gmae/db/getGameStats?playerid=${userId.user.userId}`, {
+                credentials: 'include',
+                method: 'GET'
+            })
+            .then (async (response) => {
+                if (!response.ok) {
+                    if (response.status === 404) return null;
+                    throw new Error('Failed to get game data from user');
+                }
+                const data = await response.json();
+                const gameDataDiv = document.createElement('div');
+                const played = data.gamesPlayed;
+                const won = data.gamesWon;
+                
+                gameDataDiv.className = 'winLoss';
+
+                const size = 250;
+                const strokeWidth = 20;
+                const radius = (size - strokeWidth) / 2;
+                const circumference = 2 * Math.PI * radius;
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', size.toString());
+                svg.setAttribute("height", size.toString());
+
+                const bigCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                bigCircle.setAttribute("cx", (size / 2).toString());
+                bigCircle.setAttribute('cy', (size / 2).toString());
+                bigCircle.setAttribute('r', radius.toString());
+                bigCircle.setAttribute('stroke', '#888');
+                bigCircle.setAttribute('stroke-width', strokeWidth.toString());
+                bigCircle.setAttribute('fill', 'none');
+                svg.appendChild(bigCircle);
+
+                const progressCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                progressCircle.setAttribute('cx', (size / 2).toString());
+                progressCircle.setAttribute('cy', (size / 2).toString());
+                progressCircle.setAttribute('r', radius.toString());
+                progressCircle.setAttribute('stroke', 'lime');
+                progressCircle.setAttribute('stroke-width', strokeWidth.toString());
+                progressCircle.setAttribute('fill', 'none');
+                progressCircle.setAttribute('stroke-linecap', 'round');
+                progressCircle.setAttribute('stroke-dasharray', circumference.toString());
+                progressCircle.setAttribute('stroke-dashoffset', circumference.toString());
+                progressCircle.style.transition = "stroke-dashoffset 1s ease";
+                svg.appendChild(progressCircle);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', '50%');
+                text.setAttribute('y', '50%');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#111');
+                text.setAttribute('font-size', '24');
+                text.textContent = `${won}/${played}`;
+                svg.appendChild(text);
+
+                const textTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                textTitle.setAttribute('x', '50%');
+                textTitle.setAttribute('y', '40%');
+                textTitle.setAttribute('dominant-baseline', 'middle');
+                textTitle.setAttribute('text-anchor', 'middle');
+                textTitle.setAttribute('fill', '#111');
+                textTitle.setAttribute('font-size', '24');
+                textTitle.textContent = 'played/win ratio';
+                svg.appendChild(textTitle);
+
+                gameDataDiv.appendChild(svg);
+                let progress = won / played;
+                progressCircle.setAttribute('stroke-dashoffset', (circumference * (1 - progress)).toString());
+
+                return gameDataDiv;
+            })
+            .catch(() => {});
+            if (playser) return playser
+            return null;
+        })
+        .catch(() => {});
+        if (user) {
+            return user;
         }
-        const userId = await user.json();
-        const response = await fetch(`/api/game/db/getGameStats?playerid=${userId.user.userId}`, {
-            credentials: 'include',
-            method: 'GET'
-        });
-        if (!response.ok) {
-            if (response.status === 404) return null;
-            throw new Error('Failed to get game data from user');
-        }
-        const data = await response.json();
-        const gameDataDiv = document.createElement('div');
-        const played = data.gamesPlayed;
-        const won = data.gamesWon;
-        // const played = 20;
-        // const won = 4;
-        
-        gameDataDiv.className = 'winLoss';
-
-        const size = 250;
-        const strokeWidth = 20;
-        const radius = (size - strokeWidth) / 2;
-        const circumference = 2 * Math.PI * radius;
-
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', size.toString());
-        svg.setAttribute("height", size.toString());
-
-        const bigCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        bigCircle.setAttribute("cx", (size / 2).toString());
-        bigCircle.setAttribute('cy', (size / 2).toString());
-        bigCircle.setAttribute('r', radius.toString());
-        bigCircle.setAttribute('stroke', '#888');
-        bigCircle.setAttribute('stroke-width', strokeWidth.toString());
-        bigCircle.setAttribute('fill', 'none');
-        svg.appendChild(bigCircle);
-
-        const progressCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        progressCircle.setAttribute('cx', (size / 2).toString());
-        progressCircle.setAttribute('cy', (size / 2).toString());
-        progressCircle.setAttribute('r', radius.toString());
-        progressCircle.setAttribute('stroke', 'lime');
-        progressCircle.setAttribute('stroke-width', strokeWidth.toString());
-        progressCircle.setAttribute('fill', 'none');
-        progressCircle.setAttribute('stroke-linecap', 'round');
-        progressCircle.setAttribute('stroke-dasharray', circumference.toString());
-        progressCircle.setAttribute('stroke-dashoffset', circumference.toString());
-        progressCircle.style.transition = "stroke-dashoffset 1s ease";
-        svg.appendChild(progressCircle);
-
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', '50%');
-        text.setAttribute('y', '50%');
-        text.setAttribute('dominant-baseline', 'middle');
-        text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('fill', '#111');
-        text.setAttribute('font-size', '24');
-        text.textContent = `${won}/${played}`;
-        svg.appendChild(text);
-
-        const textTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        textTitle.setAttribute('x', '50%');
-        textTitle.setAttribute('y', '40%');
-        textTitle.setAttribute('dominant-baseline', 'middle');
-        textTitle.setAttribute('text-anchor', 'middle');
-        textTitle.setAttribute('fill', '#111');
-        textTitle.setAttribute('font-size', '24');
-        textTitle.textContent = 'played/win ratio';
-        svg.appendChild(textTitle);
-
-        gameDataDiv.appendChild(svg);
-        let progress = won / played;
-        progressCircle.setAttribute('stroke-dashoffset', (circumference * (1 - progress)).toString());
-
-        return gameDataDiv;
+        return null;
     } catch (err) {
         console.error(`error in showing game stats: ${err}`);
         return null;
@@ -1007,99 +1000,144 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
     if (user === null) return null;
     const friend = await getFriends();
     if (friend === null) return null;
-    const gameResponse = await fetch('/api/game/db/getGamesForPlayer', {
+    const games = await fetch('/api/game/db/getGamesForPlayer', {
         credentials: 'include',
         method: 'GET'
-    });
-    if (!gameResponse.ok) {
-        throw new Error('failed to get game data');
-    }
-
-    const gameData = await gameResponse.json() as Game[]
-
-    let data: kindOfGames = {
-        random: 0,
-        friends: 0,
-        ai: 0,
-        tournaments: 0,
-        local: 0,
-    };
-
-    gameData.forEach((game) => {
-        let flag = false;
-        if (game.player2.userId === 0) {
-            ++data.ai;
-            flag = true;
-        }
-        else if (game.player2.userId === 1) {
-            ++data.random;
-            flag = true
-        }
-        else if (game.player2.userId === 2) {
-            ++data.local;
-            flag = true;
-        }
-        if (game.type === 'tournament') {
-            ++data.tournaments;
-            flag = true;
-        }
-        if (friend.includes(game.player2.username)) {
-            ++data.friends;
-            flag = true;
-        }
-        if (!flag) {
-            ++data.random;
-        }
     })
-    const max = Math.max(data.random, data.friends, data.ai, data.tournaments, data.local);
-    const barWidth = (width - padding * 2) / 5;
-    const charHeigth = height - padding * 2;
+    .then(async (gameResponse) => {
+        if (!gameResponse.ok) {
+            throw new Error('failed to get game data');
+        }
 
-    let bar = makeBar(data.random, max, charHeigth, padding, 0, height, barWidth);
-    let valueText = makeValueText(data.random, padding, 0, height, barWidth, (data.random / max) * charHeigth);
-    let label = makeLabel('random', padding, 0, height, barWidth);
-    svg.appendChild(bar);
-    svg.appendChild(valueText);
-    svg.appendChild(label);
+        const gameData = await gameResponse.json() as Game[]
 
-    bar = makeBar(data.friends, max, charHeigth, padding, 1, height, barWidth);
-    valueText = makeValueText(data.friends, padding, 1, height, barWidth, (data.friends / max) * charHeigth);
-    label = makeLabel('friend', padding, 1, height, barWidth);
-    svg.appendChild(bar);
-    svg.appendChild(valueText);
-    svg.appendChild(label);
+        let data: kindOfGames = {
+            random: 0,
+            friends: 0,
+            ai: 0,
+            tournaments: 0,
+            local: 0,
+        };
 
-    bar = makeBar(data.ai, max, charHeigth, padding, 2, height, barWidth);
-    valueText = makeValueText(data.ai, padding, 2, height, barWidth, (data.ai / max) * charHeigth);
-    label = makeLabel('ai', padding, 2, height, barWidth);
-    svg.appendChild(bar);
-    svg.appendChild(valueText);
-    svg.appendChild(label);
+        gameData.forEach((game) => {
+            let flag = false;
+            if (game.player2.userId === 0) {
+                ++data.ai;
+                flag = true;
+            }
+            else if (game.player2.userId === 1) {
+                ++data.random;
+                flag = true
+            }
+            else if (game.player2.userId === 2) {
+                ++data.local;
+                flag = true;
+            }
+            if (game.type === 'tournament') {
+                ++data.tournaments;
+                flag = true;
+            }
+            if (friend.includes(game.player2.username)) {
+                ++data.friends;
+                flag = true;
+            }
+            if (!flag) {
+                ++data.random;
+            }
+        })
+        const max = Math.max(data.random, data.friends, data.ai, data.tournaments, data.local);
+        const barWidth = (width - padding * 2) / 5;
+        const charHeigth = height - padding * 2;
 
-    bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
-    valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
-    label = makeLabel('tournaments', padding, 3, height, barWidth);
-    svg.appendChild(bar);
-    svg.appendChild(valueText);
-    svg.appendChild(label);
+        let bar = makeBar(data.random, max, charHeigth, padding, 0, height, barWidth);
+        let valueText = makeValueText(data.random, padding, 0, height, barWidth, (data.random / max) * charHeigth);
+        let label = makeLabel('random', padding, 0, height, barWidth);
+        svg.appendChild(bar);
+        svg.appendChild(valueText);
+        svg.appendChild(label);
 
-    bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
-    valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
-    label = makeLabel('local', padding, 4, height, barWidth);
-    svg.appendChild(bar);
-    svg.appendChild(valueText);
-    svg.appendChild(label);
+        bar = makeBar(data.friends, max, charHeigth, padding, 1, height, barWidth);
+        valueText = makeValueText(data.friends, padding, 1, height, barWidth, (data.friends / max) * charHeigth);
+        label = makeLabel('friend', padding, 1, height, barWidth);
+        svg.appendChild(bar);
+        svg.appendChild(valueText);
+        svg.appendChild(label);
 
-    const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    axis.setAttribute('x1', padding.toString());
-    axis.setAttribute('y1', (height - padding).toString());
-    axis.setAttribute('x2', (width - padding).toString());
-    axis.setAttribute('y2', (height - padding).toString());
-    axis.setAttribute('stroke', 'white');
-    axis.setAttribute('stroke-width', '2');
-    svg.appendChild(axis);
-    return gameDataBrakedownDiv;
+        bar = makeBar(data.ai, max, charHeigth, padding, 2, height, barWidth);
+        valueText = makeValueText(data.ai, padding, 2, height, barWidth, (data.ai / max) * charHeigth);
+        label = makeLabel('ai', padding, 2, height, barWidth);
+        svg.appendChild(bar);
+        svg.appendChild(valueText);
+        svg.appendChild(label);
+
+        bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
+        valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
+        label = makeLabel('tournaments', padding, 3, height, barWidth);
+        svg.appendChild(bar);
+        svg.appendChild(valueText);
+        svg.appendChild(label);
+
+        bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
+        valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
+        label = makeLabel('local', padding, 4, height, barWidth);
+        svg.appendChild(bar);
+        svg.appendChild(valueText);
+        svg.appendChild(label);
+
+        const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        axis.setAttribute('x1', padding.toString());
+        axis.setAttribute('y1', (height - padding).toString());
+        axis.setAttribute('x2', (width - padding).toString());
+        axis.setAttribute('y2', (height - padding).toString());
+        axis.setAttribute('stroke', 'white');
+        axis.setAttribute('stroke-width', '2');
+        svg.appendChild(axis);
+        return gameDataBrakedownDiv;
+    })
+    .catch(() => {});
+    if (games) return games;
+    return null;
 }
+
+async function interfalHandler() {
+    const friends = await getFriends();
+    if (friends) {
+        let friendArray:string[] = [];
+        if (friends.includes(',')) {
+            friendArray = friends.split(',');
+        } else {
+            friendArray[0] = friends;
+        }
+
+        friendArray.forEach( async (friend) => {
+            const data = await searchUsers(friend);
+            if (data?.[0]?.username) {
+                const field = document.getElementById(`statusCircle${data[0].username}`);
+                if (field) {
+                    if (data[0].isLoggedIn === 1) {
+                        field.style.backgroundColor = 'green';
+                    } else {
+                        field.style.backgroundColor = 'transparent';
+                    }
+                }
+            }
+        });
+    }
+}
+
+function checkTextMap(data: Map<string, object>) {
+    let flag = false;
+    data.forEach(values => {
+        if (!flag) {
+            if (typeof values == 'undefined') {
+                flag = true;
+            }
+        }
+    });
+    return flag;
+}
+
+ let g_intervalId: number = 0;
 
 export async function renderContent (route: string): Promise<void> {
     const content = document.getElementById('content');
@@ -1108,16 +1146,27 @@ export async function renderContent (route: string): Promise<void> {
     if (child) {
         content.removeChild(child);
     }
+    if (g_intervalId != null) {
+        clearInterval(g_intervalId);
+        g_intervalId = 0;
+    }
     content.innerHTML = '';
     content.style.display = 'flex';
     content.style.margin = '1em 0em';
     content.style.justifyContent = 'center';
     let language = (await getLanguage()).toLowerCase();
-    const textMap = await getPageContent(language, values)
-    const textData = textMap.get('row') as content;
+    const textMap = await getPageContent(language, values);
+    if (checkTextMap(textMap)) {
+        throw new Error('textMap is not correct');
+    }
+    const textData = textMap.get('row') as any;
+    if (typeof textData === 'undefined') {
+        throw new Error('textData is undefined');
+    }
     switch (route)
     {
         case 'home':
+
             content.textContent = textData.homePageText;
             break;
         case 'profile':
@@ -1143,6 +1192,9 @@ export async function renderContent (route: string): Promise<void> {
             }
             const friends = await renderFriendLists();
             content.appendChild(friends);
+
+            g_intervalId = setInterval(interfalHandler, 60 * 1000);
+
             const gameData = await renderGameData();
             if (gameData) content.appendChild(gameData);
             const gameBrake = await gameDataBrakedown();
@@ -1185,17 +1237,24 @@ export async function renderContent (route: string): Promise<void> {
 
 export async function getPageContent(language: string, textKeys: string[]): Promise<Map<string, object>> {
     const neededKeys = queryStringBuilder(language, textKeys);
-    const result = await fetch(`/api/page_content/getContent?${neededKeys}`, {
+    const response = await fetch(`/api/page_content/getContent?${neededKeys}`, {
         method: 'GET'
-    });
-    if (!result.ok) {
-        console.error('error result for page content not ok');
-        throw new Error(`HTTP error! status ${result.status}`);
+    })
+    .then(async (result) => {
+        if (!result.ok) {
+            console.error('error result for page content not ok');
+            throw new Error(`HTTP error! status ${result.status}`);
+        }
+        const body = await result.json();
+        const map = getMapFromJson(body);
+        return map;
+        })
+        .catch(() => {});
+        if (!response) {
+            throw new Error('page content needed');
+        }
+        return response;
     }
-    const body = await result.json();
-    const map = getMapFromJson(body);
-    return map;
-}
 
 export function getMapFromJson(data: any): Map<string, object> {
     const map = new Map<string, object>();

@@ -58,11 +58,12 @@ class UserDatabase {
         }
         const query = `%${data}%`;
         const users = await this.db.all(`
-            SELECT username, email, googleEmail FROM users
+            SELECT username, email, googleEmail, isLoggedIn FROM users
             WHERE (LOWER(username) LIKE ? OR LOWER(email) LIKE ? OR LOWER(googleEmail) LIKE ?)
             AND (email != ? OR googleEmail != ?)`,
             [query, query, query, email, email]
         );
+        console.log(users);
         return users;
     }
 
@@ -579,7 +580,7 @@ class UserDatabase {
                 return false;
             }
             if (transaction) {
-                this.db.exec('RELEASE SAVEPOINT remove_step');
+                await this.db.exec('RELEASE SAVEPOINT remove_step');
             } else {
                 await this.db.exec('COMMIT');
             }
@@ -595,17 +596,16 @@ class UserDatabase {
         }
     }
 
-    async setLoggedIn(email: string, loginStatus: number): Promise<void> {
+    async setLoggedStatus(email: string, loginStatus: number): Promise<void> {
         if (!this.db) {
             throw new Error('database is null');
         }
 
         try {
-            await this.db.exec('BOGIN TRANSACTION')
+            await this.db.exec('BEGIN TRANSACTION')
             const rows = await this.db.run(`
-                UPDATE user
-                SET (isLoggedIn) 
-                VALUES (?) 
+                UPDATE users
+                SET isLoggedIn = ? 
                 WHERE email = ? OR googleEmail = ?;`,
                 [loginStatus, email, email]);
             if (rows.changes !== 1) {
@@ -620,20 +620,20 @@ class UserDatabase {
         }
     }
 
-    async getLoggedIn(email: string): Promise<string | null> {
+    async getLoggedIn(email: string): Promise<any[] | null> {
         if (!this.db) {
             throw new Error('databaes is null');
         }
 
         const rows = await this.db.all(`
             SELECT * FROM users 
-            WHERE isLoggedIn = 1 AND (email != ? OR googleEMail != ?)`,
+            WHERE isLoggedIn != NULL AND (email != ? OR googleEMail != ?)`,
             [email, email]
         );
         if (rows.length === 0) {
             return null;
         }
-        return rows.join(',');
+        return rows;
     }
 
     async getLoggedInFriends(email: string): Promise<string | null> {
@@ -713,9 +713,30 @@ class UserDatabase {
                 console.error(gameSeed);
             }
         } catch (err) {
-            this.db.exec('ROLLBACK');
+            await this.db.exec('ROLLBACK');
             console.error('error seeding database', err);
         }
+    }
+    async markOffline(): Promise<void> {
+        if (!this.db) {
+            console.error('database is null in mark offline');
+            return;
+        }
+
+        await this.db.exec('BEGIN TRANSACTION');
+        const offlineThreasholdMinutes = 2;
+        try {
+            await this.db.run(
+                `UPDATE users
+                SET isLoggedIn = 0
+                WHERE isLoggedIn < datetime('now', '-${offlineThreasholdMinutes} minutes') AND isLoggedIn != 0`   
+            );
+            await this.db.exec('COMMIT');
+        } catch (err) {
+            await this.db.exec('ROLLBACK');
+            console.error(`error on setting ofline ${err}`);
+        }
+        return;
     }
 
     private async setGames(user1: {id: number, username: string}, user2: {id: number, username: string}, gameId: string): Promise<boolean | string> {
@@ -786,16 +807,16 @@ class UserDatabase {
             await database.run(`
                 CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT,
+                username TEXT NOT NULL UNIQUE,
                 password TEXT,
                 email TEXT,
                 googleEmail TEXT,
-                isGoogleRegister NUMERIC DEFAULT 0,
+                isGoogleRegister INTEGER DEFAULT 0,
                 pathToProfilePicture TEXT,
                 friends TEXT,
                 pendingFriends TEXT,
                 requestedFriends TEXT,
-                isLoggedIn NUMERIC DEFAULT 0
+                isLoggedIn INTEGER DEFAULT 0
                 CHECK (
                     email IS NOT NULL AND email <> ''
                     OR googleEmail IS NOT NULL AND googleEmail <> ''

@@ -103,6 +103,19 @@ class server {
         }
         await this.db.start(dbFile);
         await this.db.seedDatabase();
+
+        let isRunning = false;
+        setInterval(async () => {
+            if (isRunning) return;
+            isRunning = true;
+            try {
+                await this.db.markOffline();
+            } catch (e) {
+                console.error(`Error in mark offline ${e}`);
+            } finally {
+                isRunning = false;
+            }
+        }, 60 * 1000);
         this.fastify.listen({host: hostName, port: portNumber}, async err => {
             if (err) {
                 await this.db.close();
@@ -285,6 +298,14 @@ class server {
             await this.sendNotificationToUser(friendData.id as number, 'new frient request');
             return reply.send({ success: true});
         });
+
+        this.fastify.post('/heartbeat', async (req, reply) => {
+            const user = req.session.user;
+            if (!user) {
+                return reply.code(401).send({error: 'unatauthorized' });
+            }
+            this.db.setLoggedStatus(user.email, Date.now());
+        })
 
         this.fastify.post('/acceptFriend', async (req, reply) => {
             console.log('in acceptFriend');

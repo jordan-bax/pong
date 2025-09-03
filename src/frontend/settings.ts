@@ -47,11 +47,11 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 				option.selected = false;
 			}
 		})
-		languageDropdown.addEventListener('change',async (event) => {
+		languageDropdown.addEventListener('change', (event) => {
 			const target = event.target as HTMLSelectElement;
-			await setLanguage(target.value);
-			await checkSession();
-			await openSettings(); // Refresh settings after changing language
+			setLanguage(target.value);
+			checkSession();
+			openSettings(); // Refresh settings after changing language
 		})
 	const languagetext = document.createElement('div');
 	languagetext.textContent = 'Language Settings:';

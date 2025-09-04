@@ -11,16 +11,17 @@ import {
 } from "../schemas/responseSchema"
 import { DBError } from "./tournamentDB"
 
+const DBPATH = process.env.TOURNAMENT_DATABASE_PATH
 const { ADDRESS = 'localhost', PORT = '3003' } = process.env;
 const server = fastify()
-const tournamentObj = new TourService
+const tour = new TourService
 
 server.get('/tournament/:id',
     { schema: getTourSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const { id } = request.params as { id: string }
-            const tournament = await tournamentObj.getByID(Number(id))
+            const tournament = await tour.getByID(Number(id))
             reply.status(200).send(tournament)
         } catch (error) {
             console.error('Get tournament by ID error:', error)
@@ -39,7 +40,7 @@ server.get('/user/:id',
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const { id } = request.params as { id: string }
-            const tournament = await tournamentObj.getUserTours(Number(id))
+            const tournament = await tour.getUserTours(Number(id))
             reply.status(200).send(tournament)
         } catch (error) {
             console.error('Get users tournament by ID error:', error)
@@ -57,7 +58,7 @@ server.get('/idle',
     { schema: getToursSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const tournament = await tournamentObj.idle()
+            const tournament = await tour.idle()
             reply.status(200).send(tournament)
         } catch (error) {
             console.error('Get all idle tours error:', error)
@@ -75,7 +76,7 @@ server.get('/running',
     { schema: getToursSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const tournament = await tournamentObj.running()
+            const tournament = await tour.running()
             reply.status(200).send(tournament)
         } catch (error) {
             console.error('Get all running tours error:', error)
@@ -93,7 +94,7 @@ server.get('/finished',
     { schema: getToursSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const tournament = await tournamentObj.finished()
+            const tournament = await tour.finished()
             reply.status(200).send(tournament)
         } catch (error) {
             console.error('Get all finished tours error:', error)
@@ -111,7 +112,7 @@ server.get('/tours',
     { schema: getToursSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const tournament = await tournamentObj.allTournaments()
+            const tournament = await tour.allTours()
             reply.status(200).send(tournament)
         } catch (error) {
             console.error('Get all tours error:', error)
@@ -136,7 +137,7 @@ server.post('/create',
                 lockTime: number | undefined
             }
 
-            const tournament = await tournamentObj.create(
+            const tournament = await tour.create(
                 name,
                 maxPlayers,
                 userID,
@@ -164,7 +165,7 @@ server.post('/join',
                 userID: number
             }
 
-            await tournamentObj.join(tournamentID, userID)
+            await tour.join(tournamentID, userID)
             reply.status(201).send({ 'tournamentID': tournamentID })
         } catch (error) {
             console.error('join tournament error:', error)
@@ -187,7 +188,7 @@ server.post('/leave',
                 userID: number
             }
 
-            await tournamentObj.leave(tournamentID, userID)
+            await tour.leave(tournamentID, userID)
             reply.status(201).send({ 'tournamentID': tournamentID })
         } catch (error) {
             if (error instanceof DBError) {
@@ -212,7 +213,7 @@ server.post('/done',
             }
 
         try {
-            await tournamentObj.matchDone(
+            await tour.matchDone(
                 tournamentID,
                 player1ID,
                 player2ID,
@@ -234,7 +235,8 @@ server.post('/done',
 
 const start = async () => {
     try {
-        await tournamentObj.init()
+        console.log(DBPATH)
+        await tour.init(DBPATH)
         await server.listen({host: ADDRESS, port: parseInt(PORT, 10) });
         const address = server.server.address();
         if (typeof address === 'string') {

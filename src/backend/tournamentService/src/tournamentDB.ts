@@ -9,7 +9,7 @@ class DBError extends Error {
     }
 }
 
-class TournamentDB {
+class TourDB {
     private db: Database | null
 
     constructor() {
@@ -132,9 +132,9 @@ class TournamentDB {
             }
 
             await this.join(id, userID)
-            const tournament = await this.getTour(id)
+            const tour = await this.getTour(id)
 
-            return tournament
+            return tour
         } catch (error) {
             throw error
         }
@@ -303,7 +303,7 @@ class TournamentDB {
         }
     }
 
-    async allTournaments() {
+    async allTours() {
         if (!this.db) {
             throw new DBError("DB is not open")
         }
@@ -319,14 +319,17 @@ class TournamentDB {
                     ), '') AS player_ids
                 FROM tournament t`)
 
-            return result.map(({ player_ids, ...row }) => ({
+            let data = result.map(({ player_ids, ...row }) => ({
                 ...row,
                 players: player_ids
                     ? player_ids.split(",").map(Number)
                     : []
             }))
+
+
+            return data
         } catch (error) {
-            throw ("Failed to get all running tournaments")
+            throw new DBError("Failed to get all running tournaments")
         }
     }
 
@@ -661,4 +664,4 @@ class TournamentDB {
     }
 }
 
-export { TournamentDB, DBError }
+export { TourDB, DBError }

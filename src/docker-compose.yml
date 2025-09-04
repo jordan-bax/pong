@@ -54,7 +54,7 @@ services:
     expose:
       - "3003"
     volumes:
-      - tournament-db:/app/tournament.sqlite
+      - tournament-db:/app/db
     env_file:
       - .env
     networks:

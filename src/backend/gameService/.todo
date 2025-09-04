@@ -4,11 +4,12 @@ btop
 **bold text** *✅*
 TODO:
 
-
+[] ai 1second delay
+[] ai algaritme
 [] database player second id for sync so geast can have a name
-[] fastify endpoint voor 2 users match 
+[x] fastify endpoint voor 2 users match 
 [] stuur terug gameid en in leave beide playid
-[] winning must record game
+[x] winning must record game
 [] hisory better info
 [] end game schreen for winning and losing 
 [] a loading / matching screen

@@ -33,7 +33,7 @@ class table<T> {
   }
 
   // Render the data rows
-  private renderTableRows(data: T[], headers: Header<T>[]) {
+  private async renderTableRows(data: T[], headers: Header<T>[]) {
     const tbody = document.getElementById("grid-body") as HTMLTableSectionElement;
     tbody.innerHTML = "";
     data.forEach(item => {
@@ -41,14 +41,12 @@ class table<T> {
       // row.onclick = () => {
       //   if (this.func) this.func(item);
       // };
-    headers.forEach(({ key }) => {
+    headers.forEach(async ({ key }) => {
         const td = document.createElement("td");
         td.id = "td";
         td.textContent = String(item[key]);
-        td.onclick = () => {
-          if (this.func) this.func(item , td);
-        };
-        row.appendChild(td);
+        await row.appendChild(td);
+        if (this.func) this.func(item , td);
       });
       tbody.appendChild(row);
     });
@@ -72,22 +70,7 @@ class table<T> {
     });
     this.renderTableRows(data, headers);
   }
-  // Entry point
-  // window.addEventListener("DOMContentLoaded", () => {
-  //   const table = createTable();
-  //   document.body.appendChild(table);
-  //   renderTableRows(people);
-  // });
-  // function events(frame: HTMLIFrameElement): void {
-  // 	window.history.pushState({}, '', '/game-history');
-  // 	window.addEventListener('popstate', () => {
-  // 		console.log('Back button pressed');
-  // 	});
-  // 	window.addEventListener('hashchange', () => {
-  // 		// Handle hash changes
-  // 		console.log('Hash changed:', window.location.hash);
-  // 	});
-  // }
+ 
   public createNewTable1(
       frame: HTMLElement,
       data: T[],
@@ -100,37 +83,3 @@ class table<T> {
   }
 }
 export { table };
-// type Header<T> = { label: string; key: keyof T };
-
-// export function createNewTable2<T>(
-//     frame: HTMLElement,
-//     data: T[],
-//     headers: Header<T>[]
-// ): HTMLTableElement {
-//     const table = document.createElement("table");
-//     const thead = document.createElement("thead");
-//     const headerRow = document.createElement("tr");
-
-//     headers.forEach(({ label }) => {
-//         const th = document.createElement("th");
-//         th.textContent = label;
-//         headerRow.appendChild(th);
-//     });
-//     thead.appendChild(headerRow);
-//     table.appendChild(thead);
-
-//     const tbody = document.createElement("tbody");
-//     data.forEach(item => {
-//         const row = document.createElement("tr");
-//         headers.forEach(({ key }) => {
-//             const td = document.createElement("td");
-//             td.textContent = String(item[key]);
-//             row.appendChild(td);
-//         });
-//         tbody.appendChild(row);
-//     });
-//     table.appendChild(tbody);
-
-//     frame.appendChild(table);
-//     return table;
-// }

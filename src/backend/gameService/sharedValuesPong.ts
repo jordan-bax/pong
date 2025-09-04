@@ -1,5 +1,6 @@
 export interface gamestateinterface {
 	gameID: number;
+	// tournamentID: number;
 	gameActive: boolean;
 	gamePause: boolean;
 	gametype: string;

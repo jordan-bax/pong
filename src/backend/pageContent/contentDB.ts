@@ -73,7 +73,7 @@ export async function seedContentDb(): Promise<void> {
         const statement = await database.prepare(
             'INSERT INTO pageContent (language, textKey, body) VALUES (?, ?, ?)'
         );
-
+        
         await statement.run('en', 'homePageText', `Welcome to the home page!`);
         await statement.run('nl', 'homePageText', 'Welkome op de hoofd pagina!');
         await statement.run('en', 'emailText', 'Email:');

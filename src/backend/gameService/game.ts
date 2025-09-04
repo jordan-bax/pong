@@ -14,13 +14,12 @@ import { Game, player, GameStats } from './game_db.js';
 // import { getGamesForPlayer } from './game_db.js';
 import {player1Template, player2Template, ballvarTemplate, gamestateinterface,gameWall, pcInterface, ballInterface, aiInterface, gameWallsInterface } from './sharedValuesPong.js';
 // import {player1Template, player2Template, ballvarTemplate, gamestateinterface,gameWall, pcInterface, ballInterface, aiInterface, gameWallsInterface } from '../../frontend/sharedValuesPong';
-import { str } from 'ajv';
-import { get } from 'http';
-import { error } from 'console';
-enum GameTypeId {
+import { Gameloop} from './gameloop.js';
+
+export enum GameTypeId {
 	AI = 0,
-	UNKNOWN = 1,
-	LOCAL = 2
+	LOCAL = 1,
+	UNKNOWN = 2,
 }
 interface notificationInterface {
 	message: string;
@@ -45,32 +44,35 @@ var ai_var: aiInterface = {
 	reactionTime: 100 // Default reaction time in milliseconds
 };
 var ballSpeed: number;
-let games: Array<gamestateinterface|null> = [];
-let matching: Array<gamestateinterface|null> = [];
-let invited: Array<gamestateinterface|null> = [];
+let active: Array<Gameloop> = [];
+// let games: Array<gamestateinterface|null> = [];
+let matching: Array<Gameloop> = [];
+let invited: Array<Gameloop> = [];
 var fps: number = 30; // Default frames per second
 startGame(); // Start the game loop
-async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
-	// Check if the game is paused
-	if (gamestate.gamePause || !gamestate.gameActive) {
-		// If the game is paused, do not update the game state
-		// console.log('Game is paused');
-		return; // Exit the game loop if paused
-	}
-	ballmove(gamestate);
+// async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
+// 	// Check if the game is paused
+// 	if (gamestate.gamePause || !gamestate.gameActive) {
+// 		// If the game is paused, do not update the game state
+// 		// console.log('Game is paused');
+// 		return; // Exit the game loop if paused
+// 	}
+// 	ballmove(gamestate);
 
-	if (use_ai && !(gamestate.player2.id === null) && gamestate.player2.id <= GameTypeId.AI) {
-		simpleAi(gamestate);
-	}
-	playerMoveCheck(gamestate.player1);
-	playerMoveCheck(gamestate.player2);
-	if (gamestate.player1.score >= 11 || gamestate.player2.score >= 11) {
-		// End the game if a player reaches 11 points
-		console.log('Game Over! Final Score:', '-');
-		gamestate.gamePause = true; // Pause the game
-		gamestate.gameActive = false; // Set gameActive to false
-	}
-}
+// 	if (use_ai && !(gamestate.player2.id === null) && gamestate.player2.id <= GameTypeId.AI) {
+// 		simpleAi(gamestate);
+// 	}
+// 	playerMoveCheck(gamestate.player1);
+// 	playerMoveCheck(gamestate.player2);
+// 	if (gamestate.player1.score >= 11 || gamestate.player2.score >= 11) {
+// 		// End the game if a player reaches 11 points
+// 		console.log('Game Over! Final Score:', '-');
+// 		gamestate.gamePause = true; // Pause the game
+// 		gamestate.gameActive = false; // Set gameActive to false
+// 		// Update the game in the database
+// 		await updateGameInDB(gamestate);
+// 	}
+// }
 
 // function generateUniqueGameId(): string {
 //     let id: string;
@@ -79,21 +81,21 @@ async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
 //     } while (games.some(game => game && game.gameID === id));
 //     return id;
 // }
-function lastIdInArray(arr: Array<gamestateinterface | null>): number {
+function lastIdInArray(arr: Array<Gameloop>): number {
 	if (arr.length === 0) {
 		return 0;
 	}
 	// Find the highest game ID in the array
 	return arr.reduce((max, game) => {
-		if (game && game.gameID > max) {
-			return game.gameID;
+		if (game && game.getId() > max) {
+			return game.getId();
 		}
 		return max;
 	}, 0);
 }
 
 async function lastId(): Promise<number> {
-	if (games.length === 0 && matching.length === 0 && invited.length === 0) {
+	if (active.length === 0 && matching.length === 0 && invited.length === 0) {
 		var gameid = await dbfunc.getLastGameId(); // Get the last game ID from the database of finished games
 		if (gameid === null) {
 			gameid = 0; // Start with 0 if no games exist
@@ -112,12 +114,12 @@ async function lastId(): Promise<number> {
 	// 	}
 	// 	return max;
 	// }, 0);
-	const maxId = Math.max(0, lastIdInArray(games), lastIdInArray(invited), lastIdInArray(matching));
+	const maxId = Math.max(0, lastIdInArray(active), lastIdInArray(invited), lastIdInArray(matching));
 
 	return maxId;
 }
 
-async function makeNewGame(type: string, playername: string, playerid: number): Promise<gamestateinterface > {
+async function makeNewGame(type: string, playername: string, playerid: number): Promise<Gameloop > {
 	// Create a new game state
 	// const gameid = generateUniqueGameId(); // Generate a unique game ID
 	
@@ -153,9 +155,10 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 		gametype: type,
 	};
 	console.log('New game created:', newGame);
-	return newGame;
+	var gameloop = new Gameloop(newGame);
+	return gameloop;
 }
-async function updateGameInDB(game: gamestateinterface): Promise<void> {
+export async function updateGameInDB(game: gamestateinterface): Promise<void> {
 	// Update the game in the database
 	var winner: string = '';
 	if (game.player1.score > game.player2.score) {
@@ -184,18 +187,18 @@ async function updateGameInDB(game: gamestateinterface): Promise<void> {
 
 }
 
-async function getGameById(gameId: number): Promise<gamestateinterface | null> {
-	const game = games.find(game => game && game.gameID === gameId);
+async function getGameById(gameId: number): Promise<Gameloop | null> {
+	const game = active.find(game => game && game.getId() === gameId);
 	return game || null;
 }
-async function findGameToJoin(playerid: number): Promise<gamestateinterface | null> {
+async function findGameToJoin(playerid: number): Promise<Gameloop | null> {
 	// Find a game that the player can join
-	const index = matching.findIndex(game => game && game.player1.id === playerid);
+	const index = matching.findIndex(game => game && game.getState().player1.id === playerid);
 	if (index !== -1) {
 		const game = matching.splice(index,1)[0];
 		return game;
 	}
-	const index2 = matching.findIndex(game => game && game.player2.id === playerid);
+	const index2 = matching.findIndex(game => game && game.getState().player2.id === playerid);
 	if (index2 !== -1) {
 		const game = matching.splice(index2,1)[0];
 		return game;
@@ -217,8 +220,8 @@ async function addGameLoop(type : string, playername: string, playerid: number):
 			console.error('Failed to create a new game');
 			return null; // Return null if the new game could not be created
 		}
-		const ng = newGame.gameID as number; // Assign the new game to the variable
-		games.push(newGame);
+		const ng = newGame.getId() as number; // Assign the new game to the variable
+		active.push(newGame);
 	
 		return {id :ng,player: 1};
 	}
@@ -230,14 +233,14 @@ async function addGameLoop(type : string, playername: string, playerid: number):
 		// Match with an existing game
 		var existingGame = matching.pop();
 		if (existingGame) {
-			existingGame.player2 = {...player2Template, id: playerid, name: playername};
-			existingGame.gameActive = true; // Set the game to active
-			existingGame.gamePause = false; // Ensure the game is not paused
-			games.push(existingGame);
+			existingGame.getState().player2 = {...player2Template, id: playerid, name: playername};
+			existingGame.getState().gameActive = true; // Set the game to active
+			existingGame.getState().gamePause = false; // Ensure the game is not paused
+			active.push(existingGame);
 			// await updateGameInDB(existingGame); // Update the game in the database
-			console.log('Game updated in database:', existingGame.gameID);
-			console.log('Matched with existing game:', existingGame.gameID);
-			return {id: existingGame.gameID,player: 2};
+			console.log('Game updated in database:', existingGame.getId());
+			console.log('Matched with existing game:', existingGame.getId());
+			return {id: existingGame.getId(),player: 2};
 		}
 		return null; // No matching game found
 	}
@@ -248,8 +251,8 @@ async function addGameLoop(type : string, playername: string, playerid: number):
 		return null; // Return null if the new game could not be created
 	}
 	matching.push(newGame); // Add the new game to the matching array
-	console.log('Game added:', newGame, 'Total games:', games.length);
-	return {id: newGame.gameID,player :1}; // Return the game ID with '-1' suffix for player 1
+	console.log('Game added:', newGame, 'Total games:', active.length);
+	return {id: newGame.getId(),player :1}; // Return the game ID with '-1' suffix for player 1
 }
 
 async function startGame() {
@@ -269,10 +272,9 @@ async function startGame() {
 			use_ai = false; // Disable AI control for player 2 for second loop
 		}
 
-		for (const game of games) {
+		for (const game of active) {
 			if (!game) continue; // Skip if the game is null
-			// console.log('Processing game:', game.gameID, 'Player 1:', game.player1.name, 'Player 2:', game.player2.name);
-			gameturn(game, use_ai_loop);
+			game.turn(game.getState(), use_ai_loop);
 		}
 		use_ai_loop = false; // Disable AI control for player 2 after the first loop
 		await new Promise(resolve => setTimeout(resolve, delay));
@@ -281,49 +283,30 @@ async function startGame() {
 	// clearInterval(intervalRef);
 	// intervalRef = null;
 }
-function getGameID(gamePlayerId: string): string[] | null {
-	// Extract the game ID from the player ID
-	const parts = gamePlayerId.split('-');
-	if (parts.length > 0) {
-		return parts; // Return the game ID part
+function gamespeed(): number {
+	// Adjust the game speed based on the current FPS
+	if (fps < 1) {
+		fps = 1; // Ensure FPS is at least 1
+	} else if (fps > 60) {
+		fps = 60; // Cap FPS at 60
 	}
-	return null; // Return null if no valid game ID is found
+	ballSpeed = ballvarTemplate.staticSpeed / fps; // Set the ball speed based on FPS
+	return 1000 / fps; // Return the delay in milliseconds for the next frame
 }
-// function findGamebyplayerId(playerId: string): gamestateinterface | null {
-//     // Find the game by player ID
-//     if (!playerId) {
-//         return null; // Return null if playerId is not provided
-//     }
-//     const gameid = getGameID(playerId);
-//     if (!gameid) {
-//         return null; // Return null if game ID is not valid
-//     }
-//     for (const game of games) {
-//         if (game && game.gameID === gameid[0]) {
-//             return game;
-//         }
-//     }
-//     for (const game of matching) {
-//         if (game && game.gameID === gameid[0]) {
-//             return game;
-//         }
-//     }
-//     console.log('Game not found for player ID:', playerId);
-//     return null; // Return null if no game is found for the player ID
-// }
-function findGamebyGameId(gameid: number | null): gamestateinterface | null {
+
+function findGamebyGameId(gameid: number | null): Gameloop | null {
 	// Find the game by player ID
 	if (!gameid ) {
 		console.error('Invalid game ID:', gameid);
 		return null; // Return null if game ID is not valid
 	}
-	for (const game of games) {
-		if (game && game.gameID === gameid) {
+	for (const game of active) {
+		if (game && game.getId() === gameid) {
 			return game;
 		}
 	}
 	for (const game of matching) {
-		if (game && game.gameID === gameid) {
+		if (game && game.getId() === gameid) {
 			return game;
 		}
 	}
@@ -484,30 +467,13 @@ fastify.post('/leave', async (req, reply) => {
 		reply.status(404).send({ status: 'Game not found' });
 		return;
 	}
-	if (game.gameActive) {
-		addNotification('Game has been played by: ' + req.session.player.username);
-		await updateGameInDB(game); // Update the game in the database before removing it
-		console.log('Game updated in database before leaving:', game.gameID);
+	
+	
+	game.playerleft(req.session.player.id as number);
+	if (game.empty()) {
+		active = active.filter(g => g && g.getId() !== game.getId());
+		console.log('Game with ID:', gameid, 'has been removed. Remaining games:', active.length);
 	}
-	if (req.session.player.id) {
-		const db = await dbfunc.getGamesForPlayer(req.session.player.id);
-		if (!db) {
-			console.error('Failed to retrieve game from database');
-			// reply.status(500).send({ status: 'Error retrieving game' });
-			// return;
-		}
-		console.log('Game retrieved from database:', db);
-	}
-	// Remove the game from the games array
-	if (game.gameActive && game.gametype === 'online') {
-		game.gameActive = false; // Set gameActive to false
-		game.gamePause = true; // Pause the game
-		reply.send({ status: 'left', gameid: gameid });
-		console.log('Game with ID:', gameid, 'has been paused.');
-		return;
-	}
-	games = games.filter(g => g && g.gameID !== game.gameID);
-	console.log('Game with ID:', gameid, 'has been removed. Remaining games:', games.length);
 	reply.send({ status: 'left', gameid: gameid });
 });
 
@@ -528,12 +494,7 @@ fastify.post('/pause', async (req, reply) => {
 		reply.status(404).send({ status: 'Game not found' });
 		return;
 	}
-	if (game.gamePause) {
-		game.gamePause = false; // Resume the game
-		reply.send({ status: 'started' });
-		return;
-	}
-	game.gamePause = true;
+	game.pause();
 	reply.send({ status: 'paused' });
 });
 // move the player paddle
@@ -552,28 +513,28 @@ fastify.post('/move', async (req, reply) => {
 		reply.status(404).send({ status: 'no Game' });
 		return;
 	}
-	if (game.gamePause) {
+	if (game.getState().gamePause) {
 		reply.status(400).send({ status: 'paused' });
 		return;
 	}
-	if (game.gametype === 'local') {
+	if (game.getState().gametype === 'local') {
 		player = (req.query as { player: 1|2 }).player; // Default to player 1 if not specified
 	}
-	console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.gametype);
+	console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.getId());
 	if (player == 1) {
 		if (direction === 'up') {
-			game.player1.y -= game.player1.speed;
+			game.getState().player1.y -= game.getState().player1.speed;
 		} else if (direction === 'down') {
-			game.player1.y += game.player1.speed;
+			game.getState().player1.y += game.getState().player1.speed;
 		}
-		playerMoveCheck(game.player1);
+		// playerMoveCheck(game.player1);
 	} else if (player == 2) {
 		if (direction === 'up') {
-			game.player2.y -= game.player2.speed;
+			game.getState().player2.y -= game.getState().player2.speed;
 		} else if (direction === 'down') {
-			game.player2.y += game.player2.speed;
+			game.getState().player2.y += game.getState().player2.speed;
 		}
-		playerMoveCheck(game.player2);
+		// playerMoveCheck(game.player2);
 	}
 	reply.send({ status: 'moved'});
 });
@@ -591,136 +552,15 @@ fastify.get('/state', async (req, reply) => {
 		console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
 		return;
 	}
-	// const playerId = req.query.gameId as string;
-	console.log('Fetching game state...', games.length);
+	console.log('Fetching game state...', active.length);
 	console.log('Player session:', req.session.player, 'session ID:', req.cookies.sessionId);
-	// const {gameid:gamePlayerId} = req.query as  {gameid: string};
-	// console.log('Game Player ID:', gamePlayerId);
-	// const gameParts = getGameID(gamePlayerId);
-	// if (!gameParts) {
-	//     reply.status(400).send({ error: 'Invalid game ID format' });
-	//     return;
-	// }
-	// const game = findGamebyplayerId(gamePlayerId);
 	const game = findGamebyGameId(req.session.player?.gameid);
 	if (!game) {
 		reply.status(404).send({ error: 'Game not found' });
 		return;
 	}
-	reply.send(game || { error: 'Game not found' });
+	reply.send(game.getState() || { error: 'Game not found' });
 });
-	function simpleAi(gamestate:gamestateinterface): void {
-	// Simple AI to control player 2
-	var player2: pcInterface = gamestate.player2;
-	var ballvar: ballInterface = gamestate.ball;
-
-	if (ballvar.y < player2.y) {
-		player2.y -= player2.speed; // Move up
-	} else if (ballvar.y + ballvar.height > player2.y + player2.height) {
-		player2.y += player2.speed; // Move down
-	}
-	// Ensure the AI paddle stays within the game walls
-	if (player2.y < 0) {
-		player2.y = 0; // Prevent moving above the top wall
-	}
-	else if (player2.y + player2.height > gameWall.height) {
-		player2.y = gameWall.height - player2.height; // Prevent moving below the bottom wall
-	}
-
-	}
-	function gamespeed(): number {
-	// Adjust the game speed based on the current FPS
-	if (fps < 1) {
-		fps = 1; // Ensure FPS is at least 1
-	} else if (fps > 60) {
-		fps = 60; // Cap FPS at 60
-	}
-	ballSpeed = ballvarTemplate.staticSpeed / fps; // Set the ball speed based on FPS
-	return 1000 / fps; // Return the delay in milliseconds for the next frame
-}
-	function getSize(): number {
-		const width = window.innerWidth;
-		const height = window.innerHeight;
-		var smaller = Math.min(width, height);
-		smaller -= gameWall.wallTickness2x; // Adjust for wall thickness
-		smaller -= gameWall.egdeThickness * 2; // Adjust for edge thickness
-		var sizeAduster = smaller / gameWall.width; // Calculate the size aduster based on the smaller dimension
-		if (sizeAduster < 1) {
-			sizeAduster = 1;
-		}
-		return sizeAduster;
-	}
-	function playerMoveCheck(player: pcInterface): void {
-		// Get the current position of the player
-		if (player.y < 0) {
-			player.y = 0; // Prevent moving above the top wall
-		} else if (player.y + player.height > gameWall.height) {
-			player.y = gameWall.height - player.height; // Prevent moving below the bottom wall
-		}
-	}
-	function ballmove(gamestate:gamestateinterface): void {
-	// Move the ball
-
-	var oldBall : ballInterface = gamestate.ball;
-	gamestate.ball.x += gamestate.ball.dx * gamestate.ball.speed;
-	gamestate.ball.y += gamestate.ball.dy * gamestate.ball.speed;
-	const WallHeight = gameWall.height - gamestate.ball.height;
-	// Check for collision with the walls
-	if (gamestate.ball.y <= 0 || gamestate.ball.y >= gameWall.height - gamestate.ball.height) {
-		gamestate.ball.dy *= -1; // Reverse the y direction
-		if (gamestate.ball.y <= 0) {
-			gamestate.ball.y *= -1; // Prevent the ball from going above the top wall
-		} else {
-			gamestate.ball.y -= (gamestate.ball.y - WallHeight)*2; // Prevent the ball from going below the bottom wall
-		}
-	}
-	simplePadleCollisionPlayer1(oldBall, gamestate);
-	simplePadleCollisionPlayer2(oldBall, gamestate);
-	if (gamestate.ball.x <= 0 || gamestate.ball.x >= gameWall.width - gamestate.ball.width) {
-		gamestate.ball.dx *= -1; // Reverse the x direction
-		// Check which player scored
-		if (gamestate.ball.x <= 0) {
-			gamestate.player2.score++; // Player 2 scores
-		} else {
-			gamestate.player1.score++; // Player 1 scores
-		}
-		// Reset the ball position
-		gamestate.ball.x = gameWall.width / 2 - gamestate.ball.width / 2; // Center the ball horizontally
-		gamestate.ball.y = gameWall.height / 2 - gamestate.ball.height / 2; // Center the ball vertically
-	}
-}
-function simplePadleCollisionPlayer1(ball: ballInterface, gamestate: gamestateinterface) {
-	var player: pcInterface = gamestate.player1;
-	// Check if the ball is colliding with the paddle
-	if (gamestate.ball.x > player.x + player.width)
-		return false; // Ball is to the right of the paddle
-	if (ball.y + ball.height < player.y && gamestate.ball.y + gamestate.ball.height < player.y)
-		return false; // Ball is above the paddle
-	if (ball.y > player.y + player.height && gamestate.ball.y > player.y + player.height)
-		return false; // Ball is below the paddle
-	// If none of the conditions are met, the ball is colliding with the paddle
-	// Reverse the x direction of the ball
-	ball.dx *= -1; // Reverse the x direction
-	gamestate.ball.x += ((player.x + player.width) - gamestate.ball.x )*2;
-	// Position the ball to the right of the paddle
-	return true; // Ball is colliding with the paddle
-}
-function simplePadleCollisionPlayer2(ball: ballInterface, gamestate: gamestateinterface) {
-	var player: pcInterface = gamestate.player2;
-	// Check if the ball is colliding with the paddle
-	if (gamestate.ball.x + gamestate.ball.width < player.x)
-		return false; // Ball is to the right of the paddle
-	if (ball.y + ball.height < player.y && gamestate.ball.y + gamestate.ball.height < player.y)
-		return false; // Ball is above the paddle
-	if (ball.y > player.y + player.height && gamestate.ball.y > player.y + player.height)
-		return false; // Ball is below the paddle
-	// If none of the conditions are met, the ball is colliding with the paddle
-	// Reverse the x direction of the ball
-	ball.dx *= -1; // Reverse the x direction
-	gamestate.ball.x -= ((gamestate.ball.x + gamestate.ball.width) - player.x)*2;
-	// Position the ball to the right of the paddle
-	return true; // Ball is colliding with the paddle
-}
 
 fastify.post('/db/addPlayer', async (req, reply) => {
 	const { username, id } = req.body as { username: string; id: number };
@@ -892,7 +732,7 @@ fastify.get('/getopengames', async (req, reply) => {
 	if (!id) {
 		id = GameTypeId.UNKNOWN; // Default player ID for unknown users
 	}
-	const openGames = invited.filter(game => game?.player1.id == id || game?.player2.id == id);
+	const openGames = invited.filter(game => game.getState().player1.id == id || game.getState().player2.id == id);
 	reply.send(openGames);
 });
 const matchingBodySchema = {
@@ -900,19 +740,64 @@ const matchingBodySchema = {
   properties: {
     playerid1: { type: 'number' },
     playerid2: { type: 'number' },
-	gametype: { type: 'string' }
-
+	gametype: { type: 'string' },
+	tournamentId: { type: 'number' }
   },
   required: ['playerid1', 'playerid2', 'gametype']
 };
 
+
+
+fastify.post('/join', async (req, reply) => {
+	if (!req.session.player || !req.session.player.id) {
+		reply.status(401).send({ status: 'Unauthorized' });
+		console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
+		return;
+	}
+	const { gameid } = req.body as { gameid: number };
+	console.log('Joining game with ID:', gameid);
+	const gameIndex = invited.findIndex(game => game && game.getId() === gameid);
+	if (gameIndex === -1) {
+		reply.status(404).send({ error: 'Game not found' });
+		return;
+	}
+	if (!invited[gameIndex]) {
+		reply.status(404).send({ error: 'Game not found' });
+		return;
+	}
+	if (invited[gameIndex].getState().player1.id === req.session.player.id ) {
+		invited[gameIndex].getState().player1.active = true; // Mark player 1 as active
+	}
+	else if (invited[gameIndex].getState().player2.id === req.session.player.id ) {
+		invited[gameIndex].getState().player2.active = true; // Mark player 2 as active
+	}
+	req.session.player.gameid = gameid;
+
+	if (invited[gameIndex].getState().player1.active && invited[gameIndex].getState().player2.active) {
+		const game = invited.splice(gameIndex, 1)[0];
+		if (!game) {
+			reply.status(404).send({ error: 'Game not found' });
+			return;
+		}
+		active.push(game); // Move the game from invited to active games
+		game.getState().gameActive = true; // Set the game to active
+		game.getState().gamePause = true; // Ensure the game is not paused
+		console.log('Game joined and moved to active games:', game);
+	}
+	reply.send({ status: 'joined', gameid: gameid });
+});
+
 async function getUserNameById(userId: number): Promise<string> {
+	if (userId <= 0) {
+		return 'ai'; // Return 'ai' for AI players
+	}
 	const player = await dbfunc.getPlayerById(userId);
 	if (player) {
 		return player.username;
 	}
 	return 'Guest';
 }
+
 fastify.post('/preparegame', {schema:{body: matchingBodySchema} }, async (req, reply) => {
 	const { playerid1, playerid2, gametype } = req.body as { playerid1: number; playerid2: number; gametype: string };
 	console.log('Matching players:', playerid1, playerid2, 'Game type:', gametype);
@@ -942,9 +827,18 @@ fastify.post('/preparegame', {schema:{body: matchingBodySchema} }, async (req, r
 		gameID: gameid,
 		gametype: gametype,
 	};
+	if (newGame.player1.id !== null && newGame.player1.id <= 0)
+		newGame.player1.active = true; // AI players are always active
+	if (newGame.player2.id !== null && newGame.player2.id <= 0)
+		newGame.player2.active = true;
 	console.log('New game created for matching:', newGame);
-	invited.push(newGame); // Add the new game to the invited array
-	if (gametype == 'ranking')
+	const games = new Gameloop(newGame);
+	if (gametype === 'tournament') {
+		const { tournamentId } = req.body as { tournamentId: number };
+		games.setTournamentId(tournamentId);
+	}
+	invited.push(games); // Add the new game to the invited array
+	if (gametype == 'tournament')
 	{
 		if (playerid1 > 0)
 			await sendNotificationToUser(playerid1, `You have been matched for a tournament game`);
@@ -965,8 +859,8 @@ async function prepareDatabase() {
 	await dbfunc.initializeDatabase().catch(console.error);
 
 	await dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
-	await dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
 	await dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
+	await dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
 	console.log('Database prepared');
 }
 

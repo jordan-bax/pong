@@ -208,7 +208,7 @@ class TourDB {
                 FROM
                     tournament
                 WHERE id = ?`,
-                    [tourID])
+                [tourID])
             }
         } catch (error) {
             throw error
@@ -228,7 +228,12 @@ class TourDB {
                         SELECT GROUP_CONCAT(p.userID)
                         FROM players p
                         WHERE p.tourID = t.id
-                    ), '') AS player_ids
+                    ), '') AS player_ids,
+                    COALESCE((
+                        SELECT MAX(round)
+                        FROM match
+                        WHERE tourID = t.id
+                    ), 0) AS currentRound
                 FROM tournament t
                 WHERE isRunning = ?
                 AND isFinished = ?`,
@@ -316,7 +321,12 @@ class TourDB {
                         SELECT GROUP_CONCAT(p.userID)
                         FROM players p
                         WHERE p.tourID = t.id
-                    ), '') AS player_ids
+                    ), '') AS player_ids,
+                    COALESCE((
+                        SELECT MAX(round)
+                        FROM match
+                        WHERE tourID = t.id
+                    ), 0) AS currentRound
                 FROM tournament t`)
 
             let data = result.map(({ player_ids, ...row }) => ({

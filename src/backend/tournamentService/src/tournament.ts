@@ -241,8 +241,23 @@ class TourService {
                     // TODO: hit games endpoint
                     for (let idx = 0; idx < tour.nextMatchs[index].length; idx++) {
                         if (tour.nextMatchs[index][idx] < 0) {
-                            // endpoint ai
                             continue
+                        }
+
+                        const resp = await fetch(`http://notification:3005/add?userId=${tour.nextMatchs[index][idx]}`, {
+                        // const resp = await fetch(`/api/notification/add?userId=${tour.nextMatchs[index][idx]}`, {
+                            method: "POST",
+                            credentials: 'include',
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                "message": `You next match in tournament ${tour.name} will start in 10 seconds`
+                            })
+                        })
+
+                        if (resp.status !== 201) {
+                            console.log(resp)
                         }
                         // send naar noty server id in querystring massage in body
                         // this.notifications.push({ id: tour.nextMatchs[index][idx], message: "You next match will start in 15 seconds" })

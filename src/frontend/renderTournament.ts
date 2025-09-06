@@ -1,9 +1,12 @@
 import { getIdFromMe } from "./routing.js"
 
+window.addEventListener('beforeunload', cleanupIntervals);
+
 interface Tour {
     id: number
     name: string
     rounds: number
+    currentRound: number,
     isRunning: boolean
     isFinished: boolean
     lockTime: number
@@ -22,12 +25,6 @@ interface ToursDict {
 let refreshIntervalId: number | null = null;
 
 export async function renderTournament() {
-    const userID: number | null = await getIdFromMe()
-    if (userID == null) {
-        console.log("moet ingeloged zijn om dit te doen")
-        return
-    }
-
     const content = document.getElementById("content") as HTMLDivElement
     if (!content) {
         console.error("Content element not found")
@@ -37,29 +34,40 @@ export async function renderTournament() {
     content.innerHTML = ""
     const div = document.createElement("div")
 
-    const createTournamentContainer = document.createElement("div")
-    createTournamentContainer.className = "create-tournament-container"
+    const userID: number | null = await getIdFromMe()
+    if (userID == null) {
+        console.log("moet ingeloged zijn om dit te doen")
+        const h1 = document.createElement('h1')
+        h1.textContent = "You need to be logged in to join a tournament!"
+        h1.style.color = 'red'
+        div.appendChild(h1)
+        content.appendChild(div)
+        return
+    }
 
-    const showFormButton = document.createElement("button")
-    showFormButton.textContent = "Create New Tournament"
-    showFormButton.className = "show-form-btn"
-    showFormButton.addEventListener("click", () => {
-        showFormButton.style.display = "none"
-        createTournamentFormContainer.style.display = "block"
+    const tournamentContainer = document.createElement("div")
+    tournamentContainer.className = "create-tournament-container"
+
+    const formButton = document.createElement("button")
+    formButton.textContent = "Create New Tournament"
+    formButton.className = "show-form-btn"
+    formButton.addEventListener("click", () => {
+        formButton.style.display = "none"
+        tournamentFormContainer.style.display = "block"
     })
 
-    const createTournamentFormContainer = document.createElement("div")
-    createTournamentFormContainer.style.display = "none"
+    const tournamentFormContainer = document.createElement("div")
+    tournamentFormContainer.style.display = "none"
 
-    await createTournamentForm(createTournamentFormContainer, userID, () => {
-        createTournamentFormContainer.style.display = "none"
-        showFormButton.style.display = "block"
+    await createTournamentForm(tournamentFormContainer, userID, () => {
+        tournamentFormContainer.style.display = "none"
+        formButton.style.display = "block"
     })
 
-    createTournamentContainer.appendChild(showFormButton)
-    createTournamentContainer.appendChild(createTournamentFormContainer)
+    tournamentContainer.appendChild(formButton)
+    tournamentContainer.appendChild(tournamentFormContainer)
 
-    div.appendChild(createTournamentContainer)
+    div.appendChild(tournamentContainer)
     div.appendChild(document.createElement('br'))
 
     await loadTournamentData(div, userID);
@@ -69,11 +77,11 @@ export async function renderTournament() {
     }, 30000);
 
     content.appendChild(div)
-
-    window.addEventListener('beforeunload', cleanupIntervals);
 }
 
 async function loadTournamentData(container: HTMLDivElement, userID: number) {
+    console.log("reload page", Date());
+
     let toursDict: ToursDict = {
         finished: [],
         running: [],
@@ -86,11 +94,7 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
         return
     }
 
-    const data: Array<any> = await resp.json()
-
-    if (data.length === 0) {
-        console.log("geen data")
-    }
+    const data: Array<Tour> = await resp.json()
 
     for (let tournament of data) {
         if (tournament.isFinished) {
@@ -101,6 +105,9 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
             toursDict.joinable.push(tournament)
         }
     }
+
+    toursDict.joinable.sort((a, b) => a.lockTime - b.lockTime);
+    toursDict.running.sort((a, b) => a.lockTime - b.lockTime);
 
     const existingTablesContainer = container.querySelector('.tables-container');
     if (existingTablesContainer) {
@@ -150,8 +157,6 @@ function cleanupIntervals() {
         refreshIntervalId = null;
     }
 }
-
-window.addEventListener('beforeunload', cleanupIntervals);
 
 async function createTournamentForm( container: HTMLDivElement,
                                     userID: number,
@@ -255,7 +260,7 @@ function createRow(tournament: Tour,
 
     const roundsTd = document.createElement("td")
     if (type == "running") {
-        roundsTd.textContent = `1/${tournament.rounds.toString()}`
+        roundsTd.textContent = `${tournament.currentRound}/${tournament.rounds.toString()}`
     } else {
         roundsTd.textContent = tournament.rounds.toString()
     }

@@ -1,7 +1,6 @@
 // import {createNewTable1} from './Tables';
 import { getLanguage, setLanguage } from "./index.js";
 import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
-import { setNotifications } from './notifications';
 import { createGameHistoryTable } from './gameHistoryTable.js';
 import { renderContent, getPageContent } from './contentRenderer.js';
 
@@ -161,7 +160,7 @@ export async function dropdowngamemenu(frame: HTMLElement): Promise<void> {
 	option2.onclick = (e) => {
 		e.preventDefault();
 		console.log('Game history option clicked');
-		
+
 		history.pushState({}, '', '/gameHistory');
 		renderContent('history');
 	};

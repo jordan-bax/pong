@@ -2,7 +2,6 @@ import {quickjoin} from './renderPong.js';
 import { joinGame } from './joingame.js';
 import { createGameHistoryTable } from './gameHistoryTable.js';
 // import {  } from './sharedValuesPong.js';
-import {setNotifications} from './notifications.js';
 import { getLanguage } from './index.js';
 import { getContent } from './settings.js';
 var fps: number = 10; // Default frames per second
@@ -79,7 +78,6 @@ async function testData(frame: HTMLIFrameElement): Promise<void> {
 	addPlayerButton.style.padding = '10px 20px';
 	addPlayerButton.onclick = async () => {
 		frame?.removeChild(container); // Remove the container before adding a player
-		await setNotifications();
 		console.log('Add player button clicked');
 		return;
 	};
@@ -122,7 +120,7 @@ async function createCenterButtons(){
 	container.style.gap = '20px';
 	container.style.zIndex = '1000';
 
-	
+
 
 	const test = document.createElement('button');
 	test.textContent = text.gameButtonTestText;
@@ -168,7 +166,7 @@ async function createCenterButtons(){
 		frame?.removeChild(container); // Remove the container before starting the game
 		nextFunction( () => quickjoin('ai') );
 	};
-	
+
 	// const input = document.createElement('input');
 	// input.type = 'number';
 	// input.placeholder = 'how many fps?';

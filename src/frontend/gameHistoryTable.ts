@@ -1,5 +1,5 @@
-import { getLanguage } from ".";
-import { getContent } from "./settings";
+import { getLanguage } from "./index.js";
+import { getContent } from "./settings.js";
 
 
 export interface player {

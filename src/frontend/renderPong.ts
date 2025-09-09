@@ -2,6 +2,8 @@ import {gamestateinterface, ballvarTemplate, player1Template, player2Template,sc
 // import { io, Socket } from 'socket.io-client';
 // import { Server } from 'socket.io';
 import { getLogginUserData, userInfo } from './routing.js';
+import { getLanguage } from './index.js';
+import { getContent } from './settings.js';
 
 
 var player1: pcInterface = player1Template
@@ -36,13 +38,16 @@ var g_gametype: string = ''; // Default game type
         return sizeAduster;
     }
 async function inputTempName(): Promise<string> {
-    return new Promise((resolve) => {
+    return  new Promise(async (resolve) => {
+        const language = await getLanguage();
+        const textMapData = await getContent(language.toLowerCase(), ['backButtonText']);
+        const text = textMapData.get('row') as {backButtonText:string};
         const input = document.createElement('input');
         input.type = 'text';
         input.placeholder = 'Enter your nickname';
 
         const button = document.createElement('button');
-        button.textContent = 'back';
+        button.textContent = text.backButtonText;
 
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === 'Return') {

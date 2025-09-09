@@ -1,4 +1,6 @@
+import { getLanguage } from "./index.js";
 import { getIdFromMe } from "./routing.js"
+import { getContent } from "./settings.js";
 
 window.addEventListener('beforeunload', cleanupIntervals);
 
@@ -22,10 +24,43 @@ interface ToursDict {
     joinable: Tour[]
 }
 
+interface TournamentText {
+    loginNeededError: string;
+    createTournamentText: string;
+    cancelText: string;
+    submitText: string;
+}
+
+interface tournamentHistoryText {
+        historyId: string;
+        historyName: string;
+        historyPlayers: string;
+        historyRounds: string;
+        historyStart: string;
+        gamePlayerOutcomeLabel: string;
+        historyActio: string;
+        historyLock: string;
+};
+
 let refreshIntervalId: number | null = null;
+
+async function getText(): Promise<TournamentText> {
+    const textArray = [
+        'loginNeededError',
+        'createTournamentText',
+        'cancelText',
+        'submitText'
+    ];
+    
+    const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), textArray);
+    const text = textMapData.get('row') as TournamentText;
+    return text;
+}
 
 export async function renderTournament() {
     const content = document.getElementById("content") as HTMLDivElement
+    const text = await getText();
     if (!content) {
         console.error("Content element not found")
         return
@@ -38,7 +73,7 @@ export async function renderTournament() {
     if (userID == null) {
         console.log("moet ingeloged zijn om dit te doen")
         const h1 = document.createElement('h1')
-        h1.textContent = "You need to be logged in to join a tournament!"
+        h1.textContent = text.loginNeededError;
         h1.style.color = 'red'
         div.appendChild(h1)
         content.appendChild(div)
@@ -49,7 +84,7 @@ export async function renderTournament() {
     tournamentContainer.className = "create-tournament-container"
 
     const formButton = document.createElement("button")
-    formButton.textContent = "Create New Tournament"
+    formButton.textContent = text.createTournamentText
     formButton.className = "show-form-btn"
     formButton.addEventListener("click", () => {
         formButton.style.display = "none"
@@ -136,7 +171,7 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
         section.appendChild(title)
 
         const table = document.createElement("table")
-        table.appendChild(createHeader(type.key))
+        table.appendChild(await createHeader(type.key))
 
         for (let tournament of toursDict[type.key]) {
             const isInTour = tournament.players.includes(userID)
@@ -162,6 +197,7 @@ async function createTournamentForm( container: HTMLDivElement,
                                     userID: number,
                                     onSuccess: () => void
 ) {
+    const text = await getText();
     container.innerHTML = ""
     const form = document.createElement("form")
     form.className = "tournament-form"
@@ -176,7 +212,7 @@ async function createTournamentForm( container: HTMLDivElement,
 
     const cancelButton = document.createElement("button")
     cancelButton.type = "button"
-    cancelButton.textContent = "Cancel"
+    cancelButton.textContent = text.cancelText
     cancelButton.addEventListener("click", () => {
         onSuccess()
     })
@@ -184,7 +220,7 @@ async function createTournamentForm( container: HTMLDivElement,
 
     const submitButton = document.createElement("button")
     submitButton.type = "submit"
-    submitButton.textContent = "Submit"
+    submitButton.textContent = text.submitText;
     form.appendChild(submitButton)
 
     form.onsubmit = async function(e) {
@@ -222,13 +258,28 @@ async function createTournamentForm( container: HTMLDivElement,
     container.appendChild(form)
 }
 
-function createHeader(type: keyof ToursDict): HTMLTableRowElement {
+async function createHeader(type: keyof ToursDict): Promise<HTMLTableRowElement> {
+    const textArray = [
+        'historyId',
+        'historyName',
+        'historyPlayers',
+        'historyRounds',
+        'historyStart',
+        'gamePlayerOutcomeLabel',
+        'historyAction',
+        'historyLock'
+    ];
+
+    const lang = await getLanguage();
+    const textMapData = await getContent(lang.toLowerCase(), textArray);
+    const text = textMapData.get('row') as tournamentHistoryText;
+
     const tr = document.createElement("tr")
 
     const headers: Record<keyof ToursDict, string[]> = {
-        finished: ["ID", "Name", "Players", "Rounds", "Start Time", "Winner"],
-        running: ["ID", "Name", "Players", "Rounds", "Start Time"],
-        joinable: ["ID", "Name", "Players", "Rounds", "Lock Time", "Actions"]
+        finished: [text.historyId, text.historyName, text.historyPlayers, text.historyRounds, text.historyStart, text.gamePlayerOutcomeLabel],
+        running: [text.historyId, text.historyName, text.historyPlayers, text.historyRounds, text.historyStart],
+        joinable: [text.historyId, text.historyName, text.historyPlayers, text.historyRounds, text.historyLock, text.historyActio]
     }
 
     for (let headerText of headers[type]) {

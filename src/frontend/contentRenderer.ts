@@ -2,7 +2,7 @@
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
 import { getLoggin, login, updateUserInfo, handleGoogleCheck, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser, getLogginServer } from "./routing.js";
-import { openSettings } from "./settings.js";
+import { getContent, openSettings } from "./settings.js";
 import {renderTournament} from "./renderTournament.js"
 import { listenForNotifications, dodo } from "./notifications.js";
 import { createGameHistoryTable } from "./gameHistoryTable.js";
@@ -65,7 +65,10 @@ function createRow(leftContent: any, rightContent: any): HTMLTableRowElement {
     return row;
 }
 
-function setupSearchUsers(): HTMLDivElement {
+async function setupSearchUsers(): Promise<HTMLDivElement> {
+    const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), ['searchUserButtonText', 'searchUserPlaceholderText']);
+    const text = textMapData.get('row') as { searchUserButtonText: string; searchUserPlaceholderText: string };
     const searchDiv = document.createElement('div');
     searchDiv.id = 'searchDiv';
     searchDiv.style.display = 'grid';
@@ -74,12 +77,12 @@ function setupSearchUsers(): HTMLDivElement {
     input.type = 'text';
     input.name = 'userSearch';
     input.id = 'searchInput';
-    input.placeholder = 'Search for user by username or email';
+    input.placeholder = text.searchUserPlaceholderText;
     searchDiv.appendChild(input);
 
     const button = document.createElement('button');
     button.id = 'searchButton';
-    button.textContent = 'seach users';
+    button.textContent = text.searchUserButtonText;
     button.addEventListener('click', async () => {
         const query = input.value.trim();
         if (!query) {
@@ -98,6 +101,9 @@ function setupSearchUsers(): HTMLDivElement {
 }
 
 async function renderResult(users: searchUser[] | null): Promise<void> {
+    const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), ['noUser', 'addFriendButtonText']);
+    const text = textMapData.get('row') as {noUser: string; addFriendButtonText:string;};
     const searchDiv = document.getElementById('searchDiv');
     if (!searchDiv) {
         console.error('no searchDiv');
@@ -115,7 +121,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
     if (Array.isArray(users))
     {
         if (users.length === 0) {
-            listItem.textContent = 'No Users found.'
+            listItem.textContent = text.noUser;
             resultList.appendChild(listItem);
             searchDiv.appendChild(resultList);
             return;
@@ -161,7 +167,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
             if (!friendArray.includes(email) && !requestedArray.includes(email) && !pendingArray.includes(email)) {
                 const addFriendButton = document.createElement('button');
                 addFriendButton.id = 'AddFriendbutton' + i;
-                addFriendButton.textContent = 'Add friend';
+                addFriendButton.textContent = text.addFriendButtonText;
                 addFriendButton.onclick = async (e) => {
                     await sendFriendRequest(user);
                     e.preventDefault();
@@ -212,9 +218,12 @@ function addOnlineCircle(status: number, username: string | null) {
 }
 
 async function friendsList(): Promise<HTMLTableRowElement> {
+    const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), ['friendsLabelText']);
+    const text = textMapData.get('row') as { friendsLabelText: string; };
     const listRow = document.createElement('tr');
     const title = document.createElement('td');
-    title.textContent = 'Friends';
+    title.textContent = text.friendsLabelText;
     listRow.appendChild(title);
     const friends = await getFriends();
     if (!friends) {
@@ -255,9 +264,12 @@ async function friendsList(): Promise<HTMLTableRowElement> {
 }
 
 async function pendingList(): Promise<HTMLTableRowElement> {
+    const lang = await getLanguage();
+    const textMapData = await getContent(lang.toLowerCase(), ['outstandingFriendsLabelText']);
+    const text = textMapData.get('row') as { outstandingFriendsLabelText: string; };
     const listRow = document.createElement('tr');
     const title = document.createElement('td');
-    title.textContent = 'outstanding friend requests';
+    title.textContent = text.outstandingFriendsLabelText;
     listRow.appendChild(title);
     const friends = await getPendingFriends();
     if (!friends) {
@@ -319,9 +331,12 @@ async function pendingList(): Promise<HTMLTableRowElement> {
 }
 
 async function requestedList(): Promise<HTMLTableRowElement> {
+    const lang = await getLanguage();
+    const textMapData = await getContent(lang.toLowerCase(), ['incomingFriendsLabelText']);
+    const text = textMapData.get('row') as {incomingFriendsLabelText:string};
     const listRow = document.createElement('tr');
     const title = document.createElement('td');
-    title.textContent = 'incomming friend requests';
+    title.textContent = text.incomingFriendsLabelText;
     listRow.appendChild(title);
     const friends = await getRequestedFriends();
     if (!friends) {
@@ -1175,7 +1190,7 @@ export async function renderContent (route: string): Promise<void> {
             if (profilePicture !== null) {
                 content.appendChild(profilePicture);
             }
-            const searchUser = setupSearchUsers();
+            const searchUser = await setupSearchUsers();
             if (searchUser !== null) {
                 content.appendChild(searchUser);
             }
@@ -1223,7 +1238,7 @@ export async function renderContent (route: string): Promise<void> {
             renderTournament();
             break;
         case 'history':
-            createGameHistoryTable(content as HTMLIFrameElement);
+            await createGameHistoryTable(content as HTMLIFrameElement);
             break;
         default:
             content.textContent = textData.notFoundText;

@@ -3,6 +3,8 @@ import {gamestateinterface, ballvarTemplate, player1Template, player2Template,sc
 import { table }  from './Tables.js'
 import * as routing from './routing.js'
 import { nextFunction } from "./pongMenu.js";
+import { getLanguage } from "./index.js";
+import { getContent } from "./settings.js";
 
 
 interface test {
@@ -11,9 +13,33 @@ interface test {
 	gameid: number;
 	active: boolean;
 }
+
+interface joingameText {
+    gameButtonJoinText: string;
+    backButtonText: string;
+    noUserIdError: string;
+    noOpenGamesError: string;
+}
+
+
+async function getText(): Promise<joingameText> {
+    const textArray = [
+        'gameButtonJoinText',
+        'backButtonText',
+        'noUserIdError',
+        'noOpenGamesError'
+    ];
+
+    const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), textArray);
+    const text = textMapData.get('row') as joingameText;
+    return text;
+}
+
 type Header<T> = { label: string; key: keyof T };
 
-function bob(test: test, td: HTMLTableCellElement): void {
+async function bob(test: test, td: HTMLTableCellElement): Promise<void> {
+    const text = await getText();
     // Remove any existing dropdown to avoid duplicates
     const removeDropdown = () => {
         const existingDropdown = td.querySelector('.dropdown-content');
@@ -36,7 +62,7 @@ function bob(test: test, td: HTMLTableCellElement): void {
 
     // Option 1: Join game
     const invite = document.createElement('a');
-    invite.textContent = 'join game';
+    invite.textContent = text.gameButtonJoinText;
     invite.className = 'a';
     invite.onclick = async () => {
         removeDropdown();
@@ -46,7 +72,7 @@ function bob(test: test, td: HTMLTableCellElement): void {
 
     // // Option 2: Back
     // const back = document.createElement('a');
-    // back.textContent = 'Back';
+    // back.textContent = text.backButtonText;
     // back.className = 'a';
     // back.onclick = () => {
     //     removeDropdown();
@@ -190,14 +216,15 @@ function errorMessage(frame: HTMLElement, message: string): void {
 }
 
 async function createGameList(games: gamestateinterface[], frame: HTMLElement): Promise<void> {
+    const text = await getText();
 	frame.innerHTML = ''; // Clear previous content
 	const id = await routing.getIdFromMe();
 	if (!id) {
-		errorMessage(frame, 'Failed to retrieve user ID.');
+		errorMessage(frame, text.noUserIdError);
 		return;
 	}
 	if (games.length === 0) {
-		errorMessage(frame, 'No open games available.');
+		errorMessage(frame, text.noOpenGamesError);
 		return;
 	}
 	const test1: test[] = [];
@@ -247,11 +274,12 @@ async function tester() {
 }
 export async function joinGame(gametype :string): Promise<void> {
     // window.location.href = '/pong/game'; // Redirect to the game page
+    const text = await getText();
 	await tester();
 	var frame = document.getElementById('content') as HTMLElement;
 	const games = await getopengames();
 	if (games.length === 0) {
-		errorMessage(frame, 'No open games available in backend.');
+		errorMessage(frame, text.noOpenGamesError);
 		return;
 	}
 	await createGameList(games, frame);

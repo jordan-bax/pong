@@ -1,6 +1,6 @@
 import { renderContent, getPageContent } from "./contentRenderer.js";
-import { getLanguage, setLanguage } from "./index.js";
-import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
+import { getLanguage } from "./index.js";
+import { getLoggin, getLogginServer, logout } from "./routing.js";
 import { dropdowngamemenu } from "./settings.js";
 
 interface navbarContent {
@@ -10,6 +10,8 @@ interface navbarContent {
     profileNavbarText: string;
     registerNavbarText: string;
     gameNavbarText: string;
+    settingNavText: string;
+    notificationNavbarText: string;
 }
 
 async function getNavbarContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
@@ -17,20 +19,9 @@ async function getNavbarContent(language:string, textKeys: string[]): Promise<Ma
     return navbarMap;
 }
 
-// function navbarStyling(navItem: HTMLAnchorElement): HTMLAnchorElement {
-//     navItem.style.color = 'black';
-//     navItem.style.display = 'flex';
-//     navItem.style.textAlign = 'center';
-//     navItem.style.justifyContent = 'left';
-//     navItem.style.textDecoration = 'none';
-//     navItem.style.marginLeft = '10px';
-//     navItem.style.border = '1em';
-//     return navItem;
-// }
-
 export async function renderNavbar(): Promise<void> {
     const language = await getLanguage();
-    const navbarMapData = await getNavbarContent(language.toLowerCase(), ['loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText', 'gameNavbarText']);
+    const navbarMapData = await getNavbarContent(language.toLowerCase(), ['settingNavText', 'loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText', 'gameNavbarText', 'notificationNavbarText']);
     const navbarText = navbarMapData.get('row') as navbarContent;
     const navbar = document.getElementById('navbar');
     if (!navbar) return;
@@ -48,11 +39,11 @@ export async function renderNavbar(): Promise<void> {
     };
     navbar.appendChild(homeLink);
     
-    dropdowngamemenu(navbar);
+    await dropdowngamemenu(navbar);
     
     let settingsLink = document.createElement('a');
     settingsLink.href = '/settings';
-    settingsLink.textContent = "Settings";
+    settingsLink.textContent = navbarText.settingNavText;
     // settingsLink.textContent = navbarText.settingsNavbarText;
     settingsLink.className = 'btn navItem';
     settingsLink.onclick = (e) => {
@@ -63,7 +54,7 @@ export async function renderNavbar(): Promise<void> {
 
     let notificationArea = document.createElement('div');
     notificationArea.id = 'notification-area';
-    notificationArea.textContent = "🔔 New notification!";
+    notificationArea.textContent = navbarText.notificationNavbarText;
     navbar.appendChild(notificationArea);
 
     const isLoggedIn = getLoggin();
@@ -109,32 +100,6 @@ export async function renderNavbar(): Promise<void> {
         };
         navbar.appendChild(registerLink);
     }
-
-    // const languageDropdown = document.createElement('select');
-    // const options = ['NL', 'EN'];
-    // options.forEach((text, index) => {
-    //     const option = document.createElement('option');
-    //     option.value  = options[index];
-    //     option.textContent = text;
-    //     languageDropdown.appendChild(option);
-    // });
-    
-    // languageDropdown.style.display = 'flex';
-    // languageDropdown.style.position = 'absolute';
-    // languageDropdown.style.right = '20px';
-    // navbar.appendChild(languageDropdown);
-    // Array.from(languageDropdown.options).forEach((option) => {
-    //     if (option.text == language) {
-    //         option.selected = true;
-    //     } else {
-    //         option.selected = false;
-    //     }
-    // })
-    // languageDropdown.addEventListener('change', (event) => {
-    //     const target = event.target as HTMLSelectElement;
-    //     setLanguage(target.value);
-    //     checkSession();
-    // })
 
     const googleLogin = document.createElement('div');
     googleLogin.id = 'google-signin-button';

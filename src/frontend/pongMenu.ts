@@ -3,10 +3,12 @@ import { joinGame } from './joingame.js';
 import { createGameHistoryTable } from './gameHistoryTable.js';
 // import {  } from './sharedValuesPong.js';
 import {setNotifications} from './notifications.js';
+import { getLanguage } from './index.js';
+import { getContent } from './settings.js';
 var fps: number = 10; // Default frames per second
 
 export async function pongbutton(): Promise<void> {
-	createCenterButtons();
+	await createCenterButtons();
 }
 
 async function testaddPlayerButton(frame: HTMLIFrameElement): Promise<void> {
@@ -34,6 +36,9 @@ async function testaddPlayerButton(frame: HTMLIFrameElement): Promise<void> {
 
 
 async function testData(frame: HTMLIFrameElement): Promise<void> {
+    const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), ['backButtonText', 'gameHistoryButtonText', 'testNotificationButtonText']);
+    const text = textMapData.get('row') as {backButtonText: string; gameHistoryButtonText: string, testNotificationButtonText: string}
 	// This function is just a placeholder for testing purposes
 	console.log('test function called');
 	// You can add your test logic here
@@ -45,7 +50,7 @@ async function testData(frame: HTMLIFrameElement): Promise<void> {
 	container.style.display = 'flex';
 
 	const backbutton = document.createElement('button');
-	backbutton.textContent = 'back';
+	backbutton.textContent = text.backButtonText;
 	backbutton.style.fontSize = '1.2em';
 	backbutton.style.padding = '10px 20px';
 	backbutton.onclick = () => {
@@ -56,20 +61,20 @@ async function testData(frame: HTMLIFrameElement): Promise<void> {
 
 	const gamehistory = document.createElement('button');
 	// gamehistory.href = '/gameHistory';
-	gamehistory.textContent = 'game history';
+	gamehistory.textContent = text.gameHistoryButtonText;
 	gamehistory.style.fontSize = '1.2em';
 	gamehistory.style.padding = '10px 20px';
-	gamehistory.onclick = () => {
+	gamehistory.onclick = async () => {
 		frame?.removeChild(container); // Remove the container before showing game history
 		console.log('Game history button clicked');
-		createGameHistoryTable(frame);
+		await createGameHistoryTable(frame);
 		return;
 	};
 	container.appendChild(gamehistory);
 
 
 	const addPlayerButton = document.createElement('button');
-	addPlayerButton.textContent = 'test notify';
+	addPlayerButton.textContent = text.testNotificationButtonText;
 	addPlayerButton.style.fontSize = '1.2em';
 	addPlayerButton.style.padding = '10px 20px';
 	addPlayerButton.onclick = async () => {
@@ -84,7 +89,25 @@ async function testData(frame: HTMLIFrameElement): Promise<void> {
 	frame.appendChild(container);
 }
 
-function createCenterButtons(){
+interface gameText {
+    gameButtonTestText: string;
+    gameButtonQuickJoinText: string;
+    gameButtonJoinText: string;
+    gameButtonLocalText: string;
+    gameButtonAIText: string;
+}
+
+async function createCenterButtons(){
+    const language = await getLanguage();
+    const textArray = [
+        'gameButtonTestText',
+        'gameButtonQuickJoinText',
+        'gameButtonJoinText',
+        'gameButtonLocalText',
+        'gameButtonAIText'
+    ]
+    const textMapData = await getContent(language.toLowerCase(), textArray);
+    const text = textMapData.get('row') as gameText;
 	const frame = document.getElementById('content');
 	if (!frame) {
 		console.error('Content frame not found');
@@ -102,18 +125,18 @@ function createCenterButtons(){
 	
 
 	const test = document.createElement('button');
-	test.textContent = 'test game';
+	test.textContent = text.gameButtonTestText;
 	test.style.fontSize = '1.2em';
 	test.style.padding = '10px 20px';
 	test.onclick = () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		nextFunction( () => testData(frame as HTMLIFrameElement) );
+		nextFunction(async () => await testData(frame as HTMLIFrameElement) );
 		console.log('Test game button clicked');
 	};
 	container.appendChild(test);
 
 	const online = document.createElement('button');
-	online.textContent = 'quick join';
+	online.textContent = text.gameButtonQuickJoinText;
 	online.style.fontSize = '1.2em';
 	online.style.padding = '10px 20px';
 	online.onclick = () => {
@@ -121,7 +144,7 @@ function createCenterButtons(){
 		nextFunction( () => quickjoin('online') );
 	};
 	const joingame = document.createElement('button');
-	joingame.textContent = 'join game';
+	joingame.textContent = text.gameButtonJoinText;
 	joingame.style.fontSize = '1.2em';
 	joingame.style.padding = '10px 20px';
 	joingame.onclick = () => {
@@ -129,7 +152,7 @@ function createCenterButtons(){
 		joinGame('joingame');
 	};
 	const button1 = document.createElement('button');
-	button1.textContent = 'local';
+	button1.textContent = text.gameButtonLocalText;
 	button1.style.fontSize = '1.2em';
 	button1.style.padding = '10px 20px';
 	button1.onclick = () => {
@@ -138,7 +161,7 @@ function createCenterButtons(){
 	};
 
 	const button2 = document.createElement('button');
-	button2.textContent = 'ai';
+	button2.textContent = text.gameButtonAIText;
 	button2.style.fontSize = '1.2em';
 	button2.style.padding = '10px 20px';
 	button2.onclick = () => {

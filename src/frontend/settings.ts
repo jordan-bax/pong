@@ -3,7 +3,20 @@ import { getLanguage, setLanguage } from "./index.js";
 import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
 import { setNotifications } from './notifications';
 import { createGameHistoryTable } from './gameHistoryTable.js';
-import { renderContent } from './contentRenderer.js';
+import { renderContent, getPageContent } from './contentRenderer.js';
+
+interface dropdownText {
+    gameNavDropText: string;
+    gameNavPongText: string;
+    gameNavHistoryText: string;
+    gameNavTournamentText: string;
+};
+
+export async function getContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
+    const content = getPageContent(language, textKeys);
+    return content;
+}
+
 // interface settingsContent {
 // 	languageSettings: string;
 // 	notificationsSettings: string;
@@ -27,6 +40,8 @@ function createRow(leftContent: any, rightContent: any): HTMLTableRowElement {
 
 async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 	const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), ['languageSettingText']);
+    const text = textMapData.get('row') as {languageSettingText: string}
 	const languageDropdown = document.createElement('select');
 		const options = ['NL', 'EN', 'DE'];
 		options.forEach((text, index) => {
@@ -54,16 +69,19 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 			openSettings(); // Refresh settings after changing language
 		})
 	const languagetext = document.createElement('div');
-	languagetext.textContent = 'Language Settings:';
+	languagetext.textContent = text.languageSettingText;
 
 	return createRow(
 		languagetext,
 		languageDropdown
 	);
 }
-function addNotificationSettings(): HTMLTableRowElement {
+async function addNotificationSettings(): Promise<HTMLTableRowElement> {
+    const languae = await getLanguage();
+    const textMapData = await getContent(languae.toLowerCase(), ['notificationSettingText']);
+    const text = textMapData.get('row') as {notificationSettingText:string};
 	const notificationText = document.createElement('div');
-	notificationText.textContent = 'Notification Settings:';
+	notificationText.textContent = text.notificationSettingText;
 
 	const notificationCheckbox = document.createElement('input');
 	notificationCheckbox.type = 'checkbox';
@@ -94,12 +112,15 @@ export async function openSettings(): Promise<void> {
 	table.id = "settings-table";
 
 	table.appendChild(await addLanguageSettings());
-	table.appendChild(addNotificationSettings());
+	table.appendChild(await addNotificationSettings());
 
 	content.appendChild(table);
 }
 
-export function dropdowngamemenu(frame: HTMLElement): void {
+export async function dropdowngamemenu(frame: HTMLElement): Promise<void> {
+    const language = await getLanguage();
+    const textMapData = await getContent(language.toLowerCase(), ['gameNavDropText', 'gameNavPongText', 'gameNavHistoryText', 'gameNavTournamentText']);
+    const text = textMapData.get('row') as dropdownText;
 	const dropdown = document.createElement('div');
 	const content = document.getElementById('content');
 	if (!content) {
@@ -112,7 +133,7 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 
 	const dropbtn = document.createElement('button');
 	dropbtn.className = 'dropbtn';
-	dropbtn.textContent = 'Game Menu';
+	dropbtn.textContent = text.gameNavDropText;
 	dropbtn.onclick = (e) => {
 		e.preventDefault();
 		console.log('Pong option clicked');
@@ -125,7 +146,7 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 
 	const option1 = document.createElement('a');
 	option1.href = '/pong';
-	option1.textContent = 'pong';
+	option1.textContent = text.gameNavPongText;
 	option1.onclick = (e) => {
 		e.preventDefault();
 		console.log('Pong option clicked');
@@ -136,7 +157,7 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 
 	const option2 = document.createElement('a');
 	option2.href = '/gamehistory';
-	option2.textContent = 'History';
+	option2.textContent = text.gameNavHistoryText;
 	option2.onclick = (e) => {
 		e.preventDefault();
 		console.log('Game history option clicked');
@@ -148,7 +169,7 @@ export function dropdowngamemenu(frame: HTMLElement): void {
 
 	const option3 = document.createElement('a');
 	option3.href = '/tournament';
-	option3.textContent = 'tournament';
+	option3.textContent = text.gameNavTournamentText;
     option3.onclick = (e) => {
         e.preventDefault();
         history.pushState({}, '', '/tournament');

@@ -10,9 +10,21 @@ interface GetContentBody {
     textKey: string | string[];
 }
 
+interface translateBody {
+    textkey: string;
+    text: string;
+}
+
+interface translateMap {
+    language: string;
+    translation: translateBody;
+}
+
 const fastify = Fastify({ logger: true });
 const sessionSecret = process.env.SESSION_SECRET;
 const cookieSecret = process.env.COOKIE_SECRET;
+
+let g_translatePromise: Map<string, Map<string, string>> = new Map<string, Map<string, string>>();
 
 if (!sessionSecret || !cookieSecret) {
     throw new Error('MISSING ENV VARIABLES');

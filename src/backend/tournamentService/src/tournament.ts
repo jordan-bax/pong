@@ -168,11 +168,11 @@ class TourService {
         }
 
         if (player1ID < 1) {
-            throw new Error('player1ID can not be 0')
+            throw new Error('player1ID can not be less then 1')
         }
 
         if (player2ID < 1) {
-            throw new Error('player2ID can not be 0')
+            throw new Error('player2ID can not be be less then 1')
         }
 
         const winnerID = player1Score > player2Score ? player1ID : player2ID

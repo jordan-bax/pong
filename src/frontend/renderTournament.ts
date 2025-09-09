@@ -51,7 +51,7 @@ async function getText(): Promise<TournamentText> {
         'cancelText',
         'submitText'
     ];
-    
+
     const language = await getLanguage();
     const textMapData = await getContent(language.toLowerCase(), textArray);
     const text = textMapData.get('row') as TournamentText;
@@ -115,8 +115,6 @@ export async function renderTournament() {
 }
 
 async function loadTournamentData(container: HTMLDivElement, userID: number) {
-    console.log("reload page", Date());
-
     let toursDict: ToursDict = {
         finished: [],
         running: [],

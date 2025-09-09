@@ -205,13 +205,12 @@ server.post('/leave',
 server.post('/done',
     { schema: gameDoneSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
-        const { tournamentID, player1ID, player2ID, matchID} = request.body as {
+        const { tournamentID, player1ID, player2ID, player1Score, player2Score} = request.body as {
                 tournamentID: number,
                 player1ID: number,
                 player2ID: number
                 player1Score: number,
-                player2Score: number,
-                matchID: number
+                player2Score: number
             }
 
         try {
@@ -219,7 +218,8 @@ server.post('/done',
                 tournamentID,
                 player1ID,
                 player2ID,
-                matchID
+                player1Score,
+                player2Score
             )
 
             reply.status(201).send({ 'message': 'OK' })

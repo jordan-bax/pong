@@ -161,23 +161,21 @@ class TourService {
     async matchDone(tourID: number,
                     player1ID: number,
                     player2ID: number,
-                    matchID: Number) {
+                    player1Score: number,
+                    player2Score: number) {
         if (tourID < 1) {
             throw new Error('tournamentID must be more then 0')
         }
 
-        if (player1ID === 0) {
+        if (player1ID < 1) {
             throw new Error('player1ID can not be 0')
         }
 
-        if (player2ID === 0) {
+        if (player2ID < 1) {
             throw new Error('player2ID can not be 0')
         }
 
-        // get data from game endpoint
-        const winnerID = 0
-        const player1Score = 0
-        const player2Score = 0
+        const winnerID = player1Score > player2Score ? player1ID : player2ID
 
         try {
             await db.done(
@@ -258,6 +256,7 @@ class TourService {
                         if (resp.status !== 201) {
                             console.log(resp)
                         }
+
                         // send naar noty server id in querystring massage in body
                         // this.notifications.push({ id: tour.nextMatchs[index][idx], message: "You next match will start in 15 seconds" })
                     }

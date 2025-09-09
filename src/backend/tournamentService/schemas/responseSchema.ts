@@ -110,6 +110,7 @@ export const gameDoneSchema = {
             tournamentID: { type: 'number' },
             player1ID: { type: 'number' },
             player2ID: { type: 'number' },
+            matchID: {type: 'number'}
         },
         required: ['tournamentID', 'player1ID', 'player2ID']
     },

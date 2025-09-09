@@ -245,14 +245,13 @@ class TourService {
                         }
 
                         const resp = await fetch(`http://notification:3005/add?userId=${tour.nextMatchs[index][idx]}`, {
-                        // const resp = await fetch(`/api/notification/add?userId=${tour.nextMatchs[index][idx]}`, {
                             method: "POST",
                             credentials: 'include',
                             headers: {
                                 "Content-Type": "application/json"
                             },
                             body: JSON.stringify({
-                                "message": `You next match in tournament ${tour.name} will start in 10 seconds`
+                                "message": `You next match in tournament ${tour.name} is ready to start`
                             })
                         })
 

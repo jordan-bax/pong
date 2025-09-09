@@ -110,9 +110,11 @@ export const gameDoneSchema = {
             tournamentID: { type: 'number' },
             player1ID: { type: 'number' },
             player2ID: { type: 'number' },
-            matchID: {type: 'number'}
+            player1Score: { type: 'number' },
+            player2Score: { type: 'number' },
+            matchID: { type: 'number' }
         },
-        required: ['tournamentID', 'player1ID', 'player2ID']
+        required: ['tournamentID', 'player1ID', 'player2ID', 'Player1Score', 'player2Score', 'matchID']
     },
     response: {
         201: {
@@ -203,7 +205,7 @@ export const getToursSchema = {
                     id: { type: 'number' },
                     name: { type: 'string' },
                     rounds: { type: 'number' },
-                    currentRound: {type: 'number'},
+                    currentRound: { type: 'number' },
                     isRunning: { type: 'boolean' },
                     isFinished: { type: 'boolean' },
                     lockTime: { type: 'number' },

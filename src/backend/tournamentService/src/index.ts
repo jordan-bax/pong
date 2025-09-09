@@ -209,6 +209,8 @@ server.post('/done',
                 tournamentID: number,
                 player1ID: number,
                 player2ID: number
+                player1Score: number,
+                player2Score: number,
                 matchID: number
             }
 

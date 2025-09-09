@@ -2,6 +2,7 @@ import { renderContent, getPageContent } from "./contentRenderer.js";
 import { getLanguage } from "./index.js";
 import { getLoggin, getLogginServer, logout } from "./routing.js";
 import { dropdowngamemenu } from "./settings.js";
+import { renderNotification } from "./notifications.js"
 
 interface navbarContent {
     homeNavbarText: string;
@@ -38,9 +39,9 @@ export async function renderNavbar(): Promise<void> {
         renderContent('home');
     };
     navbar.appendChild(homeLink);
-    
+
     await dropdowngamemenu(navbar);
-    
+
     let settingsLink = document.createElement('a');
     settingsLink.href = '/settings';
     settingsLink.textContent = navbarText.settingNavText;
@@ -52,9 +53,7 @@ export async function renderNavbar(): Promise<void> {
         renderContent('settings');
     };
 
-    let notificationArea = document.createElement('div');
-    notificationArea.id = 'notification-area';
-    notificationArea.textContent = navbarText.notificationNavbarText;
+    let notificationArea = renderNotification()
     navbar.appendChild(notificationArea);
 
     const isLoggedIn = getLoggin();

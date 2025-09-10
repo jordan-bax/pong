@@ -65,7 +65,6 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 			const target = event.target as HTMLSelectElement;
 			setLanguage(target.value);
 			checkSession();
-			openSettings(); // Refresh settings after changing language
 		})
 	const languagetext = document.createElement('div');
 	languagetext.textContent = text.languageSettingText;

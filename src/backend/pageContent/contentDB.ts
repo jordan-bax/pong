@@ -366,6 +366,15 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('en', 'localStat', 'local');
         await statement.run('nl', 'localStat', 'Lokaal');
         await statement.run('de', 'localStat', 'Lokal');
+        await statement.run('en', 'tournamentNameText', 'Tournament Name');
+        await statement.run('nl', 'tournamentNameText', 'Compititie Naam');
+        await statement.run('de', 'tournamentNameText', 'Turniername');
+        await statement.run('en', 'tournamentPlayersText', 'How many players');
+        await statement.run('nl', 'tournamentPlayersText', 'Hoeveel spelers');
+        await statement.run('de', 'tournamentPlayersText', 'Wie viele Spieler');
+        await statement.run('en', 'tournamentDurationText', 'Duration before locking');
+        await statement.run('nl', 'tournamentDurationText', 'Duratie voor dat het gelock is');
+        await statement.run('de', 'tournamentDurationText', 'Dauer vor dem Sperren');
 
         await statement.finalize();
 

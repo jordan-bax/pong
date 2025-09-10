@@ -29,6 +29,9 @@ interface TournamentText {
     createTournamentText: string;
     cancelText: string;
     submitText: string;
+    tournamentNameText: string;
+    tournamentPlayersText: string;
+    tournamentDurationText: string;
 }
 
 interface tournamentHistoryText {
@@ -49,7 +52,10 @@ async function getText(): Promise<TournamentText> {
         'loginNeededError',
         'createTournamentText',
         'cancelText',
-        'submitText'
+        'submitText',
+        'tournamentNameText',
+        'tournamentPlayersText',
+        'tournamentDurationText'
     ];
 
     const language = await getLanguage();
@@ -200,9 +206,9 @@ async function createTournamentForm( container: HTMLDivElement,
     const form = document.createElement("form")
     form.className = "tournament-form"
 
-    const nameField = await createFormField("tname", "Tournament Name:", false)
-    const playersField = await createFormField("tplayers", "How many players:", true)
-    const lockField = await createFormField("tlock", "Duration before locking:", true)
+    const nameField = await createFormField("tname", text.tournamentNameText, false)
+    const playersField = await createFormField("tplayers", text.tournamentPlayersText, true)
+    const lockField = await createFormField("tlock", text.tournamentDurationText, true)
 
     nameField.forEach(field => form.appendChild(field))
     playersField.forEach(field => form.appendChild(field))

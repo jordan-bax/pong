@@ -25,6 +25,40 @@ class UserDatabase {
         }
     }
 
+    async isFriend(userid: number, otherId: number): Promise<boolean> {
+        if (!this.db) {
+            throw new Error('database is null');
+        }
+
+        try {
+            const user = await this.db.get(`
+                SELECT email, googleEmail FROM users
+                WEHERE id = ?`,
+                [userid]);
+
+            const other = await this.db.get(`
+                SELECT friends FROM users
+                WHERE id = ?`,
+                [otherId]);
+
+            const email = user.email || user.googleEmail as string;
+            if (other.email.includes(',')) {
+                const friendArray = other.email.split(',') as string[];
+                if (typeof friendArray.find(email) !== 'undefined') {
+                    return true;
+                }
+            } else {
+                if (other.email=== email) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (err) {
+            console.error(`error in checking for friends ${err}`);
+        }
+        return false;
+    }
+
     async findUserByEmail(email: string): Promise<any> {
         if (!this.db) {
             throw new Error('database is null');

@@ -1,7 +1,7 @@
 // import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, handleGoogleCheck, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends, sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser, getLogginServer } from "./routing.js";
+import { getLoggin, login, updateUserInfo, handleGoogleCheck, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser, getLogginServer, getIdFromMe } from "./routing.js";
 import { getContent, openSettings } from "./settings.js";
 import { renderTournament } from "./renderTournament.js"
 import { createGameHistoryTable } from "./gameHistoryTable.js";
@@ -839,95 +839,85 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
             headers: {
                 'x-internal': 'true'
             }
-        })
-            .then(async (user) => {
-                if (!user.ok) {
-                    if (user.status === 404) return null;
-                    throw new Error('failed ot get userID');
-                }
-                const userId = await user.json();
-                const playser = await fetch(`/api/gmae/db/getGameStats?playerid=${userId.user.userId}`, {
-                    credentials: 'include',
-                    method: 'GET'
-                })
-                    .then(async (response) => {
-                        if (!response.ok) {
-                            if (response.status === 404) return null;
-                            throw new Error('Failed to get game data from user');
-                        }
-                        const data = await response.json();
-                        const gameDataDiv = document.createElement('div');
-                        const played = data.gamesPlayed;
-                        const won = data.gamesWon;
-
-                        gameDataDiv.className = 'winLoss';
-
-                        const size = 250;
-                        const strokeWidth = 20;
-                        const radius = (size - strokeWidth) / 2;
-                        const circumference = 2 * Math.PI * radius;
-
-                        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        svg.setAttribute('width', size.toString());
-                        svg.setAttribute("height", size.toString());
-
-                        const bigCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        bigCircle.setAttribute("cx", (size / 2).toString());
-                        bigCircle.setAttribute('cy', (size / 2).toString());
-                        bigCircle.setAttribute('r', radius.toString());
-                        bigCircle.setAttribute('stroke', '#888');
-                        bigCircle.setAttribute('stroke-width', strokeWidth.toString());
-                        bigCircle.setAttribute('fill', 'none');
-                        svg.appendChild(bigCircle);
-
-                        const progressCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        progressCircle.setAttribute('cx', (size / 2).toString());
-                        progressCircle.setAttribute('cy', (size / 2).toString());
-                        progressCircle.setAttribute('r', radius.toString());
-                        progressCircle.setAttribute('stroke', 'lime');
-                        progressCircle.setAttribute('stroke-width', strokeWidth.toString());
-                        progressCircle.setAttribute('fill', 'none');
-                        progressCircle.setAttribute('stroke-linecap', 'round');
-                        progressCircle.setAttribute('stroke-dasharray', circumference.toString());
-                        progressCircle.setAttribute('stroke-dashoffset', circumference.toString());
-                        progressCircle.style.transition = "stroke-dashoffset 1s ease";
-                        svg.appendChild(progressCircle);
-
-                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                        text.setAttribute('x', '50%');
-                        text.setAttribute('y', '50%');
-                        text.setAttribute('dominant-baseline', 'middle');
-                        text.setAttribute('text-anchor', 'middle');
-                        text.setAttribute('fill', '#111');
-                        text.setAttribute('font-size', '24');
-                        text.textContent = `${won}/${played}`;
-                        svg.appendChild(text);
-
-                        const textTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                        textTitle.setAttribute('x', '50%');
-                        textTitle.setAttribute('y', '40%');
-                        textTitle.setAttribute('dominant-baseline', 'middle');
-                        textTitle.setAttribute('text-anchor', 'middle');
-                        textTitle.setAttribute('fill', '#111');
-                        textTitle.setAttribute('font-size', '24');
-                        textTitle.textContent = 'played/win ratio';
-                        svg.appendChild(textTitle);
-
-                        gameDataDiv.appendChild(svg);
-                        let progress = won / played;
-                        progressCircle.setAttribute('stroke-dashoffset', (circumference * (1 - progress)).toString());
-
-                        return gameDataDiv;
-                    })
-                    .catch(() => { });
-                if (playser) return playser
-                return null;
-            })
-            .catch(() => { });
-        if (user) {
-            return user;
+        });
+        if (!user.ok) {
+            console.error('user is returns with error')
+            return null;
         }
-        return null;
+
+        const userId = await user.json();
+        const players = await fetch(`/api/game/db/getGameStats?playerid=${userId.user.userId}`, {
+            credentials: 'include',
+            method: 'GET'
+        });
+        if (!players.ok) {
+            console.error('getGameStates returns with error');
+            return null;
+        }
+
+        const data = await players.json();
+        const gameDataDiv = document.createElement('div');
+        const played = data.gamesPlayed;
+        const won = data.gamesWon;
+        
+        gameDataDiv.className = 'winLoss';
+
+        const size = 250;
+        const strokeWidth = 20;
+        const radius = (size - strokeWidth) / 2;
+        const circumference = 2 * Math.PI * radius;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', size.toString());
+        svg.setAttribute("height", size.toString());
+
+        const bigCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bigCircle.setAttribute("cx", (size / 2).toString());
+        bigCircle.setAttribute('cy', (size / 2).toString());
+        bigCircle.setAttribute('r', radius.toString());
+        bigCircle.setAttribute('stroke', '#888');
+        bigCircle.setAttribute('stroke-width', strokeWidth.toString());
+        bigCircle.setAttribute('fill', 'none');
+        svg.appendChild(bigCircle);
+
+        const progressCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        progressCircle.setAttribute('cx', (size / 2).toString());
+        progressCircle.setAttribute('cy', (size / 2).toString());
+        progressCircle.setAttribute('r', radius.toString());
+        progressCircle.setAttribute('stroke', 'lime');
+        progressCircle.setAttribute('stroke-width', strokeWidth.toString());
+        progressCircle.setAttribute('fill', 'none');
+        progressCircle.setAttribute('stroke-linecap', 'round');
+        progressCircle.setAttribute('stroke-dasharray', circumference.toString());
+        progressCircle.setAttribute('stroke-dashoffset', circumference.toString());
+        progressCircle.style.transition = "stroke-dashoffset 1s ease";
+        svg.appendChild(progressCircle);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', '50%');
+        text.setAttribute('y', '50%');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#111');
+        text.setAttribute('font-size', '24');
+        text.textContent = `${won}/${played}`;
+        svg.appendChild(text);
+
+        const textTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textTitle.setAttribute('x', '50%');
+        textTitle.setAttribute('y', '40%');
+        textTitle.setAttribute('dominant-baseline', 'middle');
+        textTitle.setAttribute('text-anchor', 'middle');
+        textTitle.setAttribute('fill', '#111');
+        textTitle.setAttribute('font-size', '24');
+        textTitle.textContent = 'played/win ratio';
+        svg.appendChild(textTitle);
+
+        gameDataDiv.appendChild(svg);
+        let progress = won / played;
+        progressCircle.setAttribute('stroke-dashoffset', (circumference * (1 - progress)).toString());
+
+        return gameDataDiv;
     } catch (err) {
         console.error(`error in showing game stats: ${err}`);
         return null;
@@ -1001,109 +991,144 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
     svg.setAttribute('height', height.toString());;
     gameDataBrakedownDiv.appendChild(svg);
 
-    // TODO check if tournament data is used
     const user = await getLogginUserData();
 
     if (user === null) return null;
-    const friend = await getFriends();
-    if (friend === null) return null;
     const games = await fetch('/api/game/db/getGamesForPlayer', {
         credentials: 'include',
         method: 'GET'
-    })
-        .then(async (gameResponse) => {
-            if (!gameResponse.ok) {
-                throw new Error('failed to get game data');
-            }
+    });
+    if (!games.ok) {
+        console.error('failed to get game data');
+        return null;
+    }
+    const gameData = await games.json() as Game[];
 
-            const gameData = await gameResponse.json() as Game[]
+    let data: kindOfGames = {
+            random: 0,
+            friends: 0,
+            ai: 0,
+            tournaments: 0,
+            local: 0,
+        };
+        const self = await getIdFromMe();
+        if (!self) {
+            console.error("failed to get own data");
+            return null;
+        }
 
-            let data: kindOfGames = {
-                random: 0,
-                friends: 0,
-                ai: 0,
-                tournaments: 0,
-                local: 0,
-            };
-
-            gameData.forEach((game) => {
-                let flag = false;
+        gameData.forEach(async (game) => {
+        if (typeof game.type !== 'undefined') {
+            if(game.type === 'local') {
                 if (game.player2.userId === 0) {
-                    ++data.ai;
-                    flag = true;
+                    data.ai += 1;
+                } else {
+                    data.local += 1;
                 }
-                else if (game.player2.userId === 1) {
-                    ++data.random;
-                    flag = true
-                }
-                else if (game.player2.userId === 2) {
-                    ++data.local;
-                    flag = true;
-                }
+            } else {
                 if (game.type === 'tournament') {
-                    ++data.tournaments;
-                    flag = true;
+                    data.tournaments += 1;        
                 }
-                if (friend.includes(game.player2.username)) {
-                    ++data.friends;
-                    flag = true;
+                else if (self === game.player1.userId) {
+                    if (game.player2.userId === 2) {
+                        data.random += 1;
+                    } else {
+                        const response = await fetch(`api/user/isIdFriend?id=${self}`, {
+                            method: 'GET',
+                            credentials: 'include',
+                            headers: {
+                                'x-internal': 'true'
+                            }
+                        });
+                        if (!response.ok) {
+                            return null;
+                        }
+                        const isFriendData = await response.json();
+                        if (isFriendData) {
+                            data.friends += 1;
+                        } else {
+                            data.random += 1;
+                        }
+                    }
+                } else if (self === game.player2.userId) {
+                    if (game.player1.userId === 2) {
+                        data.random += 1;
+                    } else {
+                        const response = await fetch(`api/user/isIdFriend?id=${self}`, {
+                            method: 'GET',
+                            credentials: 'include',
+                            headers: {
+                                'x-internal': 'true'
+                            }
+                        });
+                        if (!response.ok) {
+                            return null;
+                        }
+                        const isFriendData = await response.json();
+                        if (isFriendData) {
+                            data.friends += 1;
+                        } else {
+                            data.random += 1;
+                        }
+                    }
+                } else {
+                    data.random += 1;
                 }
-                if (!flag) {
-                    ++data.random;
-                }
-            })
-            const max = Math.max(data.random, data.friends, data.ai, data.tournaments, data.local);
-            const barWidth = (width - padding * 2) / 5;
-            const charHeigth = height - padding * 2;
+            }
+        }
+         return null;
+    });
 
-            let bar = makeBar(data.random, max, charHeigth, padding, 0, height, barWidth);
-            let valueText = makeValueText(data.random, padding, 0, height, barWidth, (data.random / max) * charHeigth);
-            let label = makeLabel('random', padding, 0, height, barWidth);
-            svg.appendChild(bar);
-            svg.appendChild(valueText);
-            svg.appendChild(label);
+    const max = Math.max(data.random, data.friends, data.ai, data.tournaments, data.local);
+    const barWidth = (width - padding * 2) / 5;
+    const charHeigth = height - padding * 2;
 
-            bar = makeBar(data.friends, max, charHeigth, padding, 1, height, barWidth);
-            valueText = makeValueText(data.friends, padding, 1, height, barWidth, (data.friends / max) * charHeigth);
-            label = makeLabel('friend', padding, 1, height, barWidth);
-            svg.appendChild(bar);
-            svg.appendChild(valueText);
-            svg.appendChild(label);
+    let bar = makeBar(data.random, max, charHeigth, padding, 0, height, barWidth);
+    let valueText = makeValueText(data.random, padding, 0, height, barWidth, (data.random / max) * charHeigth);
+    let label = makeLabel('random', padding, 0, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
 
-            bar = makeBar(data.ai, max, charHeigth, padding, 2, height, barWidth);
-            valueText = makeValueText(data.ai, padding, 2, height, barWidth, (data.ai / max) * charHeigth);
-            label = makeLabel('ai', padding, 2, height, barWidth);
-            svg.appendChild(bar);
-            svg.appendChild(valueText);
-            svg.appendChild(label);
+    bar = makeBar(data.friends, max, charHeigth, padding, 1, height, barWidth);
+    valueText = makeValueText(data.friends, padding, 1, height, barWidth, (data.friends / max) * charHeigth);
+    label = makeLabel('friend', padding, 1, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
 
-            bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
-            valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
-            label = makeLabel('tournaments', padding, 3, height, barWidth);
-            svg.appendChild(bar);
-            svg.appendChild(valueText);
-            svg.appendChild(label);
+    bar = makeBar(data.ai, max, charHeigth, padding, 2, height, barWidth);
+    valueText = makeValueText(data.ai, padding, 2, height, barWidth, (data.ai / max) * charHeigth);
+    label = makeLabel('ai', padding, 2, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
 
-            bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
-            valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
-            label = makeLabel('local', padding, 4, height, barWidth);
-            svg.appendChild(bar);
-            svg.appendChild(valueText);
-            svg.appendChild(label);
+    bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
+    valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
+    label = makeLabel('tournaments', padding, 3, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
 
-            const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            axis.setAttribute('x1', padding.toString());
-            axis.setAttribute('y1', (height - padding).toString());
-            axis.setAttribute('x2', (width - padding).toString());
-            axis.setAttribute('y2', (height - padding).toString());
-            axis.setAttribute('stroke', 'white');
-            axis.setAttribute('stroke-width', '2');
-            svg.appendChild(axis);
-            return gameDataBrakedownDiv;
-        })
-        .catch(() => { });
-    if (games) return games;
-    return null;
+    bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
+    valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
+    label = makeLabel('local', padding, 4, height, barWidth);
+    svg.appendChild(bar);
+    svg.appendChild(valueText);
+    svg.appendChild(label);
+
+    const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    axis.setAttribute('x1', padding.toString());
+    axis.setAttribute('y1', (height - padding).toString());
+    axis.setAttribute('x2', (width - padding).toString());
+    axis.setAttribute('y2', (height - padding).toString());
+    axis.setAttribute('stroke', 'white');
+    axis.setAttribute('stroke-width', '2');
+    svg.appendChild(axis);
+
+    gameDataBrakedownDiv.appendChild(svg);
+    return gameDataBrakedownDiv;
 }
 
 async function interfalHandler() {
@@ -1202,9 +1227,13 @@ export async function renderContent(route: string): Promise<void> {
             g_intervalId = setInterval(interfalHandler, 60 * 1000);
 
             const gameData = await renderGameData();
-            if (gameData) content.appendChild(gameData);
+            if (gameData) {
+                content.appendChild(gameData);
+            }
             const gameBrake = await gameDataBrakedown();
-            if (gameBrake) content.appendChild(gameBrake);
+            if (gameBrake) {
+                content.appendChild(gameBrake);
+            }
             break;
         case 'login':
             const googleLogin = renderGoogle();

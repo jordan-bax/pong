@@ -280,6 +280,23 @@ class server {
             return reply.send(requested);
         });
 
+        this.fastify.get('/isIdFriend', async (req, reply) => {
+            const user = req.session.user;
+            if (!user) {
+                return reply.code(401).send({ error: 'unauthorized' });
+            }
+            const query = req.query as { id?: number };
+            if (!query.id) {
+                return reply.code(400).send({ error: 'missingQuery' });
+            }
+
+            const dbResponse = await this.db.isFriend(user.userId, query.id);
+            if (dbResponse) {
+                return reply.send(true);
+            }
+            return reply.send(false);
+        });
+
         this.fastify.post('/requested', async (req: FastifyRequest, reply) => {
             const user = req.session.user;
             const toEmail = req.body as string | null;
@@ -365,6 +382,9 @@ class server {
                 } else if (part.type === 'field' && typeof part.value === 'string') {
                     userData[part.fieldname as keyof registerBody] = part.value;
                 }
+            }
+            if (userData['pathToProfileP'] === null) {
+                userData['pathToProfileP'] = '/app/uploads/profile_pictures/profilePicture.png'
             }
             const errors = this.validate.validateRegisterData(userData);
             if (errors.length > 0) {

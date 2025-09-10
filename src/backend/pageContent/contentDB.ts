@@ -348,7 +348,24 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('en', 'historyLock', 'Lock time');
         await statement.run('nl', 'historyLock', 'Tijd gelocked');
         await statement.run('de', 'historyLock', 'Sperrzeit');
-
+        await statement.run('en', 'gameRatio', 'win/played ratio');
+        await statement.run('nl', 'gameRatio', 'gewonnen/gespeed ratio');
+        await statement.run('de', 'gameRatio', 'Gewinn-/Spielverhältnis');
+        await statement.run('en', 'randomStat', 'random');
+        await statement.run('nl', 'randomStat', 'random');
+        await statement.run('de', 'randomStat', 'zufällige');
+        await statement.run('en', 'friendStat', 'Friend');
+        await statement.run('nl', 'friendStat', 'vriend');
+        await statement.run('de', 'friendStat', 'Freund');
+        await statement.run('en', 'aiStat', 'AI');
+        await statement.run('nl', 'aiStat', 'AI');
+        await statement.run('de', 'aiStat', 'AI');
+        await statement.run('en', 'tournamentStat', 'Tournament');
+        await statement.run('nl', 'tournamentStat', 'Competitie');
+        await statement.run('de', 'tournamentStat', 'Turnier');
+        await statement.run('en', 'localStat', 'local');
+        await statement.run('nl', 'localStat', 'Lokaal');
+        await statement.run('de', 'localStat', 'Lokal');
 
         await statement.finalize();
 

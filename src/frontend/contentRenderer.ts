@@ -833,6 +833,9 @@ interface player {
 
 async function renderGameData(): Promise<HTMLDivElement | null> {
     try {
+        const lang = await getLanguage();
+        const textMapData = await getContent(lang.toLowerCase(), ['gameRatio']);
+        const visibleText = textMapData.get('row') as { gameRatio: string };
         const user = await fetch('/api/user/me', {
             credentials: 'include',
             method: 'GET',
@@ -910,7 +913,7 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
         textTitle.setAttribute('text-anchor', 'middle');
         textTitle.setAttribute('fill', '#111');
         textTitle.setAttribute('font-size', '24');
-        textTitle.textContent = 'played/win ratio';
+        textTitle.textContent = visibleText.gameRatio;
         svg.appendChild(textTitle);
 
         gameDataDiv.appendChild(svg);
@@ -1025,6 +1028,8 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
                 } else {
                     data.local += 1;
                 }
+            } else if (game.type === 'ai') {
+                data.ai +=1;
             } else {
                 if (game.type === 'tournament') {
                     data.tournaments += 1;        
@@ -1079,41 +1084,45 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
          return null;
     });
 
+    const lang = await getLanguage();
+    const textMapData = await getContent(lang.toLowerCase(), ['randomStat', 'friendStat', 'aiStat', 'tournamentStat', 'localStat']);
+    const text = textMapData.get('row') as { randomStat: string; friendStat: string; aiStat: string; tournamentStat: string; localStat: string; };
+
     const max = Math.max(data.random, data.friends, data.ai, data.tournaments, data.local);
     const barWidth = (width - padding * 2) / 5;
     const charHeigth = height - padding * 2;
 
     let bar = makeBar(data.random, max, charHeigth, padding, 0, height, barWidth);
     let valueText = makeValueText(data.random, padding, 0, height, barWidth, (data.random / max) * charHeigth);
-    let label = makeLabel('random', padding, 0, height, barWidth);
+    let label = makeLabel(text.randomStat, padding, 0, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
     svg.appendChild(label);
 
     bar = makeBar(data.friends, max, charHeigth, padding, 1, height, barWidth);
     valueText = makeValueText(data.friends, padding, 1, height, barWidth, (data.friends / max) * charHeigth);
-    label = makeLabel('friend', padding, 1, height, barWidth);
+    label = makeLabel(text.friendStat, padding, 1, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
     svg.appendChild(label);
 
     bar = makeBar(data.ai, max, charHeigth, padding, 2, height, barWidth);
     valueText = makeValueText(data.ai, padding, 2, height, barWidth, (data.ai / max) * charHeigth);
-    label = makeLabel('ai', padding, 2, height, barWidth);
+    label = makeLabel(text.aiStat, padding, 2, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
     svg.appendChild(label);
 
     bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
     valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
-    label = makeLabel('tournaments', padding, 3, height, barWidth);
+    label = makeLabel(text.tournamentStat , padding, 3, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
     svg.appendChild(label);
 
     bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
     valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
-    label = makeLabel('local', padding, 4, height, barWidth);
+    label = makeLabel(text.localStat, padding, 4, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
     svg.appendChild(label);

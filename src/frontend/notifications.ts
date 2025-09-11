@@ -2,6 +2,7 @@ export interface Notification {
     id: number;
     message: string;
     timestamp: Date;
+    showed: boolean;
 }
 
 class NotificationSystem {
@@ -30,9 +31,12 @@ class NotificationSystem {
             data.forEach((notification: Notification) => {
                 notification.timestamp = new Date(notification.timestamp);
                 if (!this.notifications.some(n => n.id === notification.id)) {
-                    this.notifications.push(notification);
+                    notification.showed = true;
                     this.storageNotifications.push(notification);
                     this.saveNotifications();
+
+                    notification.showed = false;
+                    this.notifications.push(notification);
 
                     if (this.dropdown) {
                         this.addMessageToDropdown(
@@ -183,7 +187,7 @@ export async function listenForNotifications(): Promise<void> {
 
 export function showNotification(): void {
     const notification = notificationSystem.shiftNotification();
-    if (notification) {
+    if (notification && !notification.showed) {
         displayNotification(notification);
     }
 }

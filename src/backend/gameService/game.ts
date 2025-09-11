@@ -27,7 +27,7 @@ interface notificationInterface {
 }
 // testing notifications
 var notifications: Array<notificationInterface> = [];
-function addNotification(message: string): void {   
+function addNotification(message: string): void {
 notifications.push({
 	message: message,
 	data: new Date()
@@ -122,7 +122,7 @@ async function lastId(): Promise<number> {
 async function makeNewGame(type: string, playername: string, playerid: number): Promise<Gameloop > {
 	// Create a new game state
 	// const gameid = generateUniqueGameId(); // Generate a unique game ID
-	
+
 
 
 	const gameid = await lastId().then(id => id + 1); // Increment the last game ID
@@ -222,7 +222,7 @@ async function addGameLoop(type : string, playername: string, playerid: number):
 		}
 		const ng = newGame.getId() as number; // Assign the new game to the variable
 		active.push(newGame);
-	
+
 		return {id :ng,player: 1};
 	}
 	if (type !== 'online' && type !== 'ranking') {
@@ -328,7 +328,7 @@ if (!sessionSecret || !cookieSecret) {
 // Register cookie and session plugins
 // cookie + session support
 fastify.register(fastifyCookie, {
-	secret: cookieSecret, // Optional, needed only for signed cookies 
+	secret: cookieSecret, // Optional, needed only for signed cookies
 	parseOptions: {}
 });
 fastify.register(fastifySession, {
@@ -416,7 +416,7 @@ fastify.post('/start', async (req, reply) => {
 		online = req.session.player.loggedin || false; // Check if the player is logged in
 		playername = req.session.player.username || 'Guest';
 	}
-	
+
 	console.log('Starting game with AI:', type, 'Player Name:', playername);
 	if (!playid) {
 		console.error('Invalid player ID', playid);
@@ -467,8 +467,8 @@ fastify.post('/leave', async (req, reply) => {
 		reply.status(404).send({ status: 'Game not found' });
 		return;
 	}
-	
-	
+
+
 	game.playerleft(req.session.player.id as number);
 	if (game.empty()) {
 		active = active.filter(g => g && g.getId() !== game.getId());
@@ -587,7 +587,6 @@ fastify.get('/db/getGamesForPlayer', async (req, reply) => {
 	} else {
 		console.error('Player ID is missing in the query parameters');
 	}
-	sendNotificationToUser(playerid, 'Fetching games for player ID: ' + playerid);
 	console.log('Fetching games for player ID:', playerid);
 	try {
 		const games = await dbfunc.getGamesForPlayer(playerid);

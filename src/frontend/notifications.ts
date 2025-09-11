@@ -156,14 +156,12 @@ class NotificationSystem {
                 ...n,
                 timestamp: new Date(n.timestamp)
             }));
-            this.updateBadge();
         }
     }
 
     private saveNotifications(): void {
         localStorage.setItem('notifications',
             JSON.stringify(this.storageNotifications));
-        this.updateBadge();
     }
 
     public shiftNotification(): Notification | undefined {
@@ -171,13 +169,6 @@ class NotificationSystem {
         return notification;
     }
 
-    private updateBadge(): void {
-        const badge = document.querySelector('.badge') as HTMLElement;
-        if (badge) {
-            badge.textContent = this.notifications.length.toString();
-            badge.style.display = this.notifications.length > 0 ? 'flex' : 'none';
-        }
-    }
 }
 
 const notificationSystem = new NotificationSystem();

@@ -1,5 +1,7 @@
 # Use an official Node.js image as the base image
-FROM node:18
+FROM node:22
+
+RUN npm install -g npm@latest
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -12,7 +14,7 @@ COPY package*.json ./
 RUN npm install
 # # Install cookie and session middleware
 # RUN npm install cookie-parser express-session --save
-RUN npm i @fastify/session 
+RUN npm i @fastify/session
 RUN npm install @fastify/cors
 # npm install concurrently --save
 # "scripts": {

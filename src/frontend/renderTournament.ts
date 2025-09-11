@@ -35,14 +35,14 @@ interface TournamentText {
 }
 
 interface tournamentHistoryText {
-        historyId: string;
-        historyName: string;
-        historyPlayers: string;
-        historyRounds: string;
-        historyStart: string;
-        gamePlayerOutcomeLabel: string;
-        historyActio: string;
-        historyLock: string;
+    historyId: string;
+    historyName: string;
+    historyPlayers: string;
+    historyRounds: string;
+    historyStart: string;
+    gamePlayerOutcomeLabel: string;
+    historyActio: string;
+    historyLock: string;
 };
 
 let refreshIntervalId: number | null = null;
@@ -77,7 +77,6 @@ export async function renderTournament() {
 
     const userID: number | null = await getIdFromMe()
     if (userID == null) {
-        console.log("moet ingeloged zijn om dit te doen")
         const h1 = document.createElement('h1')
         h1.textContent = text.loginNeededError;
         h1.style.color = 'red'
@@ -129,7 +128,6 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
 
     const resp = await fetch("api/tournament/tours")
     if (resp.status != 200) {
-        console.log("error", resp)
         return
     }
 
@@ -156,10 +154,10 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
     const tablesContainer = document.createElement("div")
     tablesContainer.className = "tables-container"
 
-    const tableTypes: { key: keyof ToursDict, title: string}[] = [
-        { key: "joinable", title: "Joinable Tournaments"},
-        { key: "finished", title: "Finished Tournaments"},
-        { key: "running", title: "Running Tournaments"}
+    const tableTypes: { key: keyof ToursDict, title: string }[] = [
+        { key: "joinable", title: "Joinable Tournaments" },
+        { key: "finished", title: "Finished Tournaments" },
+        { key: "running", title: "Running Tournaments" }
     ]
 
     for (let type of tableTypes) {
@@ -197,10 +195,10 @@ function cleanupIntervals() {
     }
 }
 
-async function createTournamentForm( container: HTMLDivElement,
-                                    userID: number,
-                                    onSuccess: () => void
-) {
+async function createTournamentForm(container: HTMLDivElement,
+    userID: number,
+    onSuccess: () => void) {
+
     const text = await getText();
     container.innerHTML = ""
     const form = document.createElement("form")
@@ -229,7 +227,6 @@ async function createTournamentForm( container: HTMLDivElement,
 
     form.onsubmit = async function(e) {
         e.preventDefault()
-        console.log("Form submitted!")
         try {
             const resp = await fetch("/api/tournament/create", {
                 method: "POST",
@@ -246,7 +243,7 @@ async function createTournamentForm( container: HTMLDivElement,
 
             const result = resp.status
             if (result !== 201) {
-                console.log("error it", result)
+                console.error("No valid response from server create")
             } else {
                 onSuccess()
                 if (refreshIntervalId !== null) {
@@ -255,7 +252,7 @@ async function createTournamentForm( container: HTMLDivElement,
                 await renderTournament()
             }
         } catch (error) {
-            console.log("error it except", error)
+            console.error("unexpected error on createTournamentForm")
         }
     }
 
@@ -299,6 +296,7 @@ function createRow(tournament: Tour,
     isInTour: boolean,
     userID: number,
     type: keyof ToursDict): HTMLTableRowElement {
+
     const tr = document.createElement("tr")
 
     const idTd = document.createElement("td")
@@ -372,8 +370,9 @@ function formatDateTime(timestamp: number): string {
 }
 
 async function changeTourstatus(tourID: number,
-                                userID: number,
-                                status: string) {
+    userID: number,
+    status: string) {
+
     try {
         const resp = await fetch(`/api/tournament/${status.toLocaleLowerCase()}`, {
             method: "POST",
@@ -388,24 +387,26 @@ async function changeTourstatus(tourID: number,
 
         const result = resp.status
         if (result !== 201) {
-            console.log("error it", result)
+            console.error(`No valid response from server ${status}`)
         } else {
             await renderTournament()
         }
     } catch (error) {
-        console.log("error it except", error)
+        console.error("unexpected error on changeTourstatus")
     }
 }
 
 async function createFormField(id: string,
-                               labelText: string,
-                               mustNumber: boolean) {
+    labelText: string,
+    mustNumber: boolean) {
+
     const label = document.createElement("label")
     label.htmlFor = id
     label.textContent = labelText
 
     const input = document.createElement("input")
     input.type = "text"
+    input.autofocus
     input.id = id
     input.name = id
     input.required = true

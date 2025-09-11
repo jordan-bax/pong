@@ -8,20 +8,15 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "@fastify/cookie": "^11.0.2",
-        "@fastify/session": "^11.1.0",
+        "@fastify/cookie": "11.0.2",
+        "@fastify/session": "11.1.0",
         "@types/express-session": "1.18.2",
-        "@types/node": "^22.15.17",
-        "connect-redis": "5.2.0",
-        "express-session": "1.18.1",
-        "fastify": "^5.3.2",
-        "ioredis": "5.6.1",
-        "sqlite": "^5.1.1",
-        "sqlite3": "^5.1.7"
+        "@types/node": "24.3.1",
+        "fastify": "5.6.0",
+        "sqlite": "5.1.1",
+        "sqlite3": "5.1.7"
     },
     "devDependencies": {
-        "@types/bcryptjs": "^2.4.3",
-        "@types/connect-redis": "^0.0.23",
-        "typescript": "^5.0.0"
+        "typescript": "5.9.2"
     }
 }

@@ -118,9 +118,11 @@ class NotificationSystem {
         return wrapper;
     }
 
-    private addMessageToDropdown(dropdown: HTMLElement,
-                                 message: string,
-                                 time: string): void {
+    private addMessageToDropdown(
+        dropdown: HTMLElement,
+        message: string,
+        time: string): void {
+
         const notiItem = document.createElement("div");
         notiItem.className = "notify_item";
 
@@ -160,7 +162,7 @@ class NotificationSystem {
 
     private saveNotifications(): void {
         localStorage.setItem('notifications',
-                             JSON.stringify(this.storageNotifications));
+            JSON.stringify(this.storageNotifications));
         this.updateBadge();
     }
 

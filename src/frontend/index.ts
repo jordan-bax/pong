@@ -1,6 +1,6 @@
 import { renderContent, initGoogleSignInIfNeeded } from "./contentRenderer.js";
 import { routeFromPath, checkSession } from "./routing.js";
-import { showNotification, listenForNotifications } from "./notifications.js";
+import { listenForNotifications, showNotification } from "./notifications.js";
 
 window.addEventListener('popstate', async () => {
     renderContent(routeFromPath[window.location.pathname] || 'not found');

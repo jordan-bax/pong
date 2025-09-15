@@ -6,7 +6,7 @@ if (!dbfile) {
     throw new Error('env data missing');
 }
 
-export const db: Promise<Database> = open({ 
+export const db: Promise<Database> = open({
     filename: dbfile,
     driver: sqlite3.Database
 }).then (async (database) => {
@@ -74,7 +74,7 @@ export async function seedContentDb(): Promise<void> {
         const statement = await database.prepare(
             'INSERT INTO pageContent (language, textKey, body) VALUES (?, ?, ?)'
         );
-        
+
         await statement.run('en', 'homePageText', `Welcome to the home page!`);
         await statement.run('nl', 'homePageText', 'Welkome op de hoofd pagina!');
         await statement.run('de', 'homePageText', 'Willkommen auf der Homepage!')
@@ -265,7 +265,7 @@ export async function seedContentDb(): Promise<void> {
         await statement.run('nl', 'noOpenGamesError', 'Geen open spellen beschrikbaar');
         await statement.run('de', 'noOpenGamesError', 'Keine offenen Spiele verfügbar');
         await statement.run('en', 'gameHistoryButtonText', 'Game History');
-        await statement.run('nl', 'gameHistoryButtonText', 'Spel geschriedenis');
+        await statement.run('nl', 'gameHistoryButtonText', 'Spel geschiedenis');
         await statement.run('de', 'gameHistoryButtonText', 'Spielverlauf');
         await statement.run('en', 'testNotificationButtonText', 'Test Notify');
         await statement.run('nl', 'testNotificationButtonText', 'Test Notificatie');

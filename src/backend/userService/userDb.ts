@@ -723,10 +723,10 @@ class UserDatabase {
             );
 
             let password = await bcrypt.hash('1!AdminAdmin', 10);
-            await statement.run(3, 'Alice', password, 'aa@mail.com', null, null, 'bt@mail.com', null);
+            await statement.run(3, 'Alice', password, 'aa@mail.com', null, '/app/uploads/profile_pictures/profilePicture.png', 'bt@mail.com', null);
 
             password = await bcrypt.hash('1!TestTest1!', 10);
-            await statement.run(4, 'bob', password, 'bt@mail.com', null, null, 'aa@mail.com', null);
+            await statement.run(4, 'bob', password, 'bt@mail.com', null, '/app/uploads/profile_pictures/profilePicture.png', 'aa@mail.com', null);
 
             await statement.finalize();
 

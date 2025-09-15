@@ -37,10 +37,6 @@ class TourService {
             throw new Error('maxplayers must be more then 1')
         }
 
-        if (maxPlayers % 2 !== 0) {
-            throw new Error('maxPlayers must be a even number')
-        }
-
         if (userID < 1) {
             throw new Error('userID must be more then 0')
         }

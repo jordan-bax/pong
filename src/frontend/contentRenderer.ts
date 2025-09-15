@@ -865,8 +865,16 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
         
         gameDataDiv.className = 'winLoss';
 
-        const size = 250;
+        const circleText = `${won}/${played}`;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            return null;
+        }
+        ctx.font = `24px sans-serif`;
+        const textWidth = ctx.measureText(circleText).width;
         const strokeWidth = 20;
+        const size = (textWidth + 20 + strokeWidth) * 4;
         const radius = (size - strokeWidth) / 2;
         const circumference = 2 * Math.PI * radius;
 
@@ -903,7 +911,7 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('fill', '#111');
         text.setAttribute('font-size', '24');
-        text.textContent = `${won}/${played}`;
+        text.textContent = circleText;
         svg.appendChild(text);
 
         const textTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');

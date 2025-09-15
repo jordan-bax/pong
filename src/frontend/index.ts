@@ -21,15 +21,13 @@ setInterval(() => {
         headers: {
             'x-internal': 'true'
         }
-    })
-        .then(() => {
-            return null;
-        })
-        .catch();
+    }).then(() => {
+        return null;
+    }).catch();
 }, 30000);
 
 setInterval(async () => {
-    await listenForNotifications().catch(console.error);
+    await listenForNotifications().catch();
 }, 10000);
 
 setInterval(() => {
@@ -48,13 +46,11 @@ export async function setLanguage(language: string): Promise<void> {
             'Content-type': 'application/json',
         },
         body: JSON.stringify(language),
-    })
-        .then(respones => {
-            if (!respones.ok) {
-                throw new Error('Failed to set language');
-            }
-        })
-        .catch(() => { });
+    }).then(respones => {
+        if (!respones.ok) {
+            throw new Error('Failed to set language');
+        }
+    }).catch(() => { });
 }
 
 export async function getLanguage(): Promise<string> {
@@ -64,13 +60,14 @@ export async function getLanguage(): Promise<string> {
         headers: {
             'Accept': 'application/json',
         },
-    })
-        .then(async (response) => {
-            if (!response.ok) throw new Error('Failed to tetch language');
-            const language = await response.text();
-            return language;
-        })
-        .catch(() => { });
-    if (lang) return lang;
+    }).then(async (response) => {
+        if (!response.ok) throw new Error('Failed to tetch language');
+        const language = await response.text();
+        return language;
+    }).catch(() => { });
+
+    if (lang) {
+        return lang;
+    }
     return 'en';
 }

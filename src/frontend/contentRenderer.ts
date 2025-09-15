@@ -1217,7 +1217,6 @@ export async function renderContent(route: string): Promise<void> {
     }
     switch (route) {
         case 'home':
-
             content.textContent = textData.homePageText;
             break;
         case 'profile':
@@ -1283,6 +1282,7 @@ export async function renderContent(route: string): Promise<void> {
         default:
             content.textContent = textData.notFoundText;
     }
+
     initGoogleSignInIfNeeded();
     if (!getLoggin && route !== 'login' && route === 'profile') {
         history.pushState({}, '', '/login');

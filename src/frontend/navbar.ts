@@ -1,6 +1,6 @@
 import { renderContent, getPageContent } from "./contentRenderer.js";
 import { getLanguage } from "./index.js";
-import { getLoggin, getLogginServer, logout } from "./routing.js";
+import { checkSession, clearGameSession, getLoggin, getLogginServer, logout } from "./routing.js";
 import { dropdowngamemenu } from "./settings.js";
 import { renderNotification } from "./notifications.js"
 
@@ -75,7 +75,6 @@ export async function renderNavbar(): Promise<void> {
 
         const logoutBtn = document.createElement('a');
         logoutBtn.className= 'btn navItem';
-        logoutBtn.href = '/';
         logoutBtn.textContent = navbarText.logoutNavbarText;
         logoutBtn.onclick = async () => {
             await logout();

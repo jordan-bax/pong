@@ -4,10 +4,10 @@ import fs from 'fs';
 import type { MultipartFile } from '@fastify/multipart';
 import path from 'path';
 
- class Validator {
+class Validator {
     private passwordPattern: RegExp;
     private usernamePattern: RegExp;
-    private emailPattern:RegExp;
+    private emailPattern: RegExp;
     private mimeTypeList: string[];
 
     constructor() {
@@ -80,7 +80,7 @@ import path from 'path';
         return filePath;
     }
 
-    async verifyPassword( password1: string, password2: string ): Promise<boolean> {
+    async verifyPassword(password1: string, password2: string): Promise<boolean> {
         return await bcrypt.compare(password1, password2)
     }
 
@@ -112,7 +112,7 @@ import path from 'path';
         return errors;
     }
 
-    private validateNewPassword(password: string | null):string[] {
+    private validateNewPassword(password: string | null): string[] {
         const errors = [];
         console.log('password in validateNewPassword is', password);
         if (typeof password !== 'string' && password !== null) {
@@ -122,7 +122,7 @@ import path from 'path';
             if (password === '') {
                 password = null;
             } else {
-                if (!this.testPasswordPattern(password) || password.length < 12 ) {
+                if (!this.testPasswordPattern(password) || password.length < 12) {
                     console.log('in validateNewPassword error');
                     errors.push('errorNewPassword');
                 }
@@ -244,7 +244,7 @@ import path from 'path';
     }
 
     private validateUsername(username: string): string[] {
-         const errors = [];
+        const errors = [];
         if (typeof username !== 'string') {
             errors.push('errorUsernameNoString');
         } else {
@@ -263,6 +263,6 @@ import path from 'path';
         }
         return false;
     }
- }
+}
 
 export default Validator;

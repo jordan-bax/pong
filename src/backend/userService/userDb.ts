@@ -1,5 +1,5 @@
 import sqlite3 from 'sqlite3';
-import { open, Database} from 'sqlite';
+import { open, Database } from 'sqlite';
 import bcrypt from 'bcryptjs';
 import type { TokenPayload } from 'google-auth-library';
 
@@ -10,11 +10,11 @@ interface in_transactionRow {
 }
 
 class UserDatabase {
-    private db: Database|null
+    private db: Database | null
     constructor() {
         this.db = null;
     };
-    
+
     async start(file: string) {
         this.db = await this.initdatabase(file);
     }
@@ -48,7 +48,7 @@ class UserDatabase {
                     return true;
                 }
             } else {
-                if (other.email=== email) {
+                if (other.email === email) {
                     return true;
                 }
             }
@@ -64,8 +64,8 @@ class UserDatabase {
             throw new Error('database is null');
         }
         const user = await this.db.get(`
-            SELECT * FROM users 
-            WHERE email IS ? OR googleEmail IS ?`, 
+            SELECT * FROM users
+            WHERE email IS ? OR googleEmail IS ?`,
             [email, email]);
         if (!user) {
             return null;
@@ -73,7 +73,7 @@ class UserDatabase {
         return user;
     }
 
-    async getUserData(email:string): Promise<any> {
+    async getUserData(email: string): Promise<any> {
         if (!this.db) {
             throw new Error('database is null');
         }
@@ -87,7 +87,7 @@ class UserDatabase {
     }
 
     async getUsers(data: string, email: string): Promise<any> {
-        if(!this.db) {
+        if (!this.db) {
             throw new Error('database is null');
         }
         const query = `%${data}%`;
@@ -102,13 +102,12 @@ class UserDatabase {
     }
 
     async insertUserIntoDatabase(
-        username:string | null, 
-        password:string | null, 
+        username: string | null,
+        password: string | null,
         email: string | null,
         googleEmail: string | null,
         pathToPP: string | null,
-    ): Promise<boolean | unknown>
-    {
+    ): Promise<boolean | unknown> {
         if (!this.db) {
             throw new Error('database is null');
         }
@@ -119,8 +118,8 @@ class UserDatabase {
         await this.db.exec('BEGIN TRANSACTION');
         try {
             await this.db.run(`
-                INSERT INTO users (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                INSERT INTO users (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [username, password, email, googleEmail, 0, pathToPP, null, null, null]);
             await this.db.exec('COMMIT');
             return true;
@@ -148,14 +147,14 @@ class UserDatabase {
                 (username, password, email, googleEmail, isGoogleRegister, pathToProfilePicture, friends, pendingFriends, requestedFriends)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ? , ?)`,
                 [
-                    typeof payload.given_name !== 'undefined' ? payload.given_name : null, 
-                    null, 
-                    null, 
-                    payload.email, 
-                    1, 
-                    picture, 
-                    null, 
-                    null, 
+                    typeof payload.given_name !== 'undefined' ? payload.given_name : null,
+                    null,
+                    null,
+                    payload.email,
+                    1,
+                    picture,
+                    null,
+                    null,
                     null]);
             await this.db.exec("COMMIT");
             return true;
@@ -166,17 +165,16 @@ class UserDatabase {
         }
     }
 
-    async  updateUserInfo(
-        oldEmail:string, 
-        newEmail: string | null, 
-        newPassword: string | null, 
+    async updateUserInfo(
+        oldEmail: string,
+        newEmail: string | null,
+        newPassword: string | null,
         newUsername: string | null,
         googleEmail: string | null,
         pathToPP: string | null,
         oldPassword: string | null,
         oldUsername: string | null
-    ): Promise<boolean | unknown> 
-    {
+    ): Promise<boolean | unknown> {
         let isOld: boolean = false;
         if (!this.db) {
             throw new Error('database is null');
@@ -269,8 +267,8 @@ class UserDatabase {
             throw new Error('database is null');
         }
         const friendsList = await this.db.get(`
-            SELECT friends 
-            FROM users 
+            SELECT friends
+            FROM users
             WHERE email = ? OR googleEmail = ?`,
             [email, email]);
         if (!friendsList) {
@@ -279,13 +277,13 @@ class UserDatabase {
         return friendsList.friends as string;
     }
 
-    async  getPendingFriends(email: string): Promise<string | null> {
+    async getPendingFriends(email: string): Promise<string | null> {
         if (!this.db) {
             throw new Error('database is null');
         }
         const pendingList = await this.db.all(`
-            SELECT pendingFriends 
-            FROM users 
+            SELECT pendingFriends
+            FROM users
             WHERE email = ? OR googleEmail = ?`,
             [email, email]);
         console.log(pendingList);
@@ -309,8 +307,8 @@ class UserDatabase {
             throw new Error('database is null');
         }
         const requestList = await this.db.all(`
-            SELECT requestedFriends 
-            FROM users 
+            SELECT requestedFriends
+            FROM users
             WHERE email = ? OR googleEmail = ?`,
             [email, email]);
         console.log(requestList);
@@ -337,7 +335,7 @@ class UserDatabase {
         const userFriends = await this.getFriends(fromEmail);
         const friendFriends = await this.getFriends(toEmail);
 
-        if(userFriends?.includes(toEmail) && friendFriends?.includes(fromEmail)){
+        if (userFriends?.includes(toEmail) && friendFriends?.includes(fromEmail)) {
             console.log('already friends');
             return false;
         }
@@ -366,7 +364,7 @@ class UserDatabase {
                 UPDATE users
                 SET pendingFriends = ?
                 WHERE email = ? OR googleEmail = ?`,
-            [newPending, fromEmail, fromEmail]);
+                [newPending, fromEmail, fromEmail]);
             let changes = updatedPending.changes || 0;
             if (changes > 1) {
                 await this.db.exec('ROLLBACK');
@@ -382,7 +380,7 @@ class UserDatabase {
                 UPDATE users
                 SET requestedFriends = ?
                 WHERE email = ? OR googleEmail = ?`,
-            [newRequest, toEmail, toEmail]);
+                [newRequest, toEmail, toEmail]);
             changes = updatedRequest.changes || 0;
             if (changes > 1) {
                 await this.db.exec('ROLLBACK');
@@ -421,8 +419,7 @@ class UserDatabase {
 
         let userFriends: string | null = null;
         let friendFriends: string | null = null
-        if (user.friends && friend.friends)
-        {
+        if (user.friends && friend.friends) {
             userFriends = user.friends as string;
             friendFriends = friend.friends as string;
         }
@@ -433,8 +430,8 @@ class UserDatabase {
                 }
                 return true;
             }
-            
-        console.log('users where not found in friends')
+
+            console.log('users where not found in friends')
             if (!friendFriends) {
                 friendFriends = userEmail;
             } else {
@@ -471,8 +468,8 @@ class UserDatabase {
             let changes = row.changes || 0;
             if (changes > 1) {
                 await this.db.exec('ROLLBACK');
-               console.error('more then 1 row effected when updating user friends field');
-               return false;
+                console.error('more then 1 row effected when updating user friends field');
+                return false;
             } else if (changes == 0) {
                 await this.db.exec('ROLLBACK');
                 return false;
@@ -537,7 +534,7 @@ class UserDatabase {
                 .filter(email => email != friendEmail)
                 .join(',');
         }
-        if ( myNewPending === '') {
+        if (myNewPending === '') {
             myNewPending = null;
         }
         const myRequest = userPending.requestedFriends as string;
@@ -555,7 +552,7 @@ class UserDatabase {
         let newFriendPending: string | null = null;
         if (friendPending) {
             newFriendPending = friendEmail.split(',')
-                .map(email=> email.trim())
+                .map(email => email.trim())
                 .filter(email => email != userEmail)
                 .join(',');
         }
@@ -639,7 +636,7 @@ class UserDatabase {
             await this.db.exec('BEGIN TRANSACTION')
             const rows = await this.db.run(`
                 UPDATE users
-                SET isLoggedIn = ? 
+                SET isLoggedIn = ?
                 WHERE email = ? OR googleEmail = ?;`,
                 [loginStatus, email, email]);
             if (rows.changes !== 1) {
@@ -660,7 +657,7 @@ class UserDatabase {
         }
 
         const rows = await this.db.all(`
-            SELECT * FROM users 
+            SELECT * FROM users
             WHERE isLoggedIn != NULL AND (email != ? OR googleEMail != ?)`,
             [email, email]
         );
@@ -679,7 +676,7 @@ class UserDatabase {
         if (!this.db) {
             throw new Error('db is null');
         }
-        
+
         let friendArray: string[] = [];
         if (friends.includes(',')) {
             friendArray = friends.split(',');
@@ -717,8 +714,8 @@ class UserDatabase {
         try {
             await this.db.run(`INSERT INTO meta (seeded) VALUES ('true');`)
             const statement = await this.db.prepare(`
-                INSERT INTO users 
-                (id, username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends) 
+                INSERT INTO users
+                (id, username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
             );
 
@@ -731,18 +728,18 @@ class UserDatabase {
             await statement.finalize();
 
             await this.db.each('SELECT * FROM users;', async (err, row) => {
-                if (err)  {
+                if (err) {
                     await this.db?.exec('ROLLBACK');
                     throw err;
                 }
             });
             await this.db.exec('COMMIT');
-            let gameSeed = await this.setGames({id: 3, username: 'Alice'}, {id: 2, username: 'local'}, '0');
+            let gameSeed = await this.setGames({ id: 3, username: 'Alice' }, { id: 2, username: 'local' }, '0');
 
             if (typeof gameSeed === 'string') {
                 console.error(gameSeed);
             }
-            gameSeed = await this.setGames({id: 4, username: 'bob'}, {id: 2, username: 'local'}, '1');
+            gameSeed = await this.setGames({ id: 4, username: 'bob' }, { id: 2, username: 'local' }, '1');
             if (typeof gameSeed === 'string') {
                 console.error(gameSeed);
             }
@@ -763,7 +760,7 @@ class UserDatabase {
             await this.db.run(
                 `UPDATE users
                 SET isLoggedIn = 0
-                WHERE isLoggedIn < datetime('now', '-${offlineThreasholdMinutes} minutes') AND isLoggedIn != 0`   
+                WHERE isLoggedIn < datetime('now', '-${offlineThreasholdMinutes} minutes') AND isLoggedIn != 0`
             );
             await this.db.exec('COMMIT');
         } catch (err) {
@@ -773,7 +770,7 @@ class UserDatabase {
         return;
     }
 
-    private async setGames(user1: {id: number, username: string}, user2: {id: number, username: string}, gameId: string): Promise<boolean | string> {
+    private async setGames(user1: { id: number, username: string }, user2: { id: number, username: string }, gameId: string): Promise<boolean | string> {
         const response = await fetch('http://game:3002/db/addPlayer', {
             method: 'POST',
             credentials: 'include',
@@ -788,7 +785,7 @@ class UserDatabase {
         if (!response.ok) {
             return `adding player failed ${response.statusText}`;
         }
-        const gameResponse = await fetch ('http://game:3002/db/addGame', {
+        const gameResponse = await fetch('http://game:3002/db/addGame', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -832,8 +829,8 @@ class UserDatabase {
         const user = await this.db.get(query, params);
         return !user;
     }
-    
-    private async initdatabase(file: string):Promise<Database>  {
+
+    private async initdatabase(file: string): Promise<Database> {
         const database = open({
             filename: file,
             driver: sqlite3.Database
@@ -864,7 +861,7 @@ class UserDatabase {
                 seeded TEXT
                 )
         `);
-        return database;
+            return database;
         });
         return database;
     }

@@ -93,7 +93,7 @@ class server {
             sessionPlugin: '@fastify/session'
         });
 
-        this.registerRoutes();
+        await this.registerRoutes();
     }
 
     async start(portNumber: number = 3001, hostName: string = '0.0.0.0') {
@@ -321,7 +321,7 @@ class server {
             if (!user) {
                 return reply.code(401).send({error: 'unauthorized' });
             }
-            this.db.setLoggedStatus(user.email, Date.now());
+            await this.db.setLoggedStatus(user.email, Date.now());
         })
 
         this.fastify.post('/acceptFriend', async (req, reply) => {
@@ -515,7 +515,7 @@ class server {
                 });
                 const payload = ticket.getPayload();
                 if (!payload || !payload.email) return reply.code(400).send({ error: 'googleToken' });
-                
+
                 const user = await this.db.getUserData(payload.email);
                 if (!user) {
                     return reply.code(404).send({ error: 'noUser' });

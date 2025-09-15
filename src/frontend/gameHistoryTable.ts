@@ -7,7 +7,7 @@ export interface player {
 	username: string;
 	// gameRef: Game[]; // Reference to games played by the player
 }
-// game id is string == game 
+// game id is string == game
 export interface Game {
 	id: number | null; // Game ID, can be null for new games
 	type: string; // Optional type field for future use
@@ -171,9 +171,9 @@ function events(frame: HTMLIFrameElement): void {
 	});
 }
 export async function createGameHistoryTable(frame: HTMLIFrameElement): Promise<HTMLTableElement> {
-	const table = createTable();
+	const table = await createTable();
 	events(frame);
-	frame.appendChild(await table);
+	frame.appendChild(table);
 	fetchGameData().then(data => {
 		renderTableRows(data);
 	}).catch(error => {

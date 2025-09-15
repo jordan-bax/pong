@@ -342,7 +342,7 @@ export async function updateUserInfo(
             }
         }
         history.pushState({}, '', '/profile');
-        checkSession();
+        await checkSession();
     })
     .catch(() => {});
 }
@@ -392,7 +392,7 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
             }
         }
         history.pushState({}, '', '/profile');
-        checkSession();
+        await checkSession();
     })
     .catch (() => {});
 }
@@ -464,8 +464,8 @@ export async function login(formData: FormData): Promise<void> {
         } else {
             isLoggedIn = true;
             history.pushState({}, '', '/profile');
-            setGameSession();
-            checkSession();
+            await setGameSession();
+            await checkSession();
         }
     })
     .catch(() => {});
@@ -510,8 +510,8 @@ export async function register(formData: FormData): Promise<void> {
         } else {
             isLoggedIn = true;
             history.pushState({}, '', '/profile');
-            setGameSession();
-            checkSession();
+            await setGameSession();
+            await checkSession();
         }
     })
     .catch(() => {});
@@ -528,7 +528,7 @@ export async function logout(): Promise<void> {
         isLoggedIn = false;
         currentUser = null;
         history.pushState({}, '', '/');
-        clearGameSession();
+        await clearGameSession();
         await checkSession();
     })
     .catch(() => {});
@@ -606,6 +606,7 @@ export async function getIdFromMe(): Promise<number | null> {
     if (typeof id === 'number') return id;
     return null;
 }
+
 export async function getUsernameFromMeData(): Promise<string | null> {
     const username = await fetch('/api/user/me/data', {
         headers: {"x-internal": "true"},
@@ -623,6 +624,7 @@ export async function getUsernameFromMeData(): Promise<string | null> {
     if (username) return username;
     return null;
 }
+
 async function createPlayer(params: { id: number; username: string }): Promise<void> {
     await fetch('/api/game/db/addPlayer', {
         method: 'POST',
@@ -640,6 +642,7 @@ async function createPlayer(params: { id: number; username: string }): Promise<v
     })
     .catch(() => {});
 }
+
 async function setGameSession(): Promise<void> {
     const myId = await getIdFromMe();
     const username = await getUsernameFromMeData();
@@ -665,6 +668,7 @@ async function setGameSession(): Promise<void> {
     })
     .catch(() => {});
 }
+
 async function clearGameSession(): Promise<void> {
     const response = await fetch('/api/game/clearsession', {
         method: 'POST',

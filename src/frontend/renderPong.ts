@@ -77,6 +77,7 @@ async function inputTempName(): Promise<string> {
         document.body.appendChild(button);
     });
 }
+
 async function getUserNameData(){
     const user = await fetch('/api/user/me/data', {
         method: 'GET',
@@ -87,7 +88,7 @@ async function getUserNameData(){
     });
     if (!user.ok) {
         console.error('Failed to fetch user data:', user.statusText);
-        return inputTempName(); // Prompt the user for a nickname if the fetch fails
+        return await inputTempName(); // Prompt the user for a nickname if the fetch fails
     }
     const data = await user.json(); // Parse the user data
     const userData: userInfo = data.user as userInfo; // Cast to userInfo type
@@ -96,7 +97,7 @@ async function getUserNameData(){
         return null; // Return null if the user data is not valid
     }
     return userData.username; // Return the username
-    
+
 }
 
 
@@ -121,6 +122,7 @@ export async function quickjoin(gametype :string): Promise<void> {
     await startGame(gametype);
     return;
 }
+
 async function endschreen(winner: string, player1Score: number, player2Score: number): Promise<void> {
     const endScreen = document.createElement('div');
     endScreen.style.position = 'absolute';
@@ -141,15 +143,15 @@ async function endschreen(winner: string, player1Score: number, player2Score: nu
     `;
     document.body.appendChild(endScreen);
 
-    document.getElementById('restartButton')?.addEventListener('click', () => {
+    document.getElementById('restartButton')?.addEventListener('click', async () => {
         document.body.removeChild(endScreen);
-        startGame(g_gametype); // Restart the game with the same game type
+        await startGame(g_gametype); // Restart the game with the same game type
     });
 
     document.getElementById('exitButton')?.addEventListener('click', () => {
         window.location.href = '/pong'; // Redirect to the main menu
     });
-} 
+}
 
 export async function startGame(gametype :string) : Promise<scoreInterface> {
     // const playername = await getUserNameData();
@@ -161,7 +163,7 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
     const delay: number = gamespeed(); // Set the initial delay based on the game speed
     let lastFrame: HTMLDivElement | null = null;
     var background = makeBackground();
-	enableKeyListener(); // Enable key listener for player controls
+	await enableKeyListener(); // Enable key listener for player controls
     console.log('Game started with AI:', gametype, 'Delay:', delay);
     while (true) {
         const state = await fetch('/api/game/state', {
@@ -178,7 +180,7 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
                 document.body.removeChild(lastFrame);
             }
             disableKeyListener(); // Disable key listener when the game ends
-            leaveGame();
+            await leaveGame();
             return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the fetch fails
         }
         const gameState = await state.json() as gamestateinterface; // Parse the game state
@@ -189,7 +191,7 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
                 document.body.removeChild(lastFrame);
             }
             disableKeyListener(); // Disable key listener when the game ends
-            leaveGame();
+            await leaveGame();
             return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the game state is not available
         }
         player1 = gameState.player1;
@@ -209,7 +211,7 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
 			console.log('Game Over! Final Score:', player1.score, '-', player2.score);
 			document.body.removeChild(HoleScreen);
 			disableKeyListener(); // Disable key listener when the game ends
-            leaveGame();
+            await leaveGame();
 			return { player1Score: player1.score, player2Score: player2.score,player1Name : '', player2Name: '' }; // Return the final scores
 		}
     }
@@ -219,7 +221,7 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
     // }
     // disableKeyListener(); // Disable key listener when the game ends
     // leaveGame();
-    
+
     // return { player1Score: player1.score, player2Score: player2.score,player1Name : '', player2Name: '' }; // Return the final scores
 }
 
@@ -241,9 +243,10 @@ function buildframe():HTMLDivElement{
     addpc1(frame);
     addpc2(frame);
     addBall(frame);
-    
+
     return frame;
 }
+
 function addpc1(frame: HTMLDivElement): HTMLDivElement {
     // playerMoveCheck(player1);
     const pc1 = document.createElement('div');
@@ -257,6 +260,7 @@ function addpc1(frame: HTMLDivElement): HTMLDivElement {
     frame.appendChild(pc1);
     return frame;
 }
+
 function addpc2(frame: HTMLDivElement): HTMLDivElement {
     // playerMoveCheck(player2);
     const pc2 = document.createElement('div');
@@ -270,6 +274,7 @@ function addpc2(frame: HTMLDivElement): HTMLDivElement {
     frame.appendChild(pc2);
     return frame;
 }
+
 function addBall(frame: HTMLDivElement): HTMLDivElement {
     const ball = document.createElement('div');
     ball.style.position = 'absolute';
@@ -283,6 +288,7 @@ function addBall(frame: HTMLDivElement): HTMLDivElement {
     frame.appendChild(ball);
     return frame;
 }
+
 function addScoreBocks1(frame: HTMLDivElement): HTMLDivElement {
     const scoreBocks1 = document.createElement('div');
     scoreBocks1.style.position = 'absolute';
@@ -304,6 +310,7 @@ function addScoreBocks1(frame: HTMLDivElement): HTMLDivElement {
     frame.appendChild(scoreBocks1);
     return frame;
 }
+
 function addScoreBocks2(frame: HTMLDivElement): HTMLDivElement {
     const scoreBocks2 = document.createElement('div');
     scoreBocks2.style.position = 'absolute';
@@ -323,6 +330,7 @@ function addScoreBocks2(frame: HTMLDivElement): HTMLDivElement {
     frame.appendChild(scoreBocks2);
     return frame;
 }
+
 function GetGameWalls(sizeAduster :number): HTMLDivElement {
     const gameWalls = document.createElement('div');
     gameWalls.style.position = 'relative'; // Use relative positioning
@@ -332,9 +340,10 @@ function GetGameWalls(sizeAduster :number): HTMLDivElement {
     gameWalls.style.border = `${gameWall.wallThickness}px solid white`; // Set the border color
     gameWalls.style.left = `${(window.innerWidth - (gameWall.width * sizeAduster + gameWall.wallTickness2x))/2}px`; // Distance from the left of the page
     gameWalls.style.top = '15px'; // Distance from the top of the page
-    
+
     return gameWalls;
 }
+
 function addMiddleStripes(gameWalls: HTMLDivElement): HTMLElement {
     const stripeWidth = 1.5; // Width of each stripe
     const stripeHeight = 4; // Height of each stripe
@@ -411,6 +420,7 @@ async function popstateHandler(event: PopStateEvent) {
     // history.pushState(null,"", window.location.pathname);
 
 }
+
 // This runs when the user reloads or leaves the page
 // You can send a message to the server here if needed
 // Example: notify backend the player left
@@ -463,16 +473,16 @@ async function keyHandler(event: KeyboardEvent) {
                 }); // Pause the game
             break;
         case 'w':
-            sendMove('up', 1); // Move player 1 up
+            await sendMove('up', 1); // Move player 1 up
             break;
         case 's':
-            sendMove('down', 1); // Move player 1 down
+            await sendMove('down', 1); // Move player 1 down
             break;
         case 'ArrowUp':
-            sendMove('up', 2); // Move player 2 up
+            await sendMove('up', 2); // Move player 2 up
             break;
         case 'ArrowDown':
-            sendMove('down', 2); // Move player 2 down
+            await sendMove('down', 2); // Move player 2 down
             break;
     }
 }
@@ -495,5 +505,3 @@ async function keyHandler(event: KeyboardEvent) {
     //             break;
     //     }
     // });
-
- 

@@ -67,7 +67,7 @@ async function bob(test: test, td: HTMLTableCellElement): Promise<void> {
     invite.onclick = async () => {
         removeDropdown();
 		console.log("Join clicked", test);
-        nextFunction(() => Joining(test));
+        nextFunction(async () => await Joining(test));
     };
 
     // // Option 2: Back
@@ -190,7 +190,7 @@ async function Joining(test: test): Promise<void> {
 		credentials: 'include',
 		body: JSON.stringify({ gameid: test.gameid })
 	});
-	startGame(test.type);
+	await startGame(test.type);
 	return;
 }
 
@@ -249,7 +249,7 @@ async function createGameList(games: gamestateinterface[], frame: HTMLElement): 
 		{ label: 'Type of game', key: 'type' },
 		{ label: 'In game', key: 'active' }
 	];
-	const gtables = gametable.createNewTable1(frame, test1, header);
+	const gtables = await gametable.createNewTable1(frame, test1, header);
 	// 	[
 	// 	{ label: 'Username', key: 'username' },
 	// 	{ label: 'Type', key: 'type' }

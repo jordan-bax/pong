@@ -168,7 +168,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
                 addFriendButton.onclick = async (e) => {
                     await sendFriendRequest(user);
                     e.preventDefault();
-                    renderContent('profile');
+                    await renderContent('profile');
                 };
                 item.appendChild(addFriendButton);
             } else {
@@ -294,7 +294,7 @@ async function pendingList(): Promise<HTMLTableRowElement> {
                     await removeRequest(user[0].email);
                 }
                 e.preventDefault();
-                renderContent('profile')
+                await renderContent('profile')
             };
             listItem.appendChild(removeRequestButton);
             list.appendChild(listItem);
@@ -317,7 +317,7 @@ async function pendingList(): Promise<HTMLTableRowElement> {
             }
             e.preventDefault();
             history.pushState({}, '', '/profile');
-            renderContent('profile')
+            await renderContent('profile')
         };
         listItem.appendChild(removeRequestButton);
         list.appendChild(listItem);
@@ -361,7 +361,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
                     await acceptFriendRequest(user[0].email);
                 }
                 e.preventDefault();
-                renderContent('profile');
+                await renderContent('profile');
             }
             listItem.appendChild(acceptRequestButton);
 
@@ -375,7 +375,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
                     await removeRequest(user[0].email);
                 }
                 e.preventDefault();
-                renderContent('profile')
+                await renderContent('profile')
             };
             listItem.appendChild(removeRequestButton);
             list.appendChild(listItem);
@@ -397,7 +397,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
                 await acceptFriendRequest(user[0].email);
             }
             e.preventDefault();
-            renderContent('profile');
+            await renderContent('profile');
         }
         listItem.appendChild(acceptRequestButton);
 
@@ -411,7 +411,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
                 await removeRequest(user[0].email);
             }
             e.preventDefault();
-            renderContent('profile');
+            await renderContent('profile');
         };
         listItem.appendChild(removeRequestButton);
         list.appendChild(listItem);
@@ -485,10 +485,10 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
 
     table.appendChild(createRow(submitButton, errorDiv));
     loginForm.appendChild(table);
-    loginForm.onsubmit = (e) => {
+    loginForm.onsubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData(loginForm);
-        login(formData);
+        await login(formData);
     };
     return loginForm;
 }
@@ -574,10 +574,10 @@ async function renderRegister(text: content): Promise<HTMLFormElement> {
     table.appendChild(createRow(submitButton, errorDiv));
 
     registerForm.appendChild(table);
-    registerForm.onsubmit = (e) => {
+    registerForm.onsubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData(registerForm);
-        register(formData);
+        await register(formData);
     };
     return registerForm;
 }
@@ -626,7 +626,7 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     const overlaySubitButton = document.createElement('button');
     overlaySubitButton.id = 'passwordSubmit';
     overlaySubitButton.textContent = 'Confirm';
-    overlaySubitButton.onclick = () => {
+    overlaySubitButton.onclick = async () => {
         const password = (document.getElementById('oldPassword') as HTMLInputElement).value;
         if (!password) {
             const error = document.getElementById('error');
@@ -640,9 +640,12 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
             error.appendChild(errorParagraph);
         }
         const formInfo = document.getElementById('profileForm') as HTMLFormElement | null;
-        if (!formInfo) return;
+        if (!formInfo) {
+            return;
+        }
+
         const formData = new FormData(formInfo);
-        updateUserInfo(user.email, user.username, password, formData);
+        await updateUserInfo(user.email, user.username, password, formData);
     }
 
     contentDiv.appendChild(overlaySubitButton);
@@ -669,9 +672,9 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     const exitButton = document.createElement('button');
     exitButton.id = 'exit-btn';
     exitButton.textContent = text.exitButtonText;
-    exitButton.onclick = () => {
+    exitButton.onclick = async () => {
         history.pushState({}, '', '/profile');
-        checkSession();
+        await checkSession();
     }
 
     contentDiv.appendChild(exitButton);
@@ -862,7 +865,7 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
         const gameDataDiv = document.createElement('div');
         const played = data.gamesPlayed;
         const won = data.gamesWon;
-        
+
         gameDataDiv.className = 'winLoss';
 
         const circleText = `${won}/${played}`;
@@ -1040,7 +1043,7 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
                 data.ai +=1;
             } else {
                 if (game.type === 'tournament') {
-                    data.tournaments += 1;        
+                    data.tournaments += 1;
                 }
                 else if (self === game.player1.userId) {
                     if (game.player2.userId === 2) {
@@ -1265,14 +1268,14 @@ export async function renderContent(route: string): Promise<void> {
             break;
         case 'game':
             // content.textContent = 'Game page is under construction.';
-            pongbutton();
+            await pongbutton();
             break;
         case 'settings':
             // content.textContent = 'Settings page is under construction.';
-            openSettings();
+            await openSettings();
             break;
         case 'tournament':
-            renderTournament();
+            await renderTournament();
             break;
         case 'history':
             await createGameHistoryTable(content as HTMLIFrameElement);
@@ -1283,7 +1286,7 @@ export async function renderContent(route: string): Promise<void> {
     initGoogleSignInIfNeeded();
     if (!getLoggin && route !== 'login' && route === 'profile') {
         history.pushState({}, '', '/login');
-        renderContent('login');
+        await renderContent('login');
     }
 }
 

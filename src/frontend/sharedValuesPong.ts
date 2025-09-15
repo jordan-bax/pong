@@ -7,6 +7,7 @@ export interface gamestateinterface {
 	player2: pcInterface;
 	ball: ballInterface;
 }
+
 export interface basicinfo {
 	paddelspeed: number;
 	ball_dx: number;
@@ -14,6 +15,7 @@ export interface basicinfo {
 	ball_speed: number;
 	ball_staticSpeed: number;
 }
+
 export interface gameWallsInterface {
 	width: number;
 	height: number;
@@ -21,12 +23,14 @@ export interface gameWallsInterface {
 	wallTickness2x: number;
 	egdeThickness: number;
 }
+
 export interface scoreInterface {
 	player1Score: number;
 	player2Score: number;
 	player1Name: string;
 	player2Name: string;
 }
+
 export interface pcInterface {
 	id: number | null; // Use string or null for player ID
 	active: boolean;
@@ -38,6 +42,7 @@ export interface pcInterface {
 	width: number;
 	score: number;
 }
+
 export interface ballInterface {
 	x: number;
 	y: number;
@@ -48,9 +53,11 @@ export interface ballInterface {
 	height: number;
 	width: number;
 }
+
 export interface aiInterface {
 	reactionTime: number; // Time it takes for the AI to react
 }
+
 export const gameWall: gameWallsInterface = {
 	width: 200,
 	height: 200,
@@ -58,6 +65,7 @@ export const gameWall: gameWallsInterface = {
 	wallTickness2x: 20,
 	egdeThickness: 15
 };
+
 export var player1Template: pcInterface = {
 	id: null,
 	active: false,
@@ -69,6 +77,7 @@ export var player1Template: pcInterface = {
 	width: 4,
 	score: 0
 };
+
 export var player2Template: pcInterface = {
 	id: null,
 	active: false,
@@ -80,10 +89,12 @@ export var player2Template: pcInterface = {
 	width: 4,
 	score: 0
 };
+
 export var ai_var: aiInterface = {
 	//The average (median) reaction time is 273 milliseconds
 	reactionTime: 100 // Default reaction time in milliseconds
 };
+
 export var ballvarTemplate: ballInterface = {
 	x: 98,
 	y: 98,
@@ -94,6 +105,7 @@ export var ballvarTemplate: ballInterface = {
 	height: 4,
 	width: 4
 };
+
 export var sizeAduster: number = 1;
 export var fps: number = 10; // Frames per second
 export var pauze: boolean = true; // Variable to control the pause state

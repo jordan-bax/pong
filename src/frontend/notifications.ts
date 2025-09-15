@@ -122,6 +122,11 @@ class NotificationSystem {
         return wrapper;
     }
 
+    public shiftNotification(): Notification | undefined {
+        const notification = this.notifications.shift();
+        return notification;
+    }
+
     private addMessageToDropdown(
         dropdown: HTMLElement,
         message: string,
@@ -167,12 +172,6 @@ class NotificationSystem {
         localStorage.setItem('notifications',
             JSON.stringify(this.storageNotifications));
     }
-
-    public shiftNotification(): Notification | undefined {
-        const notification = this.notifications.shift();
-        return notification;
-    }
-
 }
 
 const notificationSystem = new NotificationSystem();
@@ -182,7 +181,7 @@ export function renderNotification(): HTMLElement {
 }
 
 export async function listenForNotifications(): Promise<void> {
-    return notificationSystem.listenForNotifications();
+    return await notificationSystem.listenForNotifications();
 }
 
 export function showNotification(): void {

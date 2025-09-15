@@ -3,11 +3,11 @@ import { routeFromPath, checkSession } from "./routing.js";
 import { listenForNotifications, showNotification } from "./notifications.js";
 
 window.addEventListener('popstate', async () => {
-    renderContent(routeFromPath[window.location.pathname] || 'not found');
+    await renderContent(routeFromPath[window.location.pathname] || 'not found');
 });
 
-window.addEventListener('load', () => {
-    checkSession();
+window.addEventListener('load', async () => {
+    await checkSession();
 });
 
 window.onGsiLoad = function() {
@@ -28,8 +28,8 @@ setInterval(() => {
         .catch();
 }, 30000);
 
-setInterval(() => {
-    listenForNotifications().catch(console.error);
+setInterval(async () => {
+    await listenForNotifications().catch(console.error);
 }, 10000);
 
 setInterval(() => {

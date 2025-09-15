@@ -10,6 +10,7 @@ class table<T> {
   private func: ((item: T, td: HTMLTableCellElement) => void) | null = null;
   private currentSortKey: keyof T | null;
   private ascending = true;
+
   // Create and return a styled table element
   private createTable(data: T[], headers: Header<T>[]): HTMLTableElement {
     const table = document.createElement("table");
@@ -21,7 +22,7 @@ class table<T> {
       th.id = "th";
       th.textContent = label;
       th.style.padding = "10px";
-      th.addEventListener("click", () => this.sortBy(data, headers, key));
+      th.addEventListener("click", async () => await this.sortBy(data, headers, key));
       headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
@@ -45,14 +46,15 @@ class table<T> {
         const td = document.createElement("td");
         td.id = "td";
         td.textContent = String(item[key]);
-        await row.appendChild(td);
+        await row.appendChild(td);  // TODO: await does not do anything here
         if (this.func) this.func(item , td);
       });
       tbody.appendChild(row);
     });
   }
+
   // Sort function
-  private sortBy(data: T[], headers: Header<T>[], key: keyof T) {
+  private async sortBy(data: T[], headers: Header<T>[], key: keyof T) {
     console.log("Sorting by:", key, "currentSortKey:", this.currentSortKey, "ascending:", this.ascending);
     if (this.currentSortKey === key) {
       this.ascending = !this.ascending;
@@ -68,17 +70,17 @@ class table<T> {
       if (a[key] > b[key]) return this.ascending ? 1 : -1;
       return 0;
     });
-    this.renderTableRows(data, headers);
+    await this.renderTableRows(data, headers);
   }
- 
-  public createNewTable1(
+
+  public async createNewTable1(
       frame: HTMLElement,
       data: T[],
       headers: Header<T>[]
-  ): HTMLTableElement {
+  ): Promise <HTMLTableElement> {
     const table = this.createTable(data, headers);
     frame.appendChild(table);
-    this.renderTableRows(data, headers);
+    await this.renderTableRows(data, headers);
     return table;
   }
 }

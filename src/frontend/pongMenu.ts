@@ -139,15 +139,15 @@ async function createCenterButtons(){
 	online.style.padding = '10px 20px';
 	online.onclick = () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		nextFunction( () => quickjoin('online') );
+		nextFunction( async () => await quickjoin('online') );
 	};
 	const joingame = document.createElement('button');
 	joingame.textContent = text.gameButtonJoinText;
 	joingame.style.fontSize = '1.2em';
 	joingame.style.padding = '10px 20px';
-	joingame.onclick = () => {
+	joingame.onclick = async () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		joinGame('joingame');
+		await joinGame('joingame');
 	};
 	const button1 = document.createElement('button');
 	button1.textContent = text.gameButtonLocalText;
@@ -155,7 +155,7 @@ async function createCenterButtons(){
 	button1.style.padding = '10px 20px';
 	button1.onclick = () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		nextFunction( () => quickjoin('local') );
+		nextFunction( async () => await quickjoin('local') );
 	};
 
 	const button2 = document.createElement('button');
@@ -164,7 +164,7 @@ async function createCenterButtons(){
 	button2.style.padding = '10px 20px';
 	button2.onclick = () => {
 		frame?.removeChild(container); // Remove the container before starting the game
-		nextFunction( () => quickjoin('ai') );
+		nextFunction( async () => await quickjoin('ai') );
 	};
 
 	// const input = document.createElement('input');

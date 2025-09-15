@@ -77,7 +77,9 @@ export async function renderNavbar(): Promise<void> {
         logoutBtn.className= 'btn navItem';
         logoutBtn.href = '/';
         logoutBtn.textContent = navbarText.logoutNavbarText;
-        logoutBtn.onclick = logout;
+        logoutBtn.onclick = async () => {
+            await logout();
+        }
         navbar.appendChild(logoutBtn);
     } else {
         let loginLink = document.createElement('a');

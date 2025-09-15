@@ -12,7 +12,7 @@ interface dropdownText {
 };
 
 export async function getContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
-    const content = getPageContent(language, textKeys);
+    const content = await getPageContent(language, textKeys);
     return content;
 }
 
@@ -61,10 +61,10 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 				option.selected = false;
 			}
 		})
-		languageDropdown.addEventListener('change', (event) => {
+		languageDropdown.addEventListener('change', async (event) => {
 			const target = event.target as HTMLSelectElement;
-			setLanguage(target.value);
-			checkSession();
+			await setLanguage(target.value);
+			await checkSession();
 		})
 	const languagetext = document.createElement('div');
 	languagetext.textContent = text.languageSettingText;
@@ -74,6 +74,7 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
 		languageDropdown
 	);
 }
+
 async function addNotificationSettings(): Promise<HTMLTableRowElement> {
     const languae = await getLanguage();
     const textMapData = await getContent(languae.toLowerCase(), ['notificationSettingText']);
@@ -97,6 +98,7 @@ async function addNotificationSettings(): Promise<HTMLTableRowElement> {
 		notificationCheckbox
 	);
 }
+
 export async function openSettings(): Promise<void> {
 	const content = document.getElementById("content") as HTMLDivElement;
 	if (!content) {
@@ -132,11 +134,11 @@ export async function dropdowngamemenu(frame: HTMLElement): Promise<void> {
 	const dropbtn = document.createElement('button');
 	dropbtn.className = 'dropbtn';
 	dropbtn.textContent = text.gameNavDropText;
-	dropbtn.onclick = (e) => {
+	dropbtn.onclick = async (e) => {
 		e.preventDefault();
 		console.log('Pong option clicked');
 		history.pushState({}, '', '/gameMenu');
-		renderContent('game');
+		await renderContent('game');
 	};
 
 	const dropdownContent = document.createElement('div');
@@ -145,33 +147,33 @@ export async function dropdowngamemenu(frame: HTMLElement): Promise<void> {
 	const option1 = document.createElement('a');
 	option1.href = '/pong';
 	option1.textContent = text.gameNavPongText;
-	option1.onclick = (e) => {
+	option1.onclick = async (e) => {
 		e.preventDefault();
 		console.log('Pong option clicked');
 		history.pushState({}, '', '/gameMenu');
-		renderContent('game');
+		await renderContent('game');
 	};
 	dropdownContent.appendChild(option1);
 
 	const option2 = document.createElement('a');
 	option2.href = '/gamehistory';
 	option2.textContent = text.gameNavHistoryText;
-	option2.onclick = (e) => {
+	option2.onclick = async (e) => {
 		e.preventDefault();
 		console.log('Game history option clicked');
 
 		history.pushState({}, '', '/gameHistory');
-		renderContent('history');
+		await renderContent('history');
 	};
 	dropdownContent.appendChild(option2);
 
 	const option3 = document.createElement('a');
 	option3.href = '/tournament';
 	option3.textContent = text.gameNavTournamentText;
-    option3.onclick = (e) => {
+    option3.onclick = async (e) => {
         e.preventDefault();
         history.pushState({}, '', '/tournament');
-        renderContent('tournament');
+        await renderContent('tournament');
     }
 	dropdownContent.appendChild(option3);
 

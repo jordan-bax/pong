@@ -407,14 +407,14 @@ export async function checkSession() {
     .then (async (response) => {
         if (!response.ok) {
             isLoggedIn = false;
-            renderNavbar();
-            renderContent(routeFromPath[window.location.pathname] || 'not found');
+            await renderNavbar();
+            await renderContent(routeFromPath[window.location.pathname] || 'not found');
             return;
         }
         const data = await response.json();
         isLoggedIn = data.loggedIn ? true : false;
-        renderNavbar();
-        renderContent(routeFromPath[window.location.pathname] || 'not found');
+        await renderNavbar();
+        await renderContent(routeFromPath[window.location.pathname] || 'not found');
     })
     .catch (() => {});
     // isLoggedIn = false;
@@ -524,12 +524,12 @@ export async function logout(): Promise<void> {
             "x-internal": "true"
         }
     })
-    .then(() => {
+    .then(async () => {
         isLoggedIn = false;
         currentUser = null;
         history.pushState({}, '', '/');
         clearGameSession();
-        checkSession();
+        await checkSession();
     })
     .catch(() => {});
 }
@@ -537,8 +537,8 @@ export async function logout(): Promise<void> {
 let csrfToken: string | null = null;
 
 async function fetchCsrfToken() {
-    const res = await fetch('api/user/csrf-token', { 
-        credentials: 'include', 
+    const res = await fetch('api/user/csrf-token', {
+        credentials: 'include',
         headers: {
             "x-internal": "true"
         }

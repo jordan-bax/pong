@@ -25,7 +25,10 @@ export async function renderNavbar(): Promise<void> {
     const navbarMapData = await getNavbarContent(language.toLowerCase(), ['settingNavText', 'loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText', 'gameNavbarText', 'notificationNavbarText']);
     const navbarText = navbarMapData.get('row') as navbarContent;
     const navbar = document.getElementById('navbar');
-    if (!navbar) return;
+    if (!navbar) {
+        return;
+    }
+
     navbar.innerHTML = '';
     navbar.className = 'navBar';
 
@@ -33,10 +36,10 @@ export async function renderNavbar(): Promise<void> {
     homeLink.href = '/';
     homeLink.className = 'btn navItem'
     homeLink.textContent = navbarText.homeNavbarText;
-    homeLink.onclick = (e) => {
+    homeLink.onclick = async (e) => {
         e.preventDefault();
         history.pushState({}, '', '/');
-        renderContent('home');
+        await renderContent('home');
     };
     navbar.appendChild(homeLink);
 
@@ -47,10 +50,10 @@ export async function renderNavbar(): Promise<void> {
     settingsLink.textContent = navbarText.settingNavText;
     // settingsLink.textContent = navbarText.settingsNavbarText;
     settingsLink.className = 'btn navItem';
-    settingsLink.onclick = (e) => {
+    settingsLink.onclick = async (e) => {
         e.preventDefault();
         history.pushState({}, '', '/settings');
-        renderContent('settings');
+        await renderContent('settings');
     };
 
     let notificationArea = renderNotification()
@@ -63,10 +66,10 @@ export async function renderNavbar(): Promise<void> {
         profileLink.href = '/profile';
         profileLink.className = 'btn navItem'
         profileLink.textContent = navbarText.profileNavbarText;
-        profileLink.onclick = (e) => {
+        profileLink.onclick = async (e) => {
         e.preventDefault();
         history.pushState({}, '', '/profile');
-        renderContent('profile');
+        await renderContent('profile');
         };
         navbar.appendChild(profileLink);
 
@@ -81,10 +84,10 @@ export async function renderNavbar(): Promise<void> {
         loginLink.href = '/login';
         loginLink.className = 'btn navItem';
         loginLink.textContent = navbarText.loginNavbarText;
-        loginLink.onclick = (e) => {
+        loginLink.onclick = async (e) => {
             e.preventDefault();
             history.pushState({}, '', '/login');
-            renderContent('login');
+            await renderContent('login');
         };
         navbar.appendChild(loginLink);
 
@@ -92,10 +95,10 @@ export async function renderNavbar(): Promise<void> {
         registerLink.textContent= navbarText.registerNavbarText;
         registerLink.href = '/register';
         registerLink.className = 'btn navItem';
-        registerLink.onclick = (e) => {
+        registerLink.onclick = async (e) => {
             e.preventDefault();
             history.pushState({}, '', '/register');
-            renderContent('register');
+            await renderContent('register');
         };
         navbar.appendChild(registerLink);
     }

@@ -49,6 +49,7 @@ class Gameloop {
 		if (!this.gamestate.gameActive) {
 			return; // Game already ended
 		}
+		
 		console.log('Game is finished! Final Score:', this.gamestate.player1.score, '-', this.gamestate.player2.score);
 		this.gamestate.gameActive = false;
 		this.gamestate.gamePause = true;

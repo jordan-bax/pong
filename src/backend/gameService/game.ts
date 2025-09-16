@@ -527,14 +527,14 @@ fastify.post('/move', async (req, reply) => {
 		} else if (direction === 'down') {
 			game.getState().player1.y += game.getState().player1.speed;
 		}
-		// playerMoveCheck(game.player1);
+		game.playerMoveCheck(game.getState().player1);
 	} else if (player == 2) {
 		if (direction === 'up') {
 			game.getState().player2.y -= game.getState().player2.speed;
 		} else if (direction === 'down') {
 			game.getState().player2.y += game.getState().player2.speed;
 		}
-		// playerMoveCheck(game.player2);
+		game.playerMoveCheck(game.getState().player2);
 	}
 	reply.send({ status: 'moved'});
 });

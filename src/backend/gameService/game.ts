@@ -851,6 +851,7 @@ fastify.post('/preparegame', {schema:{body: matchingBodySchema} }, async (req, r
 	const games = new Gameloop(newGame);
 	if (gametype === 'tournament') {
 		const { tournamentId } = req.body as { tournamentId: number };
+        console.error("tournammentID from backend: ", tournamentId)
 		games.setTournamentId(tournamentId);
 	}
 	invited.push(games); // Add the new game to the invited array
@@ -867,7 +868,7 @@ fastify.post('/preparegame', {schema:{body: matchingBodySchema} }, async (req, r
 		if (playerid2 > 0)
 			await sendNotificationToUser(playerid2, `You have been invited to play a game`);
 	}
-	reply.send({ matchID: gameid, status: 'matched' });
+	reply.status(201).send({ matchID: gameid, status: 'matched' });
 });
 
 async function prepareDatabase() {

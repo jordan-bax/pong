@@ -1,7 +1,7 @@
 import * as dbfunc from './game_db.js';
 import { Game, player, GameStats } from './game_db.js';
 import {player1Template, player2Template, ballvarTemplate, gamestateinterface,gameWall, pcInterface, ballInterface, aiInterface, gameWallsInterface } from './sharedValuesPong.js';
-import { updateGameInDB , GameTypeId} from './game.js';	
+import { updateGameInDB , GameTypeId} from './game.js';
 
 class Gameloop {
 	constructor(state: gamestateinterface) {
@@ -45,7 +45,7 @@ class Gameloop {
 		// Update game state
 	}
 
-	end() {
+	async end() {
 		if (!this.gamestate.gameActive) {
 			return; // Game already ended
 		}
@@ -53,9 +53,11 @@ class Gameloop {
 		console.log('Game is finished! Final Score:', this.gamestate.player1.score, '-', this.gamestate.player2.score);
 		this.gamestate.gameActive = false;
 		this.gamestate.gamePause = true;
-		updateGameInDB(this.gamestate);
+		await updateGameInDB(this.gamestate);
+        console.log(this.tournamentId)
 		if (this.tournamentId !== -1) {
-			fetch('http://localhost:3003/api/tournament/done', {
+            console.log("post to tournament???")
+			fetch('http://tournament:3003/done', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -64,7 +66,6 @@ class Gameloop {
 					tournamentID: this.tournamentId,
 					player1ID: this.gamestate.player1.id,
 					player2ID: this.gamestate.player2.id,
-					matchID: this.gamestate.gameID,
 					player1Score: this.gamestate.player1.score,
 					player2Score: this.gamestate.player2.score,
 				}),
@@ -78,9 +79,11 @@ class Gameloop {
 			});
 		}
 	}
+
 	saveGame() {
-		
+
 	}
+
 	pause() {
 		if (!this.gamestate.gameActive) {
 			return; // Game not active or already paused
@@ -119,7 +122,7 @@ class Gameloop {
 	// 		this.playerMoveCheck(this.gamestate.player2);
 	// 	}
 	// }
-	
+
 	playerleft(playerId: number) {
 		if (this.gamestate.gameActive) {
 			this.end();
@@ -145,7 +148,7 @@ class Gameloop {
 			return; // Exit the game loop if paused
 		}
 		this.ballmove(gamestate);
-	
+
 		if (use_ai && !(gamestate.player2.id === null) && gamestate.player2.id <= GameTypeId.AI) {
 			this.simpleAi(gamestate);
 		}
@@ -194,7 +197,7 @@ class Gameloop {
 	}
 	ballmove(gamestate:gamestateinterface): void {
 		// Move the ball
-	
+
 		var oldBall : ballInterface = gamestate.ball;
 		this.moveBallByAngle(gamestate.ball, this.angle, this.ball_speed);
 		this.ballbounceByAngle(this.angle);
@@ -270,7 +273,7 @@ class Gameloop {
 		// Simple AI to control player 2
 		var player2: pcInterface = gamestate.player2;
 		var ballvar: ballInterface = gamestate.ball;
-	
+
 		if (ballvar.y < player2.y) {
 			player2.y -= player2.speed; // Move up
 		} else if (ballvar.y + ballvar.height > player2.y + player2.height) {
@@ -283,7 +286,7 @@ class Gameloop {
 		else if (player2.y + player2.height > gameWall.height) {
 			player2.y = gameWall.height - player2.height; // Prevent moving below the bottom wall
 		}
-	
+
 		}
 	// gamespeed(): number {
 	// 	// Adjust the game speed based on the current FPS

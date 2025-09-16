@@ -113,7 +113,7 @@ export const gameDoneSchema = {
             player1Score: { type: 'number' },
             player2Score: { type: 'number' },
         },
-        required: ['tournamentID', 'player1ID', 'player2ID', 'Player1Score', 'player2Score']
+        required: ['tournamentID', 'player1ID', 'player2ID', 'player1Score', 'player2Score']
     },
     response: {
         201: {

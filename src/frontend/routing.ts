@@ -45,6 +45,7 @@ interface ierrors {
     errorPasswordNoString: string;
     errorUsernameNoString: string;
     errorNoPath: string;
+    unprocessableEntity:string;
 }
 
 export interface searchUser {
@@ -80,6 +81,7 @@ const errorMessages = [
     'errorPasswordNoString',
     'errorUsernameNoString',
     'errorNoPath',
+    'unprocessableEntity'
 ];
 
 async function getErrorMessages(): Promise<ierrors> {

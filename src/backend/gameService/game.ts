@@ -120,11 +120,6 @@ async function lastId(): Promise<number> {
 }
 
 async function makeNewGame(type: string, playername: string, playerid: number): Promise<Gameloop > {
-	// Create a new game state
-	// const gameid = generateUniqueGameId(); // Generate a unique game ID
-
-
-
 	const gameid = await lastId().then(id => id + 1); // Increment the last game ID
 
 	var player2Id: number | null = null;
@@ -160,6 +155,14 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 }
 export async function updateGameInDB(game: gamestateinterface): Promise<void> {
 	// Update the game in the database
+	var id1 = game.player1.id;
+	if (id1 === null || id1 === undefined || id1 < 0) {
+		id1 = 0;
+	}
+	var id2 = game.player2.id;
+	if (id2 === null || id2 === undefined || id2 < 0) {
+		id2 = 0;
+	}
 	var winner: string = '';
 	if (game.player1.score > game.player2.score) {
 		winner = game.player1.name;
@@ -170,11 +173,12 @@ export async function updateGameInDB(game: gamestateinterface): Promise<void> {
 	else {
 		winner = game.player2.name;
 	}
+
 	const db = await dbfunc.createGame({
 		id: game.gameID,
 		type: game.gametype,
-		player1: { id: game.player1.id, username: game.player1.name },
-		player2: { id: game.player2.id, username: game.player2.name },
+		player1: { id: id1, username: game.player1.name },
+		player2: { id: id2, username: game.player2.name },
 		player1Score: game.player1.score,
 		player2Score: game.player2.score,
 		winner: winner,

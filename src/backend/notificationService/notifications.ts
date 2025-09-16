@@ -81,7 +81,9 @@ async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
     let userId = await getUserIdFromSession(request);
     if (!userId) {
         console.log('User is not authenticated, setting default userId to 1');
-        userId = 1;
+        userId = 2;
+        reply.status(401).send({ error: 'Unauthorized' });
+        return;
     }
     (request as any).query.userId = userId;
 }

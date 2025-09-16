@@ -134,6 +134,7 @@ class TourService {
             throw error
         }
     }
+
     async finished() {
         try {
             let tours = await db.finished()
@@ -161,14 +162,6 @@ class TourService {
                     player2Score: number) {
         if (tourID < 1) {
             throw new Error('tournamentID must be more then 0')
-        }
-
-        if (player1ID < 1) {
-            throw new Error('player1ID can not be less then 1')
-        }
-
-        if (player2ID < 1) {
-            throw new Error('player2ID can not be be less then 1')
         }
 
         const winnerID = player1Score > player2Score ? player1ID : player2ID
@@ -238,23 +231,28 @@ class TourService {
                             continue
                         }
 
-                        const resp = await fetch(`http://notification:3005/add?userId=${tour.nextMatchs[index][idx]}`, {
-                            method: "POST",
-                            credentials: 'include',
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                "message": `You next match in tournament ${tour.name} is ready to start`
+                        while (true) {
+                            console.log(tour.id)
+                            const resp = await fetch(`http://game:3002/preparegame`, {
+                                method: "POST",
+                                credentials: 'include',
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    'playerid1': tour.nextMatchs[index][0],
+                                    'playerid2': tour.nextMatchs[index][1],
+                                    'tournamentId': tour.id,
+                                    'gametype': 'tournament'
+                                })
                             })
-                        })
 
-                        if (resp.status !== 201) {
-                            console.log(resp)
+                            if (resp.status !== 201) {
+                                setTimeout(() => console.error(resp), 1000)
+                            } else {
+                                break
+                            }
                         }
-
-                        // send naar noty server id in querystring massage in body
-                        // this.notifications.push({ id: tour.nextMatchs[index][idx], message: "You next match will start in 15 seconds" })
                     }
                 }
             }

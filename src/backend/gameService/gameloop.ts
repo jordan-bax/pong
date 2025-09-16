@@ -49,13 +49,33 @@ class Gameloop {
 		if (!this.gamestate.gameActive) {
 			return; // Game already ended
 		}
-		
+
 		console.log('Game is finished! Final Score:', this.gamestate.player1.score, '-', this.gamestate.player2.score);
 		this.gamestate.gameActive = false;
 		this.gamestate.gamePause = true;
 		updateGameInDB(this.gamestate);
 		if (this.tournamentId !== -1) {
-			//fetch tournament to backend 
+			fetch('http://localhost:3003/api/tournament/done', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					tournamentID: this.tournamentId,
+					player1ID: this.gamestate.player1.id,
+					player2ID: this.gamestate.player2.id,
+					matchID: this.gamestate.gameID,
+					player1Score: this.gamestate.player1.score,
+					player2Score: this.gamestate.player2.score,
+				}),
+			})
+			.then(response => response.json())
+			.then(data => {
+				console.log('Tournament updated with game result:', data);
+			})
+			.catch(error => {
+				console.error('Error updating tournament with game result:', error);
+			});
 		}
 	}
 	saveGame() {

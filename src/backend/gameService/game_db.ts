@@ -46,7 +46,7 @@ export async function initializeDatabase() {
 	await db.run(`
 		CREATE TABLE IF NOT EXISTS player (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			playerid INTEGER UNIQUE,
+			userid INTEGER UNIQUE,
 			username TEXT UNIQUE NOT NULL
 		)
 	`);

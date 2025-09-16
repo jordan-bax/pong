@@ -310,6 +310,11 @@ function findGamebyGameId(gameid: number | null): Gameloop | null {
 			return game;
 		}
 	}
+	for (const game of invited) {
+		if (game && game.getId() === gameid) {
+			return game;
+		}
+	}
 	console.log('Game not found for game ID:', gameid);
 	return null; // Return null if no game is found for the gameid); ID
 }
@@ -497,6 +502,7 @@ fastify.post('/pause', async (req, reply) => {
 	game.pause();
 	reply.send({ status: 'paused' });
 });
+
 // move the player paddle
 fastify.post('/move', async (req, reply) => {
 	if (!req.session.player) {
@@ -505,12 +511,14 @@ fastify.post('/move', async (req, reply) => {
 		return;
 	}
 	const { direction } = req.body as { direction: 'up' | 'down' };
-	var player: 1|2 | null = req.session.player?.player; // Default player is 1
-	// const { gameid} = req.query as { gameid: string };
-	// const player = gameid.split('-')[1]; // Extract player from gameid
+	var player: 1|2 | null = req.session.player?.player;
 	const game = findGamebyGameId(req.session.player?.gameid);
 	if (!game) {
 		reply.status(404).send({ status: 'no Game' });
+		return;
+	}
+	if (game.getState().gameActive === false) {
+		reply.status(400).send({ status: 'inactive' });
 		return;
 	}
 	if (game.getState().gamePause) {
@@ -518,7 +526,7 @@ fastify.post('/move', async (req, reply) => {
 		return;
 	}
 	if (game.getState().gametype === 'local') {
-		player = (req.query as { player: 1|2 }).player; // Default to player 1 if not specified
+		player = (req.query as { player: 1|2 }).player;
 	}
 	console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.getId());
 	if (player == 1) {
@@ -732,7 +740,12 @@ fastify.get('/getopengames', async (req, reply) => {
 		id = GameTypeId.UNKNOWN; // Default player ID for unknown users
 	}
 	const openGames = invited.filter(game => game.getState().player1.id == id || game.getState().player2.id == id);
-	reply.send(openGames);
+	var open : gamestateinterface[] = [];
+	for (const game of openGames) {
+		open.push(game.getState());
+	}
+	console.log('Open games for player ID:', id, 'Number of open games:', open.length);
+	reply.send(open);
 });
 const matchingBodySchema = {
   type: 'object',
@@ -850,8 +863,7 @@ fastify.post('/preparegame', {schema:{body: matchingBodySchema} }, async (req, r
 		if (playerid2 > 0)
 			await sendNotificationToUser(playerid2, `You have been invited to play a game`);
 	}
-	reply.send({ gameid: gameid, status: 'matched' });
-
+	reply.send({ matchID: gameid, status: 'matched' });
 });
 
 async function prepareDatabase() {

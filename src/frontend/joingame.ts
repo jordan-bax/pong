@@ -67,7 +67,7 @@ async function bob(test: test, td: HTMLTableCellElement): Promise<void> {
     invite.onclick = async () => {
         removeDropdown();
 		console.log("Join clicked", test);
-        nextFunction(async () => await Joining(test));
+        nextFunction(async () => await Joining(test.gameid, test.type));
     };
 
     // // Option 2: Back
@@ -99,88 +99,7 @@ async function bob(test: test, td: HTMLTableCellElement): Promise<void> {
     };
 }
 
-// function bob(test: test, td: HTMLTableCellElement): void {
-// 	console.log("bob", test);
-// 	// Remove any existing dropdown to avoid duplicates
-// 	const existingDropdown = td.querySelector('.dropdown-content');
-// 	if (existingDropdown) {
-// 		td.removeChild(existingDropdown);
-// 	}
-
-// 	// Create dropdown menu
-// 	const dropdownoptions = document.createElement('div');
-// 	dropdownoptions.className = 'dropdown-content';
-// 	dropdownoptions.style.position = 'absolute';
-// 	dropdownoptions.style.background = '#fff';
-// 	dropdownoptions.style.border = '1px solid #ccc';
-// 	dropdownoptions.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-// 	dropdownoptions.style.zIndex = '1000';
-// 	dropdownoptions.style.display = 'block';
-
-// 	// Position dropdown below td
-// 	const rect = td.getBoundingClientRect();
-// 	dropdownoptions.style.left = '0px';
-// 	dropdownoptions.style.top = td.offsetHeight + 'px';
-
-// 	// Option 1: Invite to game
-// 	const invite = document.createElement('a');
-// 	invite.textContent = 'Invite to game';
-// 	invite.className = 'a';
-// 	invite.onclick = async () => {
-// 		if (dropdownoptions.parentElement) {
-// 			dropdownoptions.parentElement.removeChild(dropdownoptions);
-// 		}
-// 		quickjoin("ai");
-// 	};
-
-// 	// Option 2: Back
-// 	const back = document.createElement('a');
-// 	back.textContent = 'Back';
-// 	back.className = 'a';
-// 	back.onclick = () => {
-// 		if (dropdownoptions.parentElement) {
-// 			dropdownoptions.parentElement.removeChild(dropdownoptions);
-// 		}
-// 	};
-
-// 	dropdownoptions.appendChild(invite);
-// 	dropdownoptions.appendChild(back);
-
-// 	// Ensure td is positioned relatively for absolute dropdown
-// 	if (getComputedStyle(td).position === 'static') {
-// 		td.style.position = 'relative';
-// 	}
-
-// 	td.appendChild(dropdownoptions);
-// 	// const dropdownoptions = document.createElement('div');
-// 	// dropdownoptions.className = 'dropdown-content';
-// 	// dropdownoptions.style.display = 'block';
-// 	// const invite = document.createElement('button');
-// 	// invite.textContent = 'Invite to game';
-// 	// invite.className = 'a';
-// 	// invite.onclick = async () => {
-// 	// 	if (td.parentElement) {
-// 	// 		td.parentElement.removeChild(dropdownoptions);
-// 	// 	}
-// 	// 	quickjoin("ai");
-// 	// };
-// 	// const back = document.createElement('button');
-// 	// back.textContent = 'Back';
-// 	// back.className = 'a';
-// 	// back.onclick = () => {
-// 	// 	if (td.parentElement) {
-// 	// 		td.parentElement.removeChild(dropdownoptions);
-// 	// 	}
-// 	// }
-// 	// dropdownoptions.appendChild(invite);
-// 	// dropdownoptions.appendChild(back);
-// 	// if (td.parentElement) {
-// 	// 	td.parentElement.appendChild(dropdownoptions);
-// 	// }
-// 	// alert("Invite " + test.username + " to a game?");
-
-// }
-async function Joining(test: test): Promise<void> {
+export async function Joining(gameid: number , type: string): Promise<void> {
 	console.log("Joining a game");
 	await fetch('/api/game/join', {
 		method: 'POST',
@@ -188,9 +107,9 @@ async function Joining(test: test): Promise<void> {
 			'Content-Type': 'application/json'
 		},
 		credentials: 'include',
-		body: JSON.stringify({ gameid: test.gameid })
+		body: JSON.stringify({ gameid: gameid })
 	});
-	await startGame(test.type);
+	await startGame(type);
 	return;
 }
 

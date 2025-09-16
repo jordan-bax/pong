@@ -5,8 +5,10 @@ btop
 TODO:
 
 [] ai 1second delay
-[] ai algaritme
 [] database player second id for sync so geast can have a name
+[] ai algaritme
+[] paddel fix top
+[] nothify / uniqe geast id
 [x] fastify endpoint voor 2 users match 
 [] stuur terug gameid en in leave beide playid
 [x] winning must record game
@@ -20,7 +22,7 @@ TODO:
 [x] test dropdown naar echte veranderen 
 [x] fastify endpoint voor notivications 
 [x] make notivications loop in frontend 
-[x] notivication interfall and display
+[x] notivication interfall and display 
 
 optional
 [] maybe terminal game

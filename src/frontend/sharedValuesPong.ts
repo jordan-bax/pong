@@ -32,7 +32,7 @@ export interface scoreInterface {
 }
 
 export interface pcInterface {
-	id: number | null; // Use string or null for player ID
+	id: number | null;
 	active: boolean;
 	name: string;
 	x: number;
@@ -55,7 +55,7 @@ export interface ballInterface {
 }
 
 export interface aiInterface {
-	reactionTime: number; // Time it takes for the AI to react
+	reactionTime: number;
 }
 
 export const gameWall: gameWallsInterface = {
@@ -91,8 +91,7 @@ export var player2Template: pcInterface = {
 };
 
 export var ai_var: aiInterface = {
-	//The average (median) reaction time is 273 milliseconds
-	reactionTime: 100 // Default reaction time in milliseconds
+	reactionTime: 100
 };
 
 export var ballvarTemplate: ballInterface = {
@@ -107,5 +106,5 @@ export var ballvarTemplate: ballInterface = {
 };
 
 export var sizeAduster: number = 1;
-export var fps: number = 10; // Frames per second
-export var pauze: boolean = true; // Variable to control the pause state
+export var fps: number = 10;
+export var pauze: boolean = true;

@@ -59,30 +59,6 @@ async function addLanguageSettings(): Promise<HTMLTableRowElement> {
     );
 }
 
-async function addNotificationSettings(): Promise<HTMLTableRowElement> {
-    const languae = await getLanguage();
-    const textMapData = await getContent(languae.toLowerCase(), ['notificationSettingText']);
-    const text = textMapData.get('row') as { notificationSettingText: string };
-    const notificationText = document.createElement('div');
-    notificationText.textContent = text.notificationSettingText;
-
-    const notificationCheckbox = document.createElement('input');
-    notificationCheckbox.type = 'checkbox';
-
-    notificationCheckbox.addEventListener('change', (event) => {
-        const target = event.target as HTMLInputElement;
-        if (target.checked) {
-            // setNotifications();
-            console.log('Notifications enabled');
-        }
-    });
-
-    return createRow(
-        notificationText,
-        notificationCheckbox
-    );
-}
-
 export async function openSettings(): Promise<void> {
     const content = document.getElementById("content") as HTMLDivElement;
     if (!content) {
@@ -96,8 +72,6 @@ export async function openSettings(): Promise<void> {
     table.id = "settings-table";
 
     table.appendChild(await addLanguageSettings());
-    table.appendChild(await addNotificationSettings());
-
     content.appendChild(table);
 }
 

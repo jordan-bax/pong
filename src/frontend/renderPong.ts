@@ -1,8 +1,5 @@
 import { gamestateinterface, ballvarTemplate, player1Template, player2Template, scoreInterface, pcInterface, ballInterface, gameWall } from './sharedValuesPong.js';
 import { checkSession } from './routing.js';
-import { getLanguage } from './index.js';
-import { getContent } from './settings.js';
-
 
 let player1: pcInterface = player1Template
 let player2: pcInterface = player2Template;
@@ -33,46 +30,6 @@ function getSize(): number {
     }
 
     return sizeAduster;
-}
-async function inputTempName(): Promise<string> {
-    return new Promise(async (resolve) => {
-        const language = await getLanguage();
-        const textMapData = await getContent(language.toLowerCase(), ['backButtonText']);
-        const text = textMapData.get('row') as { backButtonText: string };
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'Enter your nickname';
-
-        const button = document.createElement('button');
-        button.textContent = text.backButtonText;
-
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === 'Return') {
-                const value = input.value.trim();
-                if (value.length >= 4) {
-                    console.log('Submitted nickname:', value);
-                    input.disabled = true;
-                    cleanup();
-                    resolve(value);
-                } else {
-                    alert('Nickname must be at least 4 characters.');
-                }
-            }
-        });
-
-        button.onclick = () => {
-            cleanup();
-            resolve("");
-        };
-
-        function cleanup() {
-            if (input.parentNode) input.parentNode.removeChild(input);
-            if (button.parentNode) button.parentNode.removeChild(button);
-        }
-
-        document.body.appendChild(input);
-        document.body.appendChild(button);
-    });
 }
 
 export async function quickjoin(gametype: string): Promise<void> {
@@ -122,6 +79,7 @@ export async function startGame(gametype: string): Promise<scoreInterface> {
             await leaveGame();
             return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' };
         }
+
         const gameState = await state.json() as gamestateinterface;
         if (!gameState) {
             console.error('Failed to fetch game state', gameState);
@@ -347,6 +305,7 @@ async function sendMove(direction: 'up' | 'down', player: 1 | 2) {
         body: JSON.stringify({ direction })
     });
 }
+
 async function keyHandler(event: KeyboardEvent) {
     if (!event.key) {
         return;

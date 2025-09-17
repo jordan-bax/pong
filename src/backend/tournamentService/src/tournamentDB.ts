@@ -462,7 +462,7 @@ class TourDB {
                 if (index + 1 < result.length) {
                     const nextPlayer = result[index + 1]["winnerID"]
                     let nextMatch = [winner, nextPlayer]
-                    if (nextMatch[1] > 0 && nextMatch[0] < 0) {
+                    if (nextMatch[0] < 0 && nextMatch[1] > 0) {
                         nextMatch = [nextPlayer, winner]
                     }
 

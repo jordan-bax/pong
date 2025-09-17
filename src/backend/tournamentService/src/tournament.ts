@@ -289,19 +289,22 @@ class TourService {
         while (playerCount > 0) {
             let subMatch: number[] = []
 
-            const player1 = Math.floor(Math.random() * playerCount)
-            subMatch.push(players[player1])
-            let index = players.indexOf(players[player1], 0)
+            let randInt = Math.floor(Math.random() * playerCount)
+            let index = players.indexOf(players[randInt], 0)
+            const player1 = players[index]
+            subMatch.push(player1)
             players.splice(index, 1)
             playerCount--
 
-            const player2 = Math.floor(Math.random() * playerCount)
-            subMatch.push(players[player2])
-            index = players.indexOf(players[player2], 0)
+            randInt = Math.floor(Math.random() * playerCount)
+            index = players.indexOf(players[randInt], 0)
+            const player2 = players[index]
+            subMatch.push(player2)
             players.splice(index, 1)
             playerCount--
 
             if (player1 < 0 && player2 > 0) {
+                console.log("swap");
                 subMatch[0] = player2
                 subMatch[1] = player1
             }
@@ -359,4 +362,3 @@ class TourService {
 }
 
 export default TourService
-

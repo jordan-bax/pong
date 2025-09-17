@@ -1269,10 +1269,6 @@ export async function renderContent(route: string): Promise<void> {
             // content.textContent = 'Game page is under construction.';
             await pongbutton();
             break;
-        case 'settings':
-            // content.textContent = 'Settings page is under construction.';
-            await openSettings();
-            break;
         case 'tournament':
             await renderTournament();
             break;

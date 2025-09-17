@@ -9,7 +9,6 @@ export const routeFromPath: { [key: string]: string } = {
     '/register': 'register',
     '/google': 'google',
     '/gameMenu': 'game',
-    '/settings': 'settings',
     '/tournament': 'tournament',
     '/gameHistory': 'history'
 };

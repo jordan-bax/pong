@@ -1,5 +1,5 @@
 import { renderContent, getPageContent } from "./contentRenderer.js";
-import { getLanguage } from "./index.js";
+import { getLanguage, setLanguage } from "./index.js";
 import { checkSession, clearGameSession, getLoggin, getLogginServer, logout } from "./routing.js";
 import { dropdowngamemenu } from "./settings.js";
 import { renderNotification } from "./notifications.js"
@@ -13,6 +13,7 @@ interface navbarContent {
     gameNavbarText: string;
     settingNavText: string;
     notificationNavbarText: string;
+    languageSettingText: string;
 }
 
 async function getNavbarContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
@@ -22,7 +23,7 @@ async function getNavbarContent(language:string, textKeys: string[]): Promise<Ma
 
 export async function renderNavbar(): Promise<void> {
     const language = await getLanguage();
-    const navbarMapData = await getNavbarContent(language.toLowerCase(), ['settingNavText', 'loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText', 'gameNavbarText', 'notificationNavbarText']);
+    const navbarMapData = await getNavbarContent(language.toLowerCase(), ['languageSettingText', 'settingNavText', 'loginNavbarText', 'registerNavbarText', 'logoutNavbarText', 'homeNavbarText', 'profileNavbarText', 'gameNavbarText', 'notificationNavbarText']);
     const navbarText = navbarMapData.get('row') as navbarContent;
     const navbar = document.getElementById('navbar');
     if (!navbar) {
@@ -45,16 +46,42 @@ export async function renderNavbar(): Promise<void> {
 
     await dropdowngamemenu(navbar);
 
-    let settingsLink = document.createElement('a');
-    settingsLink.href = '/settings';
-    settingsLink.textContent = navbarText.settingNavText;
-    // settingsLink.textContent = navbarText.settingsNavbarText;
-    settingsLink.className = 'btn navItem';
-    settingsLink.onclick = async (e) => {
-        e.preventDefault();
-        history.pushState({}, '', '/settings');
-        await renderContent('settings');
-    };
+    // let settingsLink = document.createElement('a');
+    // settingsLink.href = '/settings';
+    // settingsLink.textContent = navbarText.settingNavText;
+    // // settingsLink.textContent = navbarText.settingsNavbarText;
+    // settingsLink.className = 'btn navItem';
+    // settingsLink.onclick = async (e) => {
+    //     e.preventDefault();
+    //     history.pushState({}, '', '/settings');
+    //     await renderContent('settings');
+    // };
+
+    let languageButton = document.createElement('select');
+    languageButton.id = 'languageSelector';
+    const options = ['NL', 'EN', 'DE'];
+    options.forEach((text, index) => {
+        const opt = document.createElement('option');
+        opt.value = options[index];
+        opt.textContent = text;
+        languageButton.appendChild(opt); 
+    });
+
+    Array.from(languageButton.options).forEach((option) => {
+        if (option.text === language)
+            option.selected = true;
+        else
+            option.selected = false;
+    });
+
+    languageButton.addEventListener('change', async (event) => {
+        const target = event.target as HTMLSelectElement;
+        await setLanguage(target.value);
+        await checkSession();
+    });
+
+    languageButton.className = 'btn navItem';
+    navbar.appendChild(languageButton);
 
     let notificationArea = renderNotification()
     navbar.appendChild(notificationArea);
@@ -106,7 +133,7 @@ export async function renderNavbar(): Promise<void> {
 
     const googleLogin = document.createElement('div');
     googleLogin.id = 'google-signin-button';
-    navbar.appendChild(settingsLink);
+    navbar.appendChild(languageButton);
 
     navbar.appendChild(googleLogin);
 }

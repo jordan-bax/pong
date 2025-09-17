@@ -1,3 +1,4 @@
+wat te doen als user niet online is?? -> Luuk
 als iemand weg gaat de score is word niet geupdated -> Luuk
 bounce en hit -> Jordan
 

@@ -13,9 +13,6 @@ COPY userService/package*.json ./
 RUN npm install
 
 COPY userService/ ./
-RUN mkdir -p /app/shared
-RUN mkdir -p /app/shared/types
-COPY shared/types /app/shared/types
 
 # Compile TypeScript to JavaScript
 RUN npm run build

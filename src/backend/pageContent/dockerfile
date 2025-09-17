@@ -13,9 +13,6 @@ COPY pageContent/package*.json ./
 RUN npm install
 
 COPY pageContent/ ./
-RUN mkdir -p /app/shared/types
-
-COPY shared/types /app/shared/types
 
 # Compile TypeScript to JavaScript
 RUN npm run build

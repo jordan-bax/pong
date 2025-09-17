@@ -173,7 +173,6 @@ function events(frame: HTMLIFrameElement): void {
 }
 export async function createGameHistoryTable(frame: HTMLIFrameElement): Promise<HTMLTableElement> {
 	const table = await createTable();
-	events(frame);
 	frame.appendChild(table);
 	fetchGameData().then(data => {
 		renderTableRows(data);

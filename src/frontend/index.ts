@@ -13,26 +13,34 @@ window.addEventListener('load', async () => {
 window.onGsiLoad = function() {
     initGoogleSignInIfNeeded();
 };
+let heartbeat;
+if (typeof heartbeat !== 'number') {
+    heartbeat = setInterval(() => {
+        fetch('/api/user/heartbeat', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'x-internal': 'true'
+            }
+        }).then(() => {
+            return null;
+        }).catch();
+    }, 30000);
+}
 
-setInterval(() => {
-    fetch('/api/user/heartbeat', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'x-internal': 'true'
-        }
-    }).then(() => {
-        return null;
-    }).catch();
-}, 30000);
+let listenNotifications;
+if (typeof listenNotifications !== 'number') {
+    listenNotifications = setInterval(async () => {
+        await listenForNotifications().catch();
+    }, 10000);
+}
 
-setInterval(async () => {
-    await listenForNotifications().catch();
-}, 10000);
-
-setInterval(() => {
-    showNotification();
-}, 3000);
+let showNotify;
+if (typeof showNotify !== 'number') {
+    showNotify = setInterval(() => {
+        showNotification();
+    }, 3000);
+}
 
 window.addEventListener('beforeunload', () => {
     navigator.sendBeacon('/api/user/heartbeat')

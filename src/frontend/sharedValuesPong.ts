@@ -66,7 +66,7 @@ export const gameWall: gameWallsInterface = {
     egdeThickness: 15
 };
 
-export var player1Template: pcInterface = {
+export let player1Template: pcInterface = {
     id: null,
     active: false,
     name: "Player 1",
@@ -78,7 +78,7 @@ export var player1Template: pcInterface = {
     score: 0
 };
 
-export var player2Template: pcInterface = {
+export let player2Template: pcInterface = {
     id: null,
     active: false,
     name: "Player 2",
@@ -90,11 +90,11 @@ export var player2Template: pcInterface = {
     score: 0
 };
 
-export var ai_var: aiInterface = {
+export let ai_var: aiInterface = {
     reactionTime: 100
 };
 
-export var ballvarTemplate: ballInterface = {
+export let ballvarTemplate: ballInterface = {
     x: 98,
     y: 98,
     dx: 2,
@@ -105,6 +105,6 @@ export var ballvarTemplate: ballInterface = {
     width: 4
 };
 
-export var sizeAduster: number = 1;
-export var fps: number = 10;
-export var pauze: boolean = true;
+export let sizeAduster: number = 1;
+export let fps: number = 10;
+export let pauze: boolean = true;

@@ -4,12 +4,12 @@ import { getLanguage } from './index.js';
 import { getContent } from './settings.js';
 
 
-var player1: pcInterface = player1Template
-var player2: pcInterface = player2Template;
-var ballvar: ballInterface = ballvarTemplate;
-var sizeAduster: number = 1;
-var fps: number = 30;
-var g_gametype: string = '';
+let player1: pcInterface = player1Template
+let player2: pcInterface = player2Template;
+let ballvar: ballInterface = ballvarTemplate;
+let sizeAduster: number = 1;
+let fps: number = 30;
+let g_gametype: string = '';
 
 function gamespeed(): number {
     if (fps < 1) {
@@ -24,10 +24,10 @@ function gamespeed(): number {
 function getSize(): number {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    var smaller = Math.min(width, height);
+    let smaller = Math.min(width, height);
     smaller -= gameWall.wallTickness2x;
     smaller -= gameWall.egdeThickness * 2;
-    var sizeAduster = smaller / gameWall.width;
+    let sizeAduster = smaller / gameWall.width;
     if (sizeAduster < 1) {
         sizeAduster = 1;
     }
@@ -99,7 +99,7 @@ export async function startGame(gametype: string): Promise<scoreInterface> {
     console.log('Starting game with type:', gametype);
     const delay: number = gamespeed();
     let lastFrame: HTMLDivElement | null = null;
-    var background = makeBackground();
+    let background = makeBackground();
     await enableKeyListener();
     console.log('Game started with AI:', gametype, 'Delay:', delay);
     while (true) {
@@ -160,7 +160,7 @@ export async function startGame(gametype: string): Promise<scoreInterface> {
 
 function buildframe(): HTMLDivElement {
     sizeAduster = getSize();
-    var frame = document.createElement('div');
+    let frame = document.createElement('div');
     frame = GetGameWalls(sizeAduster);
     addMiddleStripes(frame);
     addScoreBocks1(frame);

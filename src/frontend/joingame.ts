@@ -136,7 +136,7 @@ async function createGameList(games: gamestateinterface[], frame: HTMLElement): 
 
     const test1: test[] = [];
     games.forEach(game => {
-        var opponent: test;
+        let opponent: test;
         opponent = { username: '', type: game.gametype, gameid: -1, active: false };
 
         if (game.player1.id === id) {
@@ -162,7 +162,7 @@ async function createGameList(games: gamestateinterface[], frame: HTMLElement): 
 
 export async function joinGame(gametype: string): Promise<void> {
     const text = await getText();
-    var frame = document.getElementById('content') as HTMLElement;
+    let frame = document.getElementById('content') as HTMLElement;
     const games = await getopengames();
     if (games.length === 0) {
         errorMessage(frame, text.noOpenGamesError);

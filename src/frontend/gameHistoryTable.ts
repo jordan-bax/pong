@@ -17,7 +17,7 @@ export interface Game {
     createdAt: Date | null;
 }
 
-var games: Game[] = [];
+let games: Game[] = [];
 export interface GameKey {
     id: number | null;
     type: string;

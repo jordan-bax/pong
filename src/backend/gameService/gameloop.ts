@@ -198,7 +198,7 @@ class Gameloop {
 	ballmove(gamestate:gamestateinterface): void {
 		// Move the ball
 
-		var oldBall : ballInterface = gamestate.ball;
+		let oldBall : ballInterface = gamestate.ball;
 		this.moveBallByAngle(gamestate.ball, this.angle, this.ball_speed);
 		this.ballbounceByAngle(this.angle);
 		// gamestate.ball.x += gamestate.ball.dx * gamestate.ball.speed;
@@ -230,7 +230,7 @@ class Gameloop {
 		}
 	}
 	simplePadleCollisionPlayer1(ball: ballInterface, gamestate: gamestateinterface) {
-		var player: pcInterface = gamestate.player1;
+		let player: pcInterface = gamestate.player1;
 		// Check if the ball is colliding with the paddle
 		if (gamestate.ball.x > player.x + player.width)
 			return false; // Ball is to the right of the paddle
@@ -246,7 +246,7 @@ class Gameloop {
 		return true; // Ball is colliding with the paddle
 	}
 	simplePadleCollisionPlayer2(ball: ballInterface, gamestate: gamestateinterface) {
-		var player: pcInterface = gamestate.player2;
+		let player: pcInterface = gamestate.player2;
 		// Check if the ball is colliding with the paddle
 		if (gamestate.ball.x + gamestate.ball.width < player.x)
 			return false; // Ball is to the right of the paddle
@@ -271,8 +271,8 @@ class Gameloop {
 	}
 	simpleAi(gamestate:gamestateinterface): void {
 		// Simple AI to control player 2
-		var player2: pcInterface = gamestate.player2;
-		var ballvar: ballInterface = gamestate.ball;
+		let player2: pcInterface = gamestate.player2;
+		let ballvar: ballInterface = gamestate.ball;
 
 		if (ballvar.y < player2.y) {
 			player2.y -= player2.speed; // Move up

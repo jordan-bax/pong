@@ -26,7 +26,7 @@ interface notificationInterface {
 	data: Date;
 }
 // testing notifications
-var notifications: Array<notificationInterface> = [];
+let notifications: Array<notificationInterface> = [];
 function addNotification(message: string): void {
 notifications.push({
 	message: message,
@@ -39,16 +39,16 @@ interface idandplayerposition {
 }
 
 player2Template.x -= player2Template.width; // Adjust player 1 position to the left edge
-var ai_var: aiInterface = {
+let ai_var: aiInterface = {
 	//The average (median) reaction time is 273 milliseconds
 	reactionTime: 100 // Default reaction time in milliseconds
 };
-var ballSpeed: number;
+let ballSpeed: number;
 let active: Array<Gameloop> = [];
 // let games: Array<gamestateinterface|null> = [];
 let matching: Array<Gameloop> = [];
 let invited: Array<Gameloop> = [];
-var fps: number = 30; // Default frames per second
+let fps: number = 30; // Default frames per second
 startGame(); // Start the game loop
 // async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
 // 	// Check if the game is paused
@@ -96,7 +96,7 @@ function lastIdInArray(arr: Array<Gameloop>): number {
 
 async function lastId(): Promise<number> {
 	if (active.length === 0 && matching.length === 0 && invited.length === 0) {
-		var gameid = await dbfunc.getLastGameId(); // Get the last game ID from the database of finished games
+		let gameid = await dbfunc.getLastGameId(); // Get the last game ID from the database of finished games
 		if (gameid === null) {
 			gameid = 0; // Start with 0 if no games exist
 		}
@@ -122,7 +122,7 @@ async function lastId(): Promise<number> {
 async function makeNewGame(type: string, playername: string, playerid: number): Promise<Gameloop > {
 	const gameid = await lastId().then(id => id + 1); // Increment the last game ID
 
-	var player2Id: number | null = null;
+	let player2Id: number | null = null;
 	switch (type) {
 		case 'ai':
 			player2Id = GameTypeId.AI; // AI player ID
@@ -140,7 +140,7 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 			throw new Error('Invalid game type');
 	}
 	// gameid++;
-	var newGame: gamestateinterface = {
+	let newGame: gamestateinterface = {
 		player1: {...player1Template, id: playerid, name: playername},
 		player2: {...player2Template, id: player2Id, name: 'Player 2'},
 		ball: {...ballvarTemplate, speed: ballSpeed},
@@ -150,20 +150,20 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 		gametype: type,
 	};
 	console.log('New game created:', newGame);
-	var gameloop = new Gameloop(newGame);
+	let gameloop = new Gameloop(newGame);
 	return gameloop;
 }
 export async function updateGameInDB(game: gamestateinterface): Promise<void> {
 	// Update the game in the database
-	var id1 = game.player1.id;
+	let id1 = game.player1.id;
 	if (id1 === null || id1 === undefined || id1 < 0) {
 		id1 = 0;
 	}
-	var id2 = game.player2.id;
+	let id2 = game.player2.id;
 	if (id2 === null || id2 === undefined || id2 < 0) {
 		id2 = 0;
 	}
-	var winner: string = '';
+	let winner: string = '';
 	if (game.player1.score > game.player2.score) {
 		winner = game.player1.name;
 	}
@@ -219,7 +219,7 @@ async function addGameLoop(type : string, playername: string, playerid: number):
 		return null; // Return null if type or playername is not provided
 	}
 	if (type === 'ai' || type === 'local') {
-		var newGame = await makeNewGame(type, playername, playerid);
+		let newGame = await makeNewGame(type, playername, playerid);
 		if (!newGame) {
 			console.error('Failed to create a new game');
 			return null; // Return null if the new game could not be created
@@ -235,7 +235,7 @@ async function addGameLoop(type : string, playername: string, playerid: number):
 	}
 	if (matching.length > 0) {
 		// Match with an existing game
-		var existingGame = matching.pop();
+		let existingGame = matching.pop();
 		if (existingGame) {
 			existingGame.getState().player2 = {...player2Template, id: playerid, name: playername};
 			existingGame.getState().gameActive = true; // Set the game to active
@@ -249,7 +249,7 @@ async function addGameLoop(type : string, playername: string, playerid: number):
 		return null; // No matching game found
 	}
 	// Create a new game if no matching game is found
-	var newGame = await makeNewGame(type, playername, playerid);
+	let newGame = await makeNewGame(type, playername, playerid);
 	if (!newGame) {
 		console.error('Failed to create a new game');
 		return null; // Return null if the new game could not be created
@@ -263,8 +263,8 @@ async function startGame() {
 	console.log('Starting game loop...');
 	const delay: number = gamespeed(); // Set the initial delay based on the game speed
 	let intervalRef: NodeJS.Timeout | null = null;
-	var use_ai: boolean = true; // Set to true if you want to use AI for player 2
-	var use_ai_loop: boolean = true; // Set to true if you want to use AI for player 2
+	let use_ai: boolean = true; // Set to true if you want to use AI for player 2
+	let use_ai_loop: boolean = true; // Set to true if you want to use AI for player 2
 	// enableKeyListener(); // Enable key listener for player controls
 	if (!intervalRef) {
 		intervalRef = setInterval(() => {
@@ -353,7 +353,7 @@ fastify.register(fastifySession, {
 fastify.register(fastifyCors, { origin: true });
 
 async function getUserIdFromSession(req: any): Promise<number | null> {
-	var userId: number | null = null;
+	let userId: number | null = null;
 	console.log('Forwarding cookies:', req.headers.cookie);
 	const user = await fetch('http://user:3001/me', {
 		method: 'GET',
@@ -386,7 +386,7 @@ async function getUserIdFromSession(req: any): Promise<number | null> {
 	return userId;
 }
 async function getUserIdFromRequest(req: FastifyRequest): Promise<number | null> {
-	var playid: number | null = null;
+	let playid: number | null = null;
 	if (!req.session.player || !req.session.player.id) {
 		await getUserIdFromSession(req).then((userId) => {
 			if (userId) {
@@ -404,9 +404,9 @@ async function getUserIdFromRequest(req: FastifyRequest): Promise<number | null>
 }
 // Start the game loop
 fastify.post('/start', async (req, reply) => {
-	var playid :number | null = null;
-	var online: boolean = false;
-	var { type, playername } = req.body as { type: string; playername: string };
+	let playid :number | null = null;
+	let online: boolean = false;
+	let { type, playername } = req.body as { type: string; playername: string };
 	if (!req.session.player || !req.session.player.id) {
 		await getUserIdFromSession(req).then((userId) => {
 			if (userId) {
@@ -440,7 +440,7 @@ fastify.post('/start', async (req, reply) => {
 	}
 
 	// const splitted = gameid.split('-');
-	// var num : 1 | 2;
+	// let num : 1 | 2;
 	// if (splitted[1] == '1')
 	//     num = 1;
 	// else
@@ -515,7 +515,7 @@ fastify.post('/move', async (req, reply) => {
 		return;
 	}
 	const { direction } = req.body as { direction: 'up' | 'down' };
-	var player: 1|2 | null = req.session.player?.player;
+	let player: 1|2 | null = req.session.player?.player;
 	const game = findGamebyGameId(req.session.player?.gameid);
 	if (!game) {
 		reply.status(404).send({ status: 'no Game' });
@@ -586,7 +586,7 @@ fastify.post('/db/addPlayer', async (req, reply) => {
 	}
 });
 fastify.get('/db/getGamesForPlayer', async (req, reply) => {
-	var playerid = GameTypeId.UNKNOWN; // Default player ID for unknown players
+	let playerid = GameTypeId.UNKNOWN; // Default player ID for unknown players
 	if (req.session.player && req.session.player.id) {
 		playerid = req.session.player.id;
 	} else if (req.session) {
@@ -739,12 +739,12 @@ async function sendNotificationToUser(userId: number, message: string)  {
 }
 
 fastify.get('/getopengames', async (req, reply) => {
-	var id = await getUserIdFromRequest(req);
+	let id = await getUserIdFromRequest(req);
 	if (!id) {
 		id = GameTypeId.UNKNOWN; // Default player ID for unknown users
 	}
 	const openGames = invited.filter(game => game.getState().player1.id == id || game.getState().player2.id == id);
-	var open : gamestateinterface[] = [];
+	let open : gamestateinterface[] = [];
 	for (const game of openGames) {
 		open.push(game.getState());
 	}

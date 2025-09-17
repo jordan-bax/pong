@@ -3,7 +3,6 @@ import { joinGame } from './joingame.js';
 import { createGameHistoryTable } from './gameHistoryTable.js';
 import { getLanguage } from './index.js';
 import { getContent } from './settings.js';
-var fps: number = 10; // Default frames per second
 
 export async function pongbutton(): Promise<void> {
     await createCenterButtons();

@@ -177,9 +177,6 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
 
         for (let tournament of toursDict[type.key]) {
             const isInTour = tournament.players.includes(userID)
-            console.log(tournament);
-
-            // table.appendChild(await createRow(tournament, isInTour, userID, type.key, tournament.winner))
             table.appendChild(
                 await createRow(tournament,
                     isInTour,
@@ -336,11 +333,6 @@ async function createRow(tournament: Tour,
     if (type === "finished") {
         const winnerTd = document.createElement("td")
         winnerTd.textContent = username
-        // if (tournament.winner < 0) {
-        //     winnerTd.textContent = `AI ${Math.abs(tournament.winner)}`
-        // } else {
-        //     winnerTd.textContent = username
-        // }
         tr.appendChild(winnerTd)
     }
 

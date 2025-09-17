@@ -1,7 +1,7 @@
 import {gamestateinterface, ballvarTemplate, player1Template, player2Template,scoreInterface, pcInterface, aiInterface, ballInterface, gameWall } from './sharedValuesPong.js';
 // import { io, Socket } from 'socket.io-client';
 // import { Server } from 'socket.io';
-import { getLogginUserData, userInfo } from './routing.js';
+import { checkSession, getLogginUserData, userInfo } from './routing.js';
 import { getLanguage } from './index.js';
 import { getContent } from './settings.js';
 
@@ -440,6 +440,7 @@ async function leaveGame() {
         keepalive: true, // Ensure the request is sent even if the page is unloading
     });
     // navigator.sendBeacon('/api/game/leave');
+    await checkSession();
 }
 
 async function sendMove(direction: 'up' | 'down', player: 1 | 2) {

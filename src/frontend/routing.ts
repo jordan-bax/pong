@@ -531,7 +531,7 @@ export async function logout(): Promise<void> {
             await clearGameSession();
             await checkSession();
             history.pushState({}, '', '/');
-            localStorage.removeItem('notifications')
+            sessionStorage.removeItem('notifications')
         })
         .catch(() => { });
 }

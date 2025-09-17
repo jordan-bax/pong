@@ -1,61 +1,10 @@
 import { quickjoin } from './renderPong.js';
 import { joinGame } from './joingame.js';
-import { createGameHistoryTable } from './gameHistoryTable.js';
 import { getLanguage } from './index.js';
 import { getContent } from './settings.js';
 
 export async function pongbutton(): Promise<void> {
     await createCenterButtons();
-}
-
-async function testData(frame: HTMLIFrameElement): Promise<void> {
-    const language = await getLanguage();
-    const textMapData = await getContent(language.toLowerCase(), ['backButtonText', 'gameHistoryButtonText', 'testNotificationButtonText']);
-    const text = textMapData.get('row') as { backButtonText: string; gameHistoryButtonText: string, testNotificationButtonText: string }
-    console.log('test function called');
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.top = '50%';
-    container.style.left = '50%';
-    container.style.transform = 'translate(-50%, -50%)';
-    container.style.display = 'flex';
-
-    const backbutton = document.createElement('button');
-    backbutton.textContent = text.backButtonText;
-    backbutton.style.fontSize = '1.2em';
-    backbutton.style.padding = '10px 20px';
-    backbutton.onclick = () => {
-        frame?.removeChild(container);
-        return
-    };
-    container.appendChild(backbutton);
-
-    const gamehistory = document.createElement('button');
-    gamehistory.textContent = text.gameHistoryButtonText;
-    gamehistory.style.fontSize = '1.2em';
-    gamehistory.style.padding = '10px 20px';
-    gamehistory.onclick = async () => {
-        frame?.removeChild(container);
-        console.log('Game history button clicked');
-        await createGameHistoryTable(frame);
-        return;
-    };
-    container.appendChild(gamehistory);
-
-
-    const addPlayerButton = document.createElement('button');
-    addPlayerButton.textContent = text.testNotificationButtonText;
-    addPlayerButton.style.fontSize = '1.2em';
-    addPlayerButton.style.padding = '10px 20px';
-    addPlayerButton.onclick = async () => {
-        frame?.removeChild(container);
-        console.log('Add player button clicked');
-        return;
-    };
-    container.appendChild(addPlayerButton);
-
-
-    frame.appendChild(container);
 }
 
 interface gameText {
@@ -69,7 +18,6 @@ interface gameText {
 async function createCenterButtons() {
     const language = await getLanguage();
     const textArray = [
-        'gameButtonTestText',
         'gameButtonQuickJoinText',
         'gameButtonJoinText',
         'gameButtonLocalText',
@@ -91,17 +39,6 @@ async function createCenterButtons() {
     container.style.display = 'flex';
     container.style.gap = '20px';
     container.style.zIndex = '1000';
-
-    const test = document.createElement('button');
-    test.textContent = text.gameButtonTestText;
-    test.style.fontSize = '1.2em';
-    test.style.padding = '10px 20px';
-    test.onclick = () => {
-        frame?.removeChild(container);
-        nextFunction(async () => await testData(frame as HTMLIFrameElement));
-        console.log('Test game button clicked');
-    };
-    container.appendChild(test);
 
     const online = document.createElement('button');
     online.textContent = text.gameButtonQuickJoinText;

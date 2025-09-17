@@ -240,7 +240,6 @@ server.post('/done',
 
 const start = async () => {
     try {
-        console.log(DBPATH)
         await tour.init(DBPATH)
         await server.listen({ host: ADDRESS, port: parseInt(PORT, 10) });
         const address = server.server.address();

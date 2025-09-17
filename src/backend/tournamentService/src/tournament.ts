@@ -310,7 +310,6 @@ class TourService {
             playerCount--
 
             if (player1 < 0 && player2 > 0) {
-                console.log("swap");
                 subMatch[0] = player2
                 subMatch[1] = player1
             }

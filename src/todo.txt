@@ -2,6 +2,8 @@ wat te doen als user niet online is?? -> Luuk
 als iemand weg gaat de score is word niet geupdated -> Luuk
 bounce en hit -> Jordan
 
+mag geen png uploaden als profilepicture
+
 // na game state Siebe gaat dat waarschijnlijk doen als die thuis is
 Page tournament doet raar als je op vorige drukt -> ??
 game-history 'page not found' -> ??

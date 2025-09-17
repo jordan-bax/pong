@@ -1,7 +1,5 @@
-import {gamestateinterface, ballvarTemplate, player1Template, player2Template,scoreInterface, pcInterface, aiInterface, ballInterface, gameWall } from './sharedValuesPong.js';
-// import { io, Socket } from 'socket.io-client';
-// import { Server } from 'socket.io';
-import { checkSession, getLogginUserData, userInfo } from './routing.js';
+import { gamestateinterface, ballvarTemplate, player1Template, player2Template, scoreInterface, pcInterface, ballInterface, gameWall } from './sharedValuesPong.js';
+import { checkSession } from './routing.js';
 import { getLanguage } from './index.js';
 import { getContent } from './settings.js';
 
@@ -10,38 +8,37 @@ var player1: pcInterface = player1Template
 var player2: pcInterface = player2Template;
 var ballvar: ballInterface = ballvarTemplate;
 var sizeAduster: number = 1;
-var pauze: boolean = true;
-var fps: number = 30; // Default frames per second
-var g_gametype: string = ''; // Default game type
+var fps: number = 30;
+var g_gametype: string = '';
 
-    function gamespeed(): number {
-    // Adjust the game speed based on the current FPS
+function gamespeed(): number {
     if (fps < 1) {
-        fps = 1; // Ensure FPS is at least 1
+        fps = 1;
     } else if (fps > 60) {
-        fps = 60; // Cap FPS at 60
-    }
-    // ballvar.speed = ballvar.staticSpeed / fps; // Set the ball speed based on FPS
-    return 1000 / fps; // Return the delay in milliseconds for the next frame
+        fps = 60;
     }
 
-    function getSize(): number {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        var smaller = Math.min(width, height);
-        smaller -= gameWall.wallTickness2x; // Adjust for wall thickness
-        smaller -= gameWall.egdeThickness * 2; // Adjust for edge thickness
-        var sizeAduster = smaller / gameWall.width; // Calculate the size aduster based on the smaller dimension
-        if (sizeAduster < 1) {
-            sizeAduster = 1;
-        }
-        return sizeAduster;
+    return 1000 / fps;
+}
+
+function getSize(): number {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    var smaller = Math.min(width, height);
+    smaller -= gameWall.wallTickness2x;
+    smaller -= gameWall.egdeThickness * 2;
+    var sizeAduster = smaller / gameWall.width;
+    if (sizeAduster < 1) {
+        sizeAduster = 1;
     }
+
+    return sizeAduster;
+}
 async function inputTempName(): Promise<string> {
-    return  new Promise(async (resolve) => {
+    return new Promise(async (resolve) => {
         const language = await getLanguage();
         const textMapData = await getContent(language.toLowerCase(), ['backButtonText']);
-        const text = textMapData.get('row') as {backButtonText:string};
+        const text = textMapData.get('row') as { backButtonText: string };
         const input = document.createElement('input');
         input.type = 'text';
         input.placeholder = 'Enter your nickname';
@@ -78,31 +75,7 @@ async function inputTempName(): Promise<string> {
     });
 }
 
-async function getUserNameData(){
-    const user = await fetch('/api/user/me/data', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
-    if (!user.ok) {
-        console.error('Failed to fetch user data:', user.statusText);
-        return await inputTempName(); // Prompt the user for a nickname if the fetch fails
-    }
-    const data = await user.json(); // Parse the user data
-    const userData: userInfo = data.user as userInfo; // Cast to userInfo type
-    if (!userData || !userData.username) {
-        console.error('Invalid user data:', userData);
-        return null; // Return null if the user data is not valid
-    }
-    return userData.username; // Return the username
-
-}
-
-
-export async function quickjoin(gametype :string): Promise<void> {
-    // window.location.href = '/pong/quickjoin'; // Redirect to the quick join page
+export async function quickjoin(gametype: string): Promise<void> {
     console.log('Starting game with AI:', gametype);
     const gameinfo = await fetch('/api/game/start', {
         method: 'POST',
@@ -110,60 +83,24 @@ export async function quickjoin(gametype :string): Promise<void> {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ type: gametype }) // your data here
+        body: JSON.stringify({ type: gametype })
     });
-    g_gametype = gametype; // Store the game type for later use
-    console.log('Game started with ID:',  'outher data:', gameinfo);
+    g_gametype = gametype;
+    console.log('Game started with ID:', 'outher data:', gameinfo);
     if (!gameinfo.ok) {
         console.error('Failed to start game:', gameinfo.statusText);
-        return; // Return empty scores if the fetch fails
+        return;
     }
     console.log('Game successfully started, launching game interface...');
     await startGame(gametype);
-    return;
 }
 
-async function endschreen(winner: string, player1Score: number, player2Score: number): Promise<void> {
-    const endScreen = document.createElement('div');
-    endScreen.style.position = 'absolute';
-    endScreen.style.width = '100%';
-    endScreen.style.height = '100%';
-    endScreen.style.backgroundColor = 'black'; // Set the background color to black
-    endScreen.style.color = 'white'; // Set the text color to white
-    endScreen.style.display = 'flex';
-    endScreen.style.flexDirection = 'column';
-    endScreen.style.justifyContent = 'center';
-    endScreen.style.alignItems = 'center';
-    endScreen.style.fontSize = '24px';
-    endScreen.innerHTML = `
-        <h1>${winner} wins!</h1>
-        <p>Final Score: ${player1Score} - ${player2Score}</p>
-        <button id="restartButton">Restart Game</button>
-        <button id="exitButton">Exit to Main Menu</button>
-    `;
-    document.body.appendChild(endScreen);
-
-    document.getElementById('restartButton')?.addEventListener('click', async () => {
-        document.body.removeChild(endScreen);
-        await startGame(g_gametype); // Restart the game with the same game type
-    });
-
-    document.getElementById('exitButton')?.addEventListener('click', () => {
-        window.location.href = '/pong'; // Redirect to the main menu
-    });
-}
-
-export async function startGame(gametype :string) : Promise<scoreInterface> {
-    // const playername = await getUserNameData();
-    // if (!playername) {
-    //     console.error('Failed to get player name, cannot start game');
-    //     return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the player name is not available
-    // }
+export async function startGame(gametype: string): Promise<scoreInterface> {
     console.log('Starting game with type:', gametype);
-    const delay: number = gamespeed(); // Set the initial delay based on the game speed
+    const delay: number = gamespeed();
     let lastFrame: HTMLDivElement | null = null;
     var background = makeBackground();
-	await enableKeyListener(); // Enable key listener for player controls
+    await enableKeyListener();
     console.log('Game started with AI:', gametype, 'Delay:', delay);
     while (true) {
         const state = await fetch('/api/game/state', {
@@ -172,28 +109,32 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
             headers: {
                 'Content-Type': 'application/json'
             }
-        }); // Fetch the game state from the server
+        });
+
         if (!state.ok) {
             console.error('Failed to state:', state.statusText);
             console.log('Game Over! Final Score:', player1.score, '-', player2.score);
             if (lastFrame) {
                 document.body.removeChild(lastFrame);
             }
-            disableKeyListener(); // Disable key listener when the game ends
+
+            disableKeyListener();
             await leaveGame();
-            return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the fetch fails
+            return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' };
         }
-        const gameState = await state.json() as gamestateinterface; // Parse the game state
+        const gameState = await state.json() as gamestateinterface;
         if (!gameState) {
-            console.error('Failed to fetch game state' , gameState);
+            console.error('Failed to fetch game state', gameState);
             console.log('Game Over! Final Score:', player1.score, '-', player2.score);
             if (lastFrame) {
                 document.body.removeChild(lastFrame);
             }
-            disableKeyListener(); // Disable key listener when the game ends
+
+            disableKeyListener();
             await leaveGame();
-            return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' }; // Return empty scores if the game state is not available
+            return { player1Score: 0, player2Score: 0, player1Name: '', player2Name: '' };
         }
+
         player1 = gameState.player1;
         player2 = gameState.player2;
         ballvar = gameState.ball;
@@ -202,38 +143,22 @@ export async function startGame(gametype :string) : Promise<scoreInterface> {
         if (lastFrame) {
             document.body.removeChild(lastFrame);
         }
+
         document.body.appendChild(HoleScreen);
         lastFrame = HoleScreen;
-        // Wait for a second
+
         await new Promise(resolve => setTimeout(resolve, delay));
-		if (player1.score >= 11 || player2.score >= 11 || !gameState.gameActive ) {
-			// End the game if a player reaches 11 points
-			console.log('Game Over! Final Score:', player1.score, '-', player2.score);
-			document.body.removeChild(HoleScreen);
-			disableKeyListener(); // Disable key listener when the game ends
+        if (player1.score >= 11 || player2.score >= 11 || !gameState.gameActive) {
+            console.log('Game Over! Final Score:', player1.score, '-', player2.score);
+            document.body.removeChild(HoleScreen);
+            disableKeyListener();
             await leaveGame();
-			return { player1Score: player1.score, player2Score: player2.score,player1Name : '', player2Name: '' }; // Return the final scores
-		}
+            return { player1Score: player1.score, player2Score: player2.score, player1Name: '', player2Name: '' };
+        }
     }
-    // console.log('Game Over! Final Score:', player1.score, '-', player2.score);
-    // if (lastFrame) {
-    //     document.body.removeChild(lastFrame);
-    // }
-    // disableKeyListener(); // Disable key listener when the game ends
-    // leaveGame();
-
-    // return { player1Score: player1.score, player2Score: player2.score,player1Name : '', player2Name: '' }; // Return the final scores
 }
 
-function WaitForASecond() {
-    // Wait for a second
-    return new Promise(resolve => setTimeout(resolve, 1000));
-}
-
-
-
-
-function buildframe():HTMLDivElement{
+function buildframe(): HTMLDivElement {
     sizeAduster = getSize();
     var frame = document.createElement('div');
     frame = GetGameWalls(sizeAduster);
@@ -248,29 +173,25 @@ function buildframe():HTMLDivElement{
 }
 
 function addpc1(frame: HTMLDivElement): HTMLDivElement {
-    // playerMoveCheck(player1);
     const pc1 = document.createElement('div');
     pc1.style.position = 'absolute';
     pc1.style.width = `${player1.width * sizeAduster}px`;
     pc1.style.height = `${player1.height * sizeAduster}px`;
-    pc1.style.top = `${player1.y * sizeAduster}px`; // Distance from the top of the page
-    pc1.style.left = `${player1.x * sizeAduster}px`; // Distance from the left of the page
-    pc1.style.backgroundColor = 'white'; // Set the background color to white
-    // pc1.style.transform = 'translateY(-50%)'; // Center vertically
+    pc1.style.top = `${player1.y * sizeAduster}px`;
+    pc1.style.left = `${player1.x * sizeAduster}px`;
+    pc1.style.backgroundColor = 'white';
     frame.appendChild(pc1);
     return frame;
 }
 
 function addpc2(frame: HTMLDivElement): HTMLDivElement {
-    // playerMoveCheck(player2);
     const pc2 = document.createElement('div');
     pc2.style.position = 'absolute';
     pc2.style.width = `${player2.width * sizeAduster}px`;
     pc2.style.height = `${player2.height * sizeAduster}px`;
-    pc2.style.top = `${player2.y * sizeAduster}px`; // Distance from the top of the page
-    pc2.style.left = `${(player2.x) * sizeAduster}px`; // Distance from the right of the page
-    pc2.style.backgroundColor = 'white'; // Set the background color to white
-    // pc2.style.transform = 'translateY(-50%)'; // Center vertically
+    pc2.style.top = `${player2.y * sizeAduster}px`;
+    pc2.style.left = `${(player2.x) * sizeAduster}px`;
+    pc2.style.backgroundColor = 'white';
     frame.appendChild(pc2);
     return frame;
 }
@@ -280,11 +201,10 @@ function addBall(frame: HTMLDivElement): HTMLDivElement {
     ball.style.position = 'absolute';
     ball.style.width = `${ballvar.width * sizeAduster}px`;
     ball.style.height = `${ballvar.height * sizeAduster}px`;
-    ball.style.backgroundColor = 'white'; // Set the background color to white
-    ball.style.borderRadius = '50%'; // Make it a circle
-    ball.style.left = `${ballvar.x * sizeAduster}px`; // Distance from the left of the page
-    ball.style.top = `${ballvar.y * sizeAduster}px`; // Distance from the top of the page
-    // ball.style.transform = 'translate(-50%, -50%)'; // Center the ball
+    ball.style.backgroundColor = 'white';
+    ball.style.borderRadius = '50%';
+    ball.style.left = `${ballvar.x * sizeAduster}px`;
+    ball.style.top = `${ballvar.y * sizeAduster}px`;
     frame.appendChild(ball);
     return frame;
 }
@@ -294,19 +214,18 @@ function addScoreBocks1(frame: HTMLDivElement): HTMLDivElement {
     scoreBocks1.style.position = 'absolute';
     scoreBocks1.style.width = `15%`;
     scoreBocks1.style.height = `15%`;
-    scoreBocks1.style.backgroundColor = 'transpirant'; // Set the background color to white
-    scoreBocks1.style.left = '17.5%'; // Distance from the left of the page
-    scoreBocks1.style.top = '1%'; // Distance from the top of the page
-    // scoreBocks1.style.transform = 'translate(-50%, -50%)'; // Center the ball
-    scoreBocks1.style.fontSize = `${20 * sizeAduster}px`; // Set the font size
-    scoreBocks1.style.color = 'blue'; // Set the font color
-    scoreBocks1.style.textAlign = 'center'; // Center the text
-    scoreBocks1.style.lineHeight = `100%`; // Center the text vertically
-    scoreBocks1.style.alignItems = 'center'; // Center vertically
-    scoreBocks1.style.display = 'flex'; // Use flexbox for centering
-    scoreBocks1.style.justifyContent = 'center'; // Center horizontally
+    scoreBocks1.style.backgroundColor = 'transpirant';
+    scoreBocks1.style.left = '17.5%';
+    scoreBocks1.style.top = '1%';
+    scoreBocks1.style.fontSize = `${20 * sizeAduster}px`;
+    scoreBocks1.style.color = 'blue';
+    scoreBocks1.style.textAlign = 'center';
+    scoreBocks1.style.lineHeight = `100%`;
+    scoreBocks1.style.alignItems = 'center';
+    scoreBocks1.style.display = 'flex';
+    scoreBocks1.style.justifyContent = 'center';
 
-    scoreBocks1.innerHTML = `${player1.score}`; // Set the initial score
+    scoreBocks1.innerHTML = `${player1.score}`;
     frame.appendChild(scoreBocks1);
     return frame;
 }
@@ -316,76 +235,71 @@ function addScoreBocks2(frame: HTMLDivElement): HTMLDivElement {
     scoreBocks2.style.position = 'absolute';
     scoreBocks2.style.width = `15%`;
     scoreBocks2.style.height = `15%`;
-    scoreBocks2.style.backgroundColor = 'transpirant'; // Set the background color to white
-    scoreBocks2.style.left = '67.5%'; // Distance from the right of the page
-    scoreBocks2.style.top = '1%'; // Distance from the top of the page
-    scoreBocks2.style.fontSize = `${20 * sizeAduster}px`; // Set the font size
-    scoreBocks2.style.color = 'blue'; // Set the font color
-    scoreBocks2.style.textAlign = 'center'; // Center the text horizontally
-    scoreBocks2.style.lineHeight = `100%`; // Match the height of the block
-    scoreBocks2.style.display = 'flex'; // Use flexbox for centering
-    scoreBocks2.style.alignItems = 'center'; // Center vertically
-    scoreBocks2.style.justifyContent = 'center'; // Center horizontally
-    scoreBocks2.innerHTML = `${player2.score}`; // Set the initial score
+    scoreBocks2.style.backgroundColor = 'transpirant';
+    scoreBocks2.style.left = '67.5%';
+    scoreBocks2.style.top = '1%';
+    scoreBocks2.style.fontSize = `${20 * sizeAduster}px`;
+    scoreBocks2.style.color = 'blue';
+    scoreBocks2.style.textAlign = 'center';
+    scoreBocks2.style.lineHeight = `100%`;
+    scoreBocks2.style.display = 'flex';
+    scoreBocks2.style.alignItems = 'center';
+    scoreBocks2.style.justifyContent = 'center';
+    scoreBocks2.innerHTML = `${player2.score}`;
     frame.appendChild(scoreBocks2);
     return frame;
 }
 
-function GetGameWalls(sizeAduster :number): HTMLDivElement {
+function GetGameWalls(sizeAduster: number): HTMLDivElement {
     const gameWalls = document.createElement('div');
-    gameWalls.style.position = 'relative'; // Use relative positioning
+    gameWalls.style.position = 'relative';
     gameWalls.style.width = `${gameWall.width * sizeAduster}px`;
     gameWalls.style.height = `${gameWall.height * sizeAduster}px`;
-    gameWalls.style.backgroundColor = 'transparent'; // Set the background color to transparent
-    gameWalls.style.border = `${gameWall.wallThickness}px solid white`; // Set the border color
-    gameWalls.style.left = `${(window.innerWidth - (gameWall.width * sizeAduster + gameWall.wallTickness2x))/2}px`; // Distance from the left of the page
-    gameWalls.style.top = '15px'; // Distance from the top of the page
+    gameWalls.style.backgroundColor = 'transparent';
+    gameWalls.style.border = `${gameWall.wallThickness}px solid white`;
+    gameWalls.style.left = `${(window.innerWidth - (gameWall.width * sizeAduster + gameWall.wallTickness2x)) / 2}px`;
+    gameWalls.style.top = '15px';
 
     return gameWalls;
 }
 
 function addMiddleStripes(gameWalls: HTMLDivElement): HTMLElement {
-    const stripeWidth = 1.5; // Width of each stripe
-    const stripeHeight = 4; // Height of each stripe
-    const stripeSpacing = 1; // Spacing between stripes
+    const stripeWidth = 1.5;
+    const stripeHeight = 4;
+    const stripeSpacing = 1;
 
     for (let i = 0; i < 100; i += stripeHeight + stripeSpacing) {
         const stripe = document.createElement('div');
         stripe.style.width = `${stripeWidth}%`;
         stripe.style.height = `${stripeHeight}%`;
         stripe.style.backgroundColor = 'white';
-        stripe.style.opacity = '0.5'; // Set opacity to 50%
+        stripe.style.opacity = '0.5';
         stripe.style.position = 'absolute';
         stripe.style.left = '50%';
-        stripe.style.transform = 'translateX(-50%)'; // Center the stripe horizontally
-        stripe.style.top = `${i + stripeSpacing}%`; // Position each stripe
+        stripe.style.transform = 'translateX(-50%)';
+        stripe.style.top = `${i + stripeSpacing}%`;
 
         gameWalls.appendChild(stripe);
     }
     return gameWalls;
 }
 
-// Attention: This function is not scaled to other shapes than a square
-
-    function makeBackground(): HTMLDivElement{
-    // Create a div element to cover the entire screen
-        const backgroundColor = document.createElement('div');
-        backgroundColor.style.width = '100%';
-        backgroundColor.style.height = '100%';
-        backgroundColor.style.backgroundColor = 'black'; // Set the background color to black
-        backgroundColor.style.position = 'absolute'; // Use absolute positioning
-        backgroundColor.style.top = '0px'; // Distance from the top of the page
-        backgroundColor.style.left = '0px'; // Distance from the left of the page
-        return backgroundColor;
-    }
+function makeBackground(): HTMLDivElement {
+    const backgroundColor = document.createElement('div');
+    backgroundColor.style.width = '100%';
+    backgroundColor.style.height = '100%';
+    backgroundColor.style.backgroundColor = 'black';
+    backgroundColor.style.position = 'absolute';
+    backgroundColor.style.top = '0px';
+    backgroundColor.style.left = '0px';
+    return backgroundColor;
+}
 
 
 async function enableKeyListener() {
     document.addEventListener('keydown', keyHandler);
     window.addEventListener('beforeunload', leaveGame);
     window.addEventListener('popstate', popstateHandler);
-    // test visability changer of the key listener
-//    window.addEventListener('')
     console.log('Key listener enabled and popstate handler added.');
 }
 
@@ -395,114 +309,67 @@ function disableKeyListener() {
 
 }
 async function popstateHandler(event: PopStateEvent) {
-    // Handle the popstate event here
     console.log('Popstate event triggered:', event);
-     // The popstate event is fired each time when the current history entry changes.
-    event.preventDefault(); // Prevent the default behavior of the popstate event
-    // event.
-    await leaveGame(); // Call leaveGame to handle the game state
-    // window.removeEventListener('popstate', popstateHandler);
-    // history.back(); // Go back to the previous page in the history stack
-    // var r = confirm("You pressed a Back button! Are you sure?!");
-
-    // if (r == true) {
-    //     // Call Back button programmatically as per user confirmation.
-    //     leaveGame();
-    //     history.back();
-
-    //     // Uncomment below line to redirect to the previous page instead.
-    //     // window.location = document.referrer // Note: IE11 is not supporting this.
-    // } else {
-    //     // Stay on the current page.
-    //     history.pushState(null, "", window.location.pathname);
-    // }
-
-    // history.pushState(null,"", window.location.pathname);
-
+    event.preventDefault();
+    await leaveGame();
 }
 
-// This runs when the user reloads or leaves the page
-// You can send a message to the server here if needed
-// Example: notify backend the player left
 async function leaveGame() {
-    // await fetch('/api/game/state?gameid='+gameID );
-    // await fetch('/api/game/leave?gameid='+gameID, {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json'
-    //     },
-    //     body: JSON.stringify({ gameid: gameID })}); // Send the game ID in the request body;
     console.log('Leaving game with ID:');
-    // navigator.sendBeacon('/api/game/leave?gameid='+gameID, JSON.stringify({ gameid: "bob" }));
     await fetch('/api/game/leave', {
         method: 'POST',
-        credentials: 'include', // Include credentials for session management
-        keepalive: true, // Ensure the request is sent even if the page is unloading
+        credentials: 'include',
+        keepalive: true,
     });
-    // navigator.sendBeacon('/api/game/leave');
+
     await checkSession();
 }
 
 async function sendMove(direction: 'up' | 'down', player: 1 | 2) {
     if (g_gametype === 'local') {
-        await fetch('/api/game/move?player='+player, {
+        await fetch('/api/game/move?player=' + player, {
             method: 'POST',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ direction }) // Send the direction in the request body
+            body: JSON.stringify({ direction })
         });
         return;
     }
-    await fetch('/api/game/move' ,{
+
+    await fetch('/api/game/move', {
         method: 'POST',
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ direction}) // Send the direction and player in the request body
+        body: JSON.stringify({ direction })
     });
 }
 async function keyHandler(event: KeyboardEvent) {
-    if (!event.key) return; // Ignore if no key is pressed
+    if (!event.key) {
+        return;
+    }
+
     switch (event.key) {
         case 'p':
             await fetch('/api/game/pause', {
                 method: 'POST',
-                credentials: 'include', // Include credentials for session management
-                }); // Pause the game
+                credentials: 'include',
+            });
             break;
         case 'w':
-            await sendMove('up', 1); // Move player 1 up
+            await sendMove('up', 1);
             break;
         case 's':
-            await sendMove('down', 1); // Move player 1 down
+            await sendMove('down', 1);
             break;
         case 'ArrowUp':
-            await sendMove('up', 2); // Move player 2 up
+            await sendMove('up', 2);
             break;
         case 'ArrowDown':
-            await sendMove('down', 2); // Move player 2 down
+            await sendMove('down', 2);
             break;
     }
 }
-    // document.addEventListener('keydown', (event) => {
-    //     switch (event.key) {
-    //         case 'p':
-    //             pauze = !pauze; // Toggle the pause state
-    //             break;
-    //         case 'w':
-    //             player1.y = player1.y - player1.speed;
-    //             break;
-    //         case 's':
-    //             player1.y = player1.y + player1.speed;
-    //             break;
-    //         case 'ArrowUp':
-    //             player2.y = player2.y - player2.speed;
-    //             break;
-    //         case 'ArrowDown':
-    //             player2.y = player2.y + player2.speed;
-    //             break;
-    //     }
-    // });

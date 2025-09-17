@@ -815,6 +815,7 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
                 imgElement.alt = 'Profile Picture';
                 imgElement.style.width = '10%';
                 imgElement.style.aspectRatio = '1/1';
+                imgElement.style.marginBottom = '10px';
                 imgElement.id = 'profilePicture';
                 return imgElement;
             })

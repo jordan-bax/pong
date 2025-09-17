@@ -60,6 +60,7 @@ async function createTable(): Promise<HTMLTableElement> {
     'gamePlayer2Label',
     'gamePlayer1ScoreLabel',
     'gamePlayer2ScoreLabel',
+    'gamePlayerOutcomeLabel',
     'gameDateLabel'
   ];
   const lang = await getLanguage();

@@ -1,0 +1,9 @@
+als iemand weg gaat de score is word niet geupdated -> Luuk
+bounce en hit -> Jordan
+
+// na game state Siebe gaat dat waarschijnlijk doen als die thuis is
+Page tournament doet raar als je op vorige drukt -> ??
+game-history 'page not found' -> ??
+game local 'druk op vorige' = menu dubbel -> ??
+game-history 'druk op vorige' = double table -> ??
+game->local->vorige triple alles -> ??

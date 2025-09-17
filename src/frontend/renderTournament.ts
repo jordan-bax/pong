@@ -1,5 +1,5 @@
 import { getLanguage } from "./index.js";
-import { getIdFromMe } from "./routing.js"
+import { getIdFromMe, getUsernameFromMeData } from "./routing.js"
 import { getContent } from "./settings.js";
 
 window.addEventListener('beforeunload', cleanupIntervals);
@@ -156,8 +156,8 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
 
     const tableTypes: { key: keyof ToursDict, title: string }[] = [
         { key: "joinable", title: "Joinable Tournaments" },
-        { key: "finished", title: "Finished Tournaments" },
-        { key: "running", title: "Running Tournaments" }
+        { key: "running", title: "Running Tournaments" },
+        { key: "finished", title: "Finished Tournaments" }
     ]
 
     for (let type of tableTypes) {
@@ -177,7 +177,7 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
 
         for (let tournament of toursDict[type.key]) {
             const isInTour = tournament.players.includes(userID)
-            table.appendChild(createRow(tournament, isInTour, userID, type.key))
+            table.appendChild(await createRow(tournament, isInTour, userID, type.key))
         }
 
         section.appendChild(table)
@@ -292,10 +292,10 @@ async function createHeader(type: keyof ToursDict): Promise<HTMLTableRowElement>
     return tr
 }
 
-function createRow(tournament: Tour,
+async function createRow(tournament: Tour,
     isInTour: boolean,
     userID: number,
-    type: keyof ToursDict): HTMLTableRowElement {
+    type: keyof ToursDict): Promise<HTMLTableRowElement> {
 
     const tr = document.createElement("tr")
 
@@ -325,7 +325,16 @@ function createRow(tournament: Tour,
 
     if (type === "finished") {
         const winnerTd = document.createElement("td")
-        winnerTd.textContent = tournament.winner ? `Player ${tournament.winner}` : "N/A"
+        if (tournament.winner < 0) {
+            winnerTd.textContent = `AI ${Math.abs(tournament.winner)}`
+        } else {
+            const username = await getUsernameFromMeData()
+            if (username === null) {
+                winnerTd.textContent = `${tournament.winner}`
+            } else {
+                winnerTd.textContent = `${username}`
+            }
+        }
         tr.appendChild(winnerTd)
     }
 

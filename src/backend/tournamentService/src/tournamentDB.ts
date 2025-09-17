@@ -146,6 +146,11 @@ class TourDB {
         }
 
         try {
+            if (userID < 0) {
+                await this.joinAI(tourID, userID);
+                return
+            }
+
             const result = await this.db.run(`
                 INSERT INTO players (tourID, userID)
                 SELECT ?, ?
@@ -208,7 +213,7 @@ class TourDB {
                 FROM
                     tournament
                 WHERE id = ?`,
-                [tourID])
+                    [tourID])
             }
         } catch (error) {
             throw error
@@ -451,21 +456,26 @@ class TourDB {
                             WHERE tourID = ?)`,
                 [tourID, tourID])
 
-            let nextMatch = []
-
+            let nextMatches = []
             for (let index = 0; index < result.length; index++) {
-                const winner1 = result[index]['winnerID'];
+                const winner = result[index]['winnerID'];
                 if (index + 1 < result.length) {
-                    nextMatch.push([winner1, result[index + 1]["winnerID"]])
+                    const nextPlayer = result[index + 1]["winnerID"]
+                    let nextMatch = [winner, nextPlayer]
+                    if (nextMatch[1] > 0 && nextMatch[0] < 0) {
+                        nextMatch = [nextPlayer, winner]
+                    }
+
+                    nextMatches.push(nextMatch)
                     index++;
                 } else {
-                    nextMatch.push([winner1, 0])
+                    nextMatches.push([winner, 0])
                 }
             }
 
-            await this.addMatches(tourID, nextMatch, result[0]["round"] + 1)
+            await this.addMatches(tourID, nextMatches, result[0]["round"] + 1)
 
-            return nextMatch
+            return nextMatches
         } catch (error) {
             throw error
         }
@@ -670,6 +680,37 @@ class TourDB {
             }
         } catch (error) {
             throw error
+        }
+    }
+
+    private async joinAI(tourID: number, userID: number) {
+        if (!this.db) {
+            throw new DBError("DB is not open")
+        }
+
+        try {
+            const result = await this.db.run(`
+                INSERT INTO players (tourID, userID)
+                SELECT ?, ?
+                WHERE (
+                    SELECT isRunning AND
+                    playerCount < maxPlayers
+                    FROM tournament
+                    WHERE id = ?
+                ) = 1
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM players
+                    WHERE userID = ?
+                    AND tourID = ?
+                )`,
+                [tourID, userID, tourID, userID, tourID])
+
+            if (result.changes === 0) {
+                throw new Error("Cannot join ai tournament with a invalid ID")
+            }
+        } catch (error) {
+            throw error;
         }
     }
 }

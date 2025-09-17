@@ -156,10 +156,10 @@ class TourService {
     }
 
     async matchDone(tourID: number,
-                    player1ID: number,
-                    player2ID: number,
-                    player1Score: number,
-                    player2Score: number) {
+        player1ID: number,
+        player2ID: number,
+        player1Score: number,
+        player2Score: number) {
         if (tourID < 1) {
             throw new Error('tournamentID must be more then 0')
         }
@@ -225,14 +225,12 @@ class TourService {
                             0)
                     }
                 } else {
-                    // TODO: hit games endpoint
                     for (let idx = 0; idx < tour.nextMatchs[index].length; idx++) {
                         if (tour.nextMatchs[index][idx] < 0) {
                             continue
                         }
 
                         while (true) {
-                            console.log(tour.id)
                             const resp = await fetch(`http://game:3002/preparegame`, {
                                 method: "POST",
                                 credentials: 'include',
@@ -291,17 +289,22 @@ class TourService {
         while (playerCount > 0) {
             let subMatch: number[] = []
 
-            let randomNumber = Math.floor(Math.random() * playerCount)
-            subMatch.push(players[randomNumber])
-            let index = players.indexOf(players[randomNumber], 0)
+            const player1 = Math.floor(Math.random() * playerCount)
+            subMatch.push(players[player1])
+            let index = players.indexOf(players[player1], 0)
             players.splice(index, 1)
             playerCount--
 
-            randomNumber = Math.floor(Math.random() * playerCount)
-            subMatch.push(players[randomNumber])
-            index = players.indexOf(players[randomNumber], 0)
+            const player2 = Math.floor(Math.random() * playerCount)
+            subMatch.push(players[player2])
+            index = players.indexOf(players[player2], 0)
             players.splice(index, 1)
             playerCount--
+
+            if (player1 < 0 && player2 > 0) {
+                subMatch[0] = player2
+                subMatch[1] = player1
+            }
 
             matches.push(subMatch)
         }
@@ -326,12 +329,12 @@ class TourService {
             const idleTours = await db.idle()
             for (let index = 0; index < idleTours.length; index++) {
                 if (now >= idleTours[index].lockTime) {
+                    await db.lock(idleTours[index].id)
                     await this.initMatches(
                         idleTours[index].id,
                         idleTours[index].players,
                         idleTours[index].playerCount,
                         idleTours[index].maxPlayers)
-                    await db.lock(idleTours[index].id)
                     await this.match(idleTours[index].id)
                 }
             }
@@ -356,3 +359,4 @@ class TourService {
 }
 
 export default TourService
+

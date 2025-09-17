@@ -5,9 +5,10 @@ export const createSchema = {
             name: { type: 'string' },
             maxPlayers: { type: 'number' },
             userID: { type: 'number' },
-            lockTime: { type: 'number' }
+            lockTime: { type: 'number' },
+            username: { type: 'string' }
         },
-        required: ['name', 'maxPlayers', 'userID']
+        required: ['name', 'maxPlayers', 'userID', 'username']
     },
     response: {
         201: {
@@ -42,9 +43,10 @@ export const joinSchema = {
         type: 'object',
         properties: {
             tournamentID: { type: 'number' },
-            userID: { type: 'number' }
+            userID: { type: 'number' },
+            username: { type: 'string' }
         },
-        required: ['tournamentID', 'userID']
+        required: ['tournamentID', 'userID', 'username']
     },
     response: {
         201: {
@@ -210,6 +212,7 @@ export const getToursSchema = {
                     lockTime: { type: 'number' },
                     playerCount: { type: 'number' },
                     maxPlayers: { type: 'number' },
+                    winner: { type: 'string' },
                     players: {
                         type: 'array',
                         items: { type: 'number' }

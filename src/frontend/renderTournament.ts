@@ -15,7 +15,7 @@ interface Tour {
     playerCount: number
     maxPlayers: number
     players: number[]
-    winner: number
+    winner: string
 }
 
 interface ToursDict {
@@ -177,7 +177,15 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
 
         for (let tournament of toursDict[type.key]) {
             const isInTour = tournament.players.includes(userID)
-            table.appendChild(await createRow(tournament, isInTour, userID, type.key))
+            console.log(tournament);
+
+            // table.appendChild(await createRow(tournament, isInTour, userID, type.key, tournament.winner))
+            table.appendChild(
+                await createRow(tournament,
+                    isInTour,
+                    userID,
+                    type.key,
+                    tournament.winner))
         }
 
         section.appendChild(table)
@@ -237,7 +245,8 @@ async function createTournamentForm(container: HTMLDivElement,
                     "name": (document.getElementById("tname") as HTMLInputElement).value,
                     "maxPlayers": (document.getElementById("tplayers") as HTMLInputElement).value,
                     "lockTime": (document.getElementById("tlock") as HTMLInputElement).value,
-                    "userID": userID
+                    "userID": userID,
+                    "username": await getUsernameFromMeData()
                 })
             })
 
@@ -295,7 +304,8 @@ async function createHeader(type: keyof ToursDict): Promise<HTMLTableRowElement>
 async function createRow(tournament: Tour,
     isInTour: boolean,
     userID: number,
-    type: keyof ToursDict): Promise<HTMLTableRowElement> {
+    type: keyof ToursDict,
+    username: string): Promise<HTMLTableRowElement> {
 
     const tr = document.createElement("tr")
 
@@ -325,16 +335,12 @@ async function createRow(tournament: Tour,
 
     if (type === "finished") {
         const winnerTd = document.createElement("td")
-        if (tournament.winner < 0) {
-            winnerTd.textContent = `AI ${Math.abs(tournament.winner)}`
-        } else {
-            const username = await getUsernameFromMeData()
-            if (username === null) {
-                winnerTd.textContent = `${tournament.winner}`
-            } else {
-                winnerTd.textContent = `${username}`
-            }
-        }
+        winnerTd.textContent = username
+        // if (tournament.winner < 0) {
+        //     winnerTd.textContent = `AI ${Math.abs(tournament.winner)}`
+        // } else {
+        //     winnerTd.textContent = username
+        // }
         tr.appendChild(winnerTd)
     }
 
@@ -390,7 +396,8 @@ async function changeTourstatus(tourID: number,
             },
             body: JSON.stringify({
                 "tournamentID": tourID,
-                "userID": userID
+                "userID": userID,
+                "username": await getUsernameFromMeData()
             })
         })
 

@@ -48,6 +48,7 @@ class TourDB {
                 CREATE TABLE IF NOT EXISTS players (
                     userID INTEGER NOT NULL,
                     tourID INTEGER NOT NULL,
+                    username TEXT NOT NULL,
                     PRIMARY KEY(userID, tourID),
                     FOREIGN KEY(tourID) REFERENCES tournament(id) ON DELETE CASCADE)`)
 
@@ -107,11 +108,11 @@ class TourDB {
         }
     }
 
-    async create(
-        name: string,
+    async create(name: string,
         maxPlayers: number,
         lockTime: number,
-        userID: number) {
+        userID: number,
+        username: string) {
         if (!this.db) {
             throw new DBError("DB is not open")
         }
@@ -131,7 +132,7 @@ class TourDB {
                 new DBError("Could not get the last ID in the DB")
             }
 
-            await this.join(id, userID)
+            await this.join(id, userID, username)
             const tour = await this.getTour(id)
 
             return tour
@@ -140,20 +141,20 @@ class TourDB {
         }
     }
 
-    async join(tourID: number, userID: number) {
+    async join(tourID: number, userID: number, username: string) {
         if (!this.db) {
             throw new DBError("DB is not open")
         }
 
         try {
             if (userID < 0) {
-                await this.joinAI(tourID, userID);
+                await this.joinAI(tourID, userID, username);
                 return
             }
 
             const result = await this.db.run(`
-                INSERT INTO players (tourID, userID)
-                SELECT ?, ?
+                INSERT INTO players (tourID, userID, username)
+                SELECT ?, ?, ?
                 WHERE (
                     SELECT NOT isRunning
                     AND playerCount < maxPlayers
@@ -166,7 +167,7 @@ class TourDB {
                     WHERE userID = ?
                     AND tourID = ?
                 )`,
-                [tourID, userID, tourID, userID, tourID])
+                [tourID, userID, username, tourID, userID, tourID])
 
             if (result.changes === 0) {
                 throw new Error("Cannot join tournament with a invalid ID")
@@ -411,22 +412,23 @@ class TourDB {
         try {
             const result = await this.db.get(`
                 SELECT
-                    CASE
-                        WHEN m.winnerID IS NOT NULL THEN 1
-                        ELSE 0
-                    END AS result,
-                    m.winnerID
+                    CASE WHEN m.winnerID IS NOT NULL THEN 1 ELSE 0 END AS result,
+                    p.username
                 FROM
                     (SELECT rounds FROM tournament WHERE id = ?) AS t
                 LEFT JOIN
-                    match m ON m.tourID = ?
-                            AND m.round = t.rounds
-                            AND m.round = (SELECT MAX(round) FROM match WHERE tourID = ?)
+                    match m
+                        ON m.tourID = ?
+                    AND m.round = t.rounds
+                    AND m.round = (SELECT MAX(round) FROM match WHERE tourID = ?)
+                LEFT JOIN
+                    players p
+                        ON p.userID = m.winnerID
                 LIMIT 1`,
                 [tourID, tourID, tourID])
 
             if (result.result) {
-                await this.setTourDone(tourID, result.winnerID)
+                await this.setTourDone(tourID, result.username)
                 return true
             }
 
@@ -663,7 +665,7 @@ class TourDB {
         }
     }
 
-    private async setTourDone(tourID: number, winnerID: number) {
+    private async setTourDone(tourID: number, username: string) {
         if (!this.db) {
             throw Error("DB is not open")
         }
@@ -674,7 +676,7 @@ class TourDB {
                         SET isFinished = 1,
                             winner = ?
                         WHERE id = ?`,
-                [winnerID, tourID])
+                [username, tourID])
             if (result.changes === 0) {
                 throw new DBError("Failed to set the tournament on finished")
             }
@@ -683,15 +685,15 @@ class TourDB {
         }
     }
 
-    private async joinAI(tourID: number, userID: number) {
+    private async joinAI(tourID: number, userID: number, username: string) {
         if (!this.db) {
             throw new DBError("DB is not open")
         }
 
         try {
             const result = await this.db.run(`
-                INSERT INTO players (tourID, userID)
-                SELECT ?, ?
+                INSERT INTO players (tourID, userID, username)
+                SELECT ?, ?, ?
                 WHERE (
                     SELECT isRunning AND
                     playerCount < maxPlayers
@@ -704,7 +706,7 @@ class TourDB {
                     WHERE userID = ?
                     AND tourID = ?
                 )`,
-                [tourID, userID, tourID, userID, tourID])
+                [tourID, userID, username, tourID, userID, tourID])
 
             if (result.changes === 0) {
                 throw new Error("Cannot join ai tournament with a invalid ID")

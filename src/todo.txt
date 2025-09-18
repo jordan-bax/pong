@@ -1,3 +1,11 @@
-wat te doen als user niet online is?? -> Luuk
+wat te doen als user niet online is in tournament?? -> Luuk
+guest vs guest db error maak guest negatief en testen -> Luuk
+
 bounce en hit -> Jordan
 
+cleaning code -> iedereen
+
+// nice to have
+end screen als de game af gelopen is -> Luuk of Siebe
+pause scherm voor als game op pause staat -> Luuk of Siebe
+countdown voor auto game start en als we van pause naar game play gaan -> Luuk of Siebe

@@ -45,6 +45,7 @@ export interface patchBody {
     oldEmail: string | null;
     googleEmail:string | null;
     pathToProfileP: string | null;
+	isGoogleLogin: string | null;
 }
 
 const __filename = fileURLToPath(import.meta.url);

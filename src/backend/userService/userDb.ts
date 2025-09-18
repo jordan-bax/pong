@@ -753,13 +753,13 @@ class UserDatabase {
                 )
                 );
             `);
+			// make db start with id 3
+			await database.run(`
+				INSERT INTO users (id, username, email)
+				VALUES (2, 'dummy', 'dummy@email.com');
+			`);
 
-            await database.run(`
-                CREATE TABLE IF NOT EXISTS meta (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                seeded TEXT
-                )
-        `);
+			await database.run(`DELETE FROM users WHERE ID = 2`)
             return database;
         });
         return database;

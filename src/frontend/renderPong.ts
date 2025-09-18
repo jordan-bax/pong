@@ -268,7 +268,6 @@ function disableKeyListener() {
 }
 async function popstateHandler(event: PopStateEvent) {
     console.log('Popstate event triggered:', event);
-    event.preventDefault();
     await leaveGame();
 }
 
@@ -279,8 +278,6 @@ async function leaveGame() {
         credentials: 'include',
         keepalive: true,
     });
-
-    await checkSession();
 }
 
 async function sendMove(direction: 'up' | 'down', player: 1 | 2) {

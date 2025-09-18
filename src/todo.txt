@@ -4,7 +4,8 @@ bounce en hit -> Jordan
 
 mag geen png uploaden als profilepicture
 
-// na game state Siebe gaat dat waarschijnlijk doen als die thuis is
+// na game state Siebe gaat dat waarschijnlijk doen als die thuis is 
+// alle tests die benedens stonden getest geen dubbel of tripple content meer
 Page tournament doet raar als je op vorige drukt -> ??
 game-history 'page not found' -> ??
 game local 'druk op vorige' = menu dubbel -> ??

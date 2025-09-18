@@ -2,7 +2,7 @@ wat te doen als user niet online is?? -> Luuk
 als iemand weg gaat de score is word niet geupdated -> Luuk
 bounce en hit -> Jordan
 
-mag geen png uploaden als profilepicture
+mag geen png uploaden als profilepicture gefixed
 
 // na game state Siebe gaat dat waarschijnlijk doen als die thuis is 
 // alle tests die benedens stonden getest geen dubbel of tripple content meer

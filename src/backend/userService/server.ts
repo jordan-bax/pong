@@ -102,7 +102,6 @@ class server {
             throw new Error('ENV variables missing!');
         }
         await this.db.start(dbFile);
-        await this.db.seedDatabase();
 
         let isRunning = false;
         setInterval(async () => {

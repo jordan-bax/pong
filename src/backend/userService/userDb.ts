@@ -703,51 +703,6 @@ class UserDatabase {
         return loggedInFriends.join(',');
     }
 
-    async seedDatabase(): Promise<void> {
-        if (!this.db) {
-            throw new Error('database is null');
-        }
-        const isSeeded = await this.db.get('SELECT * from meta;');
-        if (isSeeded)
-            return;
-        await this.db.exec('BEGIN TRANSACTION');
-        try {
-            await this.db.run(`INSERT INTO meta (seeded) VALUES ('true');`)
-            const statement = await this.db.prepare(`
-                INSERT INTO users
-                (id, username, password, email, googleEmail, pathToProfilePicture, friends, pendingFriends)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-            );
-
-            let password = await bcrypt.hash('1!AdminAdmin', 10);
-            await statement.run(3, 'Alice', password, 'aa@mail.com', null, '/app/uploads/profile_pictures/profilePicture.png', 'bt@mail.com', null);
-
-            password = await bcrypt.hash('1!TestTest1!', 10);
-            await statement.run(4, 'bob', password, 'bt@mail.com', null, '/app/uploads/profile_pictures/profilePicture.png', 'aa@mail.com', null);
-
-            await statement.finalize();
-
-            await this.db.each('SELECT * FROM users;', async (err, row) => {
-                if (err) {
-                    await this.db?.exec('ROLLBACK');
-                    throw err;
-                }
-            });
-            await this.db.exec('COMMIT');
-            let gameSeed = await this.setGames({ id: 3, username: 'Alice' }, { id: 2, username: 'local' }, '0');
-
-            if (typeof gameSeed === 'string') {
-                console.error(gameSeed);
-            }
-            gameSeed = await this.setGames({ id: 4, username: 'bob' }, { id: 2, username: 'local' }, '1');
-            if (typeof gameSeed === 'string') {
-                console.error(gameSeed);
-            }
-        } catch (err) {
-            await this.db.exec('ROLLBACK');
-            console.error('error seeding database', err);
-        }
-    }
     async markOffline(): Promise<void> {
         if (!this.db) {
             console.error('database is null in mark offline');
@@ -768,44 +723,6 @@ class UserDatabase {
             console.error(`error on setting ofline ${err}`);
         }
         return;
-    }
-
-    private async setGames(user1: { id: number, username: string }, user2: { id: number, username: string }, gameId: string): Promise<boolean | string> {
-        const response = await fetch('http://game:3002/db/addPlayer', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: user1.username,
-                id: user1.id
-            })
-        });
-        if (!response.ok) {
-            return `adding player failed ${response.statusText}`;
-        }
-        const gameResponse = await fetch('http://game:3002/db/addGame', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                player1: user1,
-                player2: user2,
-                player1Score: 11,
-                player2Score: 4,
-                winner: user1.username,
-                gameID: gameId,
-                gametype: 'local'
-            })
-        });
-
-        if (!gameResponse.ok) {
-            return `adding game failed: ${gameResponse.statusText}`;
-        }
-        return true;
     }
 
     private async isEmailUnique(email: string, id?: number): Promise<boolean> {

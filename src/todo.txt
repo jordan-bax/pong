@@ -1,12 +1,3 @@
 wat te doen als user niet online is?? -> Luuk
 bounce en hit -> Jordan
 
-mag geen png uploaden als profilepicture gefixed
-
-// na game state Siebe gaat dat waarschijnlijk doen als die thuis is
-// alle tests die benedens stonden getest geen dubbel of tripple content meer
-Page tournament doet raar als je op vorige drukt -> ??
-game-history 'page not found' -> ??
-game local 'druk op vorige' = menu dubbel -> ??
-game-history 'druk op vorige' = double table -> ??
-game->local->vorige triple alles -> ??

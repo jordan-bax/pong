@@ -1185,7 +1185,7 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
     svg.appendChild(label);
 
     bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
-    valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
+    valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.local / max) * charHeigth);
     label = makeLabel(text.localStat, padding, 4, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);

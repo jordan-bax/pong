@@ -225,12 +225,11 @@ function gamespeed(): number {
         fps = 60;
     }
 
-    ballSpeed = ballvarTemplate.staticSpeed
-    return 1000
+    ballSpeed = ballvarTemplate.staticSpeed / fps;
+    return 1000 / fps;
 }
 
 function findGamebyGameId(gameid: number | null): Gameloop | null {
-
     if (!gameid) {
         console.error('Invalid game ID:', gameid);
         return null;
@@ -263,7 +262,6 @@ fastify.register(fastifyStatic, {
     root: path.join(__dirname, './dist'),
     prefix: '/',
 });
-
 const sessionSecret = process.env.SESSION_SECRET;
 const cookieSecret = process.env.COOKIE_SECRET;
 
@@ -435,6 +433,7 @@ fastify.post('/pause', async (req: FastifyRequest, reply: FastifyReply) => {
         reply.status(404).send({ status: 'Game not found' });
         return;
     }
+
     game.pause();
     reply.send({ status: 'paused' });
 });
@@ -729,6 +728,7 @@ fastify.post('/join', async (req: FastifyRequest, reply: FastifyReply) => {
             reply.status(404).send({ error: 'Game not found' });
             return;
         }
+
         active.push(game);
         game.getState().gameActive = true;
         game.getState().gamePause = true;
@@ -831,5 +831,4 @@ fastify.listen({ host: "0.0.0.0", port: 3002 }, err => {
         process.exit(1);
     }
     prepareDatabase().catch(console.error);
-    console.log('Server started on port 3002');
 });

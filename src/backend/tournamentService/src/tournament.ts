@@ -187,6 +187,27 @@ class TourService {
         }
     }
 
+    async updateName(userID: number, username: string) {
+        if (userID < 1) {
+            throw new Error('userID must be more then 0')
+        }
+
+        const newName = username.trim()
+        if (!newName) {
+            throw new Error('username can not be empty')
+        }
+
+        console.log(username, userID, "send to DB");
+
+        try {
+            await db.updateName(userID, username)
+        } catch(error) {
+            console.error(error)
+            throw error
+        }
+
+    }
+
     private async match(tourID: number) {
         try {
             const tour = await db.getTour(tourID)

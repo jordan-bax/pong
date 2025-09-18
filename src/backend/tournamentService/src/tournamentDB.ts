@@ -654,6 +654,23 @@ class TourDB {
         }
     }
 
+    async updateName(userID: number, username: string) {
+        if (!this.db) {
+            throw new DBError("DB is not open")
+        }
+
+        try {
+            const result = await this.db.run(`
+                UPDATE players SET username = ? WHERE userID = ?`,
+                [username, userID])
+            console.log(result);
+
+            console.log("update done??");
+        } catch (error) {
+            throw new DBError(error)
+        }
+    }
+
     async closeDB() {
         if (this.db) {
             try {

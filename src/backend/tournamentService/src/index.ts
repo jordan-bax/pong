@@ -7,6 +7,7 @@ import {
     getToursSchema,
     joinSchema,
     leaveSchema,
+    updateUsernameSchema,
     userTours
 } from "../schemas/responseSchema"
 import { DBError } from "./tournamentDB"
@@ -235,6 +236,31 @@ server.post('/done',
                     error: error instanceof Error ? error.message : String(error)
                 })
             }
+        }
+    })
+
+server.post('/updatename',
+    { schema: updateUsernameSchema },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+        const { userID, username } = request.body as {
+            userID: number,
+            username: string
+        }
+
+        console.log(username, userID)
+        try {
+            await tour.updateName(userID, username)
+            reply.status(201).send({ 'message': 'OK' })
+        } catch (error) {
+            console.error('updatename error:', error)
+            if (error instanceof DBError) {
+                reply.status(500).send({ error: "Internal server error" })
+            } else {
+                reply.status(400).send({
+                    error: error instanceof Error ? error.message : String(error)
+                })
+            }
+
         }
     })
 

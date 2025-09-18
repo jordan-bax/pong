@@ -43,7 +43,7 @@ export interface patchBody {
     oldUsername: string | null;
     oldPassword: string | null;
     oldEmail: string | null;
-    googleEmail:string | null;
+    googleEmail: string | null;
     pathToProfileP: string | null;
 	isGoogleLogin: string | null;
 }
@@ -57,8 +57,8 @@ class server {
     private db: UserDatabase;
     private validate: Validator;
 
-    constructor () {
-        this.fastify = Fastify({ logger: true});
+    constructor() {
+        this.fastify = Fastify({ logger: true });
         this.client = new OAuth2Client();
         this.db = new UserDatabase();
         this.validate = new Validator();
@@ -116,7 +116,7 @@ class server {
                 isRunning = false;
             }
         }, 60 * 1000);
-        this.fastify.listen({host: hostName, port: portNumber}, async err => {
+        this.fastify.listen({ host: hostName, port: portNumber }, async err => {
             if (err) {
                 await this.db.close();
                 this.fastify.log.error((err));
@@ -125,7 +125,7 @@ class server {
         });
     }
 
-    private async downloadGooglePicure(url:string | undefined, userId: string): Promise<string | null> {
+    private async downloadGooglePicure(url: string | undefined, userId: string): Promise<string | null> {
         return new Promise((resolve, rejects) => {
             if (typeof url === 'undefined') {
                 resolve(null);
@@ -172,7 +172,7 @@ class server {
             if (!req.session.user) {
                 return reply.code(401).send({ error: 'unauthorized' });
             }
-            const query = (req.query as {q?: string}).q?.toLocaleLowerCase();
+            const query = (req.query as { q?: string }).q?.toLocaleLowerCase();
             if (typeof query === 'undefined' || query === '') {
                 return reply.code(400).send({ error: 'missingQuery' });
             }
@@ -184,7 +184,7 @@ class server {
 
         this.fastify.get('/csrf-token', async (req, reply) => {
             const token = reply.generateCsrf();
-            reply.send({csrfToken: token});
+            reply.send({ csrfToken: token });
         });
 
         this.fastify.get('/me', (req, reply) => {
@@ -195,7 +195,7 @@ class server {
             }
         });
 
-        this.fastify.get('/me/data', async  (req, reply) => {
+        this.fastify.get('/me/data', async (req, reply) => {
             try {
                 const email = req.session.user?.email;
                 if (!email) {
@@ -223,8 +223,7 @@ class server {
                 console.error('user in request but not database');
                 return reply.code(500).send({ error: 'serverError' })
             }
-            if (typeof dbInfo.pathToProfilePicture !== 'string')
-            {
+            if (typeof dbInfo.pathToProfilePicture !== 'string') {
                 console.error('pathToProfilePicture is not a string')
                 return reply.code(404).send('noImage');
             }
@@ -241,12 +240,12 @@ class server {
         this.fastify.get('/friends', async (req, reply) => {
             const user = req.session.user;
             if (!user) {
-                return reply.code(401).send({error: 'unauthorized'});
+                return reply.code(401).send({ error: 'unauthorized' });
             }
 
             const friends = await this.db.getFriends(user.email);
             if (!friends) {
-                return reply.code(404).send({error: 'noFriends'});
+                return reply.code(404).send({ error: 'noFriends' });
             }
             return reply.send(friends);
         });
@@ -254,25 +253,25 @@ class server {
         this.fastify.get('/pending', async (req, reply) => {
             const user = req.session.user;
             if (!user) {
-                return reply.code(401).send({error: 'unauthorized'});
+                return reply.code(401).send({ error: 'unauthorized' });
             }
 
             const pending = await this.db.getPendingFriends(user.email);
             if (!pending) {
-                return reply.code(404).send({error: 'noPending'});
+                return reply.code(404).send({ error: 'noPending' });
             }
             return reply.send(pending);
         });
 
-        this.fastify.get( '/requested', async (req, reply) => {
+        this.fastify.get('/requested', async (req, reply) => {
             const user = req.session.user;
             if (!user) {
-                return reply.code(401).send({error: 'unauthorized'});
+                return reply.code(401).send({ error: 'unauthorized' });
             }
 
             const requested = await this.db.getRequestedFriends(user.email);;
             if (!requested) {
-                return reply.code(404).send({error: 'noRequested'});
+                return reply.code(404).send({ error: 'noRequested' });
             }
             return reply.send(requested);
         });
@@ -310,13 +309,13 @@ class server {
             }
             const friendData = await this.db.findUserByEmail(toEmail);
             await this.sendNotificationToUser(friendData.id as number, 'new frient request');
-            return reply.send({ success: true});
+            return reply.send({ success: true });
         });
 
         this.fastify.post('/heartbeat', async (req, reply) => {
             const user = req.session.user;
             if (!user) {
-                return reply.code(401).send({error: 'unauthorized' });
+                return reply.code(401).send({ error: 'unauthorized' });
             }
             await this.db.setLoggedStatus(user.email, Date.now());
         })
@@ -334,7 +333,7 @@ class server {
             if (!accepted) {
                 return reply.code(500).send({ error: 'serverError' });
             }
-            return reply.send({success: true });
+            return reply.send({ success: true });
         })
 
         this.fastify.delete('/friendRequest', async (req, reply) => {
@@ -344,7 +343,7 @@ class server {
                 return reply.code(401).send({ error: 'unauthorized' });
             }
             if (!deleteRequest) {
-                return reply.code(400).send({error: 'noBody' });
+                return reply.code(400).send({ error: 'noBody' });
             }
 
             const dbRemove = await this.db.removeRequestPending(user.email, deleteRequest, false);
@@ -354,7 +353,7 @@ class server {
             return reply.send({ success: true });
         })
 
-        this.fastify.post( '/register', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
+        this.fastify.post('/register', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
             let userData = {} as registerBody;
 
             const parts = req.parts();
@@ -363,9 +362,9 @@ class server {
                     if (part.filename && part.filename !== '') {
                         const fileHandler = await this.validate.validateFile(part);
                         if (fileHandler === 'TOO LARGE') {
-                            return reply.code (400).send({ error: 'fileTooLarge' });
+                            return reply.code(400).send({ error: 'fileTooLarge' });
                         } if (fileHandler === 'MIMETYPE INCORRECT') {
-                            return reply.code(400).send({error: 'fileIncorrectMime'});
+                            return reply.code(400).send({ error: 'fileIncorrectMime' });
                         } if (userData['pathToProfileP'] !== '') {
                             userData['pathToProfileP'] = fileHandler;
                         }
@@ -386,7 +385,7 @@ class server {
             const hash = await bcrypt.hash(userData.password, 10);
             try {
                 const dbInsert = await this.db.insertUserIntoDatabase(userData.username, hash, userData.email, null, userData.pathToProfileP);
-                if (typeof dbInsert !== 'boolean'){
+                if (typeof dbInsert !== 'boolean') {
                     return reply.code(422).send({ error: 'unprocessableEntity' });
                 }
                 if (!dbInsert) {
@@ -395,7 +394,7 @@ class server {
                 const user = await this.db.findUserByEmail(userData.email);
                 if (!user) {
                     req.log.error('user not added');
-                    return reply.code(500).send({ error: 'serverError'});
+                    return reply.code(500).send({ error: 'serverError' });
                 }
                 req.session.user = {
                     username: user.username,
@@ -455,13 +454,13 @@ class server {
 
         this.fastify.post<{ Body: googleBody }>('/google', { schema: googleLogiSchema, preHandler: this.fastify.csrfProtection }, async (req, reply) => {
             try {
-                const  { idToken }  = req.body;
+                const { idToken } = req.body;
                 const ticket = await this.client.verifyIdToken({
                     idToken: idToken,
                     audience: process.env.GOOGLE_CLIENT_ID,
                 });
                 const payload = ticket.getPayload();
-                if(!payload || !payload.email) {
+                if (!payload || !payload.email) {
                     return reply.code(400).send({ error: 'googleToken' });
                 }
                 let user = await this.db.findUserByEmail(payload.email);
@@ -478,7 +477,7 @@ class server {
                 }
                 let email: string;
                 if (!user.email && !user.googleEmail) {
-                    return reply.code(404).send({error: 'noUser' });
+                    return reply.code(404).send({ error: 'noUser' });
                 }
                 if (user.email) {
                     email = user.email;
@@ -491,14 +490,14 @@ class server {
                     userId: user.id,
                     loginMethod: 'google',
                 };
-                return reply.send({ success: true});
+                return reply.send({ success: true });
             } catch (err) {
                 console.error('Google login error:', err);
                 return reply.code(500).send({ error: 'serverError' });
             }
         });
 
-        this.fastify.post<{ Body: googleUpdateBody}>('/google-check', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
+        this.fastify.post<{ Body: googleUpdateBody }>('/google-check', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
             try {
                 const body = req.body;
                 const ticket = await this.client.verifyIdToken({
@@ -518,7 +517,7 @@ class server {
             }
         });
 
-        this.fastify.decorateRequest('isAuthenticated', function (this: FastifyRequest) {
+        this.fastify.decorateRequest('isAuthenticated', function(this: FastifyRequest) {
             return !!this.session?.user;
         });
 
@@ -539,7 +538,7 @@ class server {
                         if (fileHandler === 'TOO LARGE') {
                             return reply.code(400).send({ error: 'fileTooLarge' });
                         } else if (fileHandler === 'MIMETYPE INCORRECT') {
-                            return reply.code(400).send({error: 'fileIncorrectMime'});
+                            return reply.code(400).send({ error: 'fileIncorrectMime' });
                         }
                         userData['pathToProfileP'] = fileHandler;
                     }
@@ -575,7 +574,7 @@ class server {
                     userData.oldUsername
                 );
                 if (typeof dbUpdate !== 'boolean') {
-                    return reply.code(422).send({ error: 'unprocessableEntity'})
+                    return reply.code(422).send({ error: 'unprocessableEntity' })
                 } else {
                     if (dbUpdate === false) {
                         return reply.code(404).send({ error: 'noUser' });
@@ -595,6 +594,17 @@ class server {
                     loginMethod: 'normal'
                 };
 
+                await fetch('http://tournament:3003/updatename', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "userID": user.id,
+                        "username": user.username
+                    })
+                })
+
                 reply.send({ success: true });
             } catch (err) {
                 req.log.error('error updating user');
@@ -603,7 +613,7 @@ class server {
         });
 
         this.fastify.patch('/update-google', async (req, reply) => {
-            let userData= {} as patchBody;
+            let userData = {} as patchBody;
             const parts = req.parts();
             for await (const part of parts) {
                 if (part.type === 'file') {
@@ -612,7 +622,7 @@ class server {
                         if (fileHandler === 'TOO LARGE') {
                             return reply.code(400).send('fileTooLarge');
                         } else if (fileHandler === 'MIMETYPE INCORRECT') {
-                            return reply.code(400).send({error: 'fileIncorrectMime'});
+                            return reply.code(400).send({ error: 'fileIncorrectMime' });
                         } else {
                             userData['pathToProfileP'] = fileHandler;
                         }
@@ -629,11 +639,11 @@ class server {
             }
             const googleEmail = req.session.user?.email;
             if (!googleEmail) {
-                return reply.code(400).send({error: 'noUserDb'});
+                return reply.code(400).send({ error: 'noUserDb' });
             }
             const user = await this.db.findUserByEmail(googleEmail);
             if (!user) {
-                return reply.code(400).send({error: 'noUserDb'});
+                return reply.code(400).send({ error: 'noUserDb' });
             }
             userData['googleEmail'] = googleEmail;
             userData['oldEmail'] = user.email;
@@ -641,7 +651,7 @@ class server {
             userData['oldUsername'] = user.username;
             if (!userData['googleEmail']) {
                 console.error('no googleEmail found in data');
-                return reply.code(400).send({error: 'noUserDb'});
+                return reply.code(400).send({ error: 'noUserDb' });
             }
             const errors = this.validate.validateUserUpdateData(userData, user.isGoogleLogin);
             if (errors.length > 0) {
@@ -649,7 +659,7 @@ class server {
             }
             try {
                 if (!userData.googleEmail) {
-                    return reply.code(400).send({error: 'noGmail'});
+                    return reply.code(400).send({ error: 'noGmail' });
                 }
                 const user = await this.db.findUserByEmail(userData.googleEmail)
                 if (!user) {

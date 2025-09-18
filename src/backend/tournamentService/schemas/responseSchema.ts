@@ -294,3 +294,36 @@ export const userTours = {
         }
     }
 }
+
+export const updateUsernameSchema = {
+    body: {
+        type: 'object',
+        properties: {
+            userID: { type: 'number' },
+            username: { type: 'string' }
+        },
+        required: ['userID', 'username']
+    },
+    response: {
+        201: {
+            type: 'object',
+            properties: {
+                message: { type: 'string' }
+            }
+        },
+        400: {
+            type: 'object',
+            properties: {
+                error: { type: 'string' }
+            },
+            required: ['error']
+        },
+        500: {
+            type: 'object',
+            properties: {
+                error: { type: 'string' }
+            },
+            required: ['error']
+        }
+    }
+}

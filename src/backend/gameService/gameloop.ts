@@ -54,9 +54,7 @@ class Gameloop {
 		this.gamestate.gameActive = false;
 		this.gamestate.gamePause = true;
 		await updateGameInDB(this.gamestate);
-        console.log(this.tournamentId)
 		if (this.tournamentId !== -1) {
-            console.log("post to tournament???")
 			fetch('http://tournament:3003/done', {
 				method: 'POST',
 				headers: {

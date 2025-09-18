@@ -2,7 +2,11 @@ import bcrypt from 'bcryptjs';
 import type { patchBody, registerBody, loginBody } from './server.js';
 import fs from 'fs';
 import type { MultipartFile } from '@fastify/multipart';
-import path from 'path';
+import path,  { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class Validator {
     private passwordPattern: RegExp;
@@ -256,7 +260,8 @@ class Validator {
     }
 
     private checkMimeType(type: string): boolean {
-        for (const item in this.mimeTypeList) {
+        for (const item of this.mimeTypeList) {
+            console.log(`type: [${type}], item: [${item}]`);
             if (type === item) {
                 return true;
             }

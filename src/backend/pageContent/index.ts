@@ -54,7 +54,6 @@ fastify.get<{ Querystring: GetContentBody }>(
     try {
         const language: string = req.query.language;
         const textKey: string[] = Array.isArray(req.query.textKey) ? req.query.textKey : [req.query.textKey];
-        console.log(`language is [${language}] and textKey is [${textKey}]`);
         const row = await getAllContentOfPage(language, textKey);
         if (row == 'ERROR') {
             return reply.code(500).send({ error: 'Database error' });

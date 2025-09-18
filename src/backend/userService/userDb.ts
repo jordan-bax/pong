@@ -5,10 +5,6 @@ import type { TokenPayload } from 'google-auth-library';
 
 sqlite3.verbose();
 
-interface in_transactionRow {
-    in_transaction: number;
-}
-
 class UserDatabase {
     private db: Database | null
     constructor() {
@@ -97,7 +93,6 @@ class UserDatabase {
             AND (email != ? OR googleEmail != ?)`,
             [query, query, query, email, email]
         );
-        console.log(users);
         return users;
     }
 
@@ -286,7 +281,6 @@ class UserDatabase {
             FROM users
             WHERE email = ? OR googleEmail = ?`,
             [email, email]);
-        console.log(pendingList);
         if (!pendingList) {
             return null;
         }
@@ -298,7 +292,6 @@ class UserDatabase {
                 list += ',' + pending.pendingFriends;
             }
         }
-        console.log('list is:', list);
         return list;
     }
 
@@ -311,8 +304,6 @@ class UserDatabase {
             FROM users
             WHERE email = ? OR googleEmail = ?`,
             [email, email]);
-        console.log(requestList);
-        console.log('email is', email);
         if (!requestList) {
             return null;
         }
@@ -324,7 +315,6 @@ class UserDatabase {
                 list += ',' + rq.requestedFriends;
             }
         }
-        console.log('request list is:', list);
         return list;
     }
 
@@ -336,7 +326,6 @@ class UserDatabase {
         const friendFriends = await this.getFriends(toEmail);
 
         if (userFriends?.includes(toEmail) && friendFriends?.includes(fromEmail)) {
-            console.log('already friends');
             return false;
         }
 
@@ -372,7 +361,6 @@ class UserDatabase {
                 return false;
             } else if (changes == 0) {
                 await this.db.exec('ROLLBACK');
-                console.log('no changes in pending')
                 return false;
             }
 
@@ -386,7 +374,6 @@ class UserDatabase {
                 await this.db.exec('ROLLBACK');
                 console.error("more then 1 row was effected when updating friend request");
             } else if (changes == 0) {
-                console.log('no changes in requested');
                 await this.db.exec('ROLLBACK');
                 return false;
             }
@@ -400,18 +387,15 @@ class UserDatabase {
     }
 
     async acceptFriendRequest(userEmail: string, fromEmail: string): Promise<boolean> {
-        console.log('at start acceptFriendRequest');
         if (!this.db) {
             throw new Error('database is null');
         }
         let user = await this.getUserData(userEmail);
-        console.log('user in accept is:', user);
         if (!user) {
             console.error('user is null');
             return false;
         }
         let friend = await this.getUserData(fromEmail);
-        console.log('friend in accept is:', friend);
         if (!friend) {
             console.error('friend is null');
             return false;
@@ -431,7 +415,6 @@ class UserDatabase {
                 return true;
             }
 
-            console.log('users where not found in friends')
             if (!friendFriends) {
                 friendFriends = userEmail;
             } else {
@@ -455,7 +438,6 @@ class UserDatabase {
                 friendFriends += ',' + userEmail;
             }
         }
-        console.log('get to update part');
 
         await this.db.exec('BEGIN TRANSACTION');
         try {

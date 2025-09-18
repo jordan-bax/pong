@@ -3,7 +3,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import csrfProtection from '@fastify/csrf-protection';
 import fastifyMultipart from '@fastify/multipart';
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
@@ -227,10 +227,7 @@ class server {
                 console.error('pathToProfilePicture is not a string')
                 return reply.code(404).send('noImage');
             }
-            console.log('makeing path');
-            console.log('original path is:', dbInfo.pathToProfilePicture);
             const imagePath = path.join(path.resolve(dbInfo.pathToProfilePicture));
-            console.log('path is:', imagePath);
             if (!fs.existsSync(imagePath)) {
                 console.error('image is not found')
                 return reply.code(404).send('noImage')
@@ -324,7 +321,6 @@ class server {
         })
 
         this.fastify.post('/acceptFriend', async (req, reply) => {
-            console.log('in acceptFriend');
             const user = req.session.user;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
@@ -333,8 +329,6 @@ class server {
             if (!friend) {
                 return reply.code(400).send({ error: 'noBody' });
             }
-            console.log('user.email is:', user.email);
-            console.log('friend is:', friend);
             const accepted = await this.db.acceptFriendRequest(user.email, friend);
             if (!accepted) {
                 return reply.code(500).send({ error: 'serverError' });
@@ -365,7 +359,6 @@ class server {
             const parts = req.parts();
             for await (const part of parts) {
                 if (part.type === 'file') {
-                    console.log("part is:", part);
                     if (part.filename && part.filename !== '') {
                         const fileHandler = await this.validate.validateFile(part);
                         if (fileHandler === 'TOO LARGE') {
@@ -470,7 +463,6 @@ class server {
                 if(!payload || !payload.email) {
                     return reply.code(400).send({ error: 'googleToken' });
                 }
-                console.log('finding user');
                 let user = await this.db.findUserByEmail(payload.email);
                 if (!user) {
                     const googlePicture = await this.downloadGooglePicure(payload.picture, payload.sub)
@@ -521,7 +513,6 @@ class server {
                 }
                 reply.send({ success: true });
             } catch (err) {
-                console.log('Google login update check error:', err);
                 return reply.code(500).send({ error: 'serverError' });
             }
         });
@@ -559,7 +550,6 @@ class server {
                     }
                 }
             }
-            console.log('update userdata', userData);
 
             let user: any;
             if (userData.oldEmail !== null) {
@@ -619,7 +609,6 @@ class server {
                     if (!part.filename && part.filename !== '') {
                         const fileHandler = await this.validate.validateFile(part);
                         if (fileHandler === 'TOO LARGE') {
-                            console.log('file too large')
                             return reply.code(400).send('fileTooLarge');
                         } else if (fileHandler === 'MIMETYPE INCORRECT') {
                             return reply.code(400).send({error: 'fileIncorrectMime'});
@@ -639,36 +628,30 @@ class server {
             }
             const googleEmail = req.session.user?.email;
             if (!googleEmail) {
-                console.log('no google email found')
                 return reply.code(400).send({error: 'noUserDb'});
             }
             const user = await this.db.findUserByEmail(googleEmail);
             if (!user) {
-                console.log('no user found in db');
                 return reply.code(400).send({error: 'noUserDb'});
             }
             userData['googleEmail'] = googleEmail;
             userData['oldEmail'] = user.email;
             userData['oldPassword'] = user.password;
             userData['oldUsername'] = user.username;
-            console.log('userdata is:',userData);
             if (!userData['googleEmail']) {
-                console.log('no googleEmail found in data');
+                console.error('no googleEmail found in data');
                 return reply.code(400).send({error: 'noUserDb'});
             }
             const errors = this.validate.validateUserUpdateData(userData, user.isGoogleLogin);
             if (errors.length > 0) {
-                console.log('validation error');
                 return reply.code(400).send({ errors });
             }
             try {
                 if (!userData.googleEmail) {
-                    console.log('userdata.google is empty')
                     return reply.code(400).send({error: 'noGmail'});
                 }
                 const user = await this.db.findUserByEmail(userData.googleEmail)
                 if (!user) {
-                    console.log('no user found in database with google email')
                     return reply.code(404).send({ error: 'noUser' });
                 }
                 if (userData.newPassword !== null) {
@@ -681,7 +664,6 @@ class server {
                     userData.googleEmail,
                     userData.pathToProfileP
                 ) === false) {
-                    console.log('update user failed')
                     return reply.code(404).send({ error: 'noUser' });
                 }
 
@@ -714,7 +696,7 @@ class server {
     private async sendNotificationToUser(userId: number, message: string): Promise<void> {
         const response = await fetch(`http://notification:3005/add?userId=${userId}`, {
             method: 'POST',
-            credentials: 'include', // Include credentials for session management
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -724,7 +706,6 @@ class server {
             console.error('Failed to send notification:', response.statusText);
         } else {
             const data = await response.json();
-            console.log('Notification sent successfully:', data);
         }
     }
 }

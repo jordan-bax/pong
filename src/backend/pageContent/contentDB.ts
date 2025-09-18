@@ -39,13 +39,10 @@ export async function getAllContentOfPage(language: string, textkeys: string[]):
         FROM pageContent
         WHERE language = ? AND textKey IN (${placeholders})`;
 
-        console.log(`db query is ${query}`);
         const rows: { textKey: string; body: string }[] = await database.all(query, [
             language,
             ...textkeys,
         ]);
-        console.log('expected textkyes:', textkeys);
-        console.log('fetched rows:', rows.map(r => r.textKey));
         if (rows.length < textkeys.length) {
             return null;
         }

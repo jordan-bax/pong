@@ -118,7 +118,6 @@ class Validator {
 
     private validateNewPassword(password: string | null): string[] {
         const errors = [];
-        console.log('password in validateNewPassword is', password);
         if (typeof password !== 'string' && password !== null) {
             errors.push('errorPasswordType');
         } else if (typeof password === 'string') {
@@ -127,7 +126,6 @@ class Validator {
                 password = null;
             } else {
                 if (!this.testPasswordPattern(password) || password.length < 12) {
-                    console.log('in validateNewPassword error');
                     errors.push('errorNewPassword');
                 }
             }
@@ -175,16 +173,13 @@ class Validator {
     }
 
     private validateOldPassword(password: string | null): string[] {
-        console.log('password is validateOldPassword', password);
         const errors = [];
         if ((typeof password !== 'string' && password !== null) || password === '') {
-            console.log('password is not a string and not null or a empty string');
             errors.push('errorPasswordNoString');
         } else {
             if (password !== null) {
                 password = password.trim();
                 if (!this.testPasswordPattern(password) || password.length < 12) {
-                    console.log('password is string but not correct pattern');
                     errors.push('errorNewPassword');
                 }
             }
@@ -261,7 +256,6 @@ class Validator {
 
     private checkMimeType(type: string): boolean {
         for (const item of this.mimeTypeList) {
-            console.log(`type: [${type}], item: [${item}]`);
             if (type === item) {
                 return true;
             }

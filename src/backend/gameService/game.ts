@@ -48,7 +48,7 @@ let active: Array<Gameloop> = [];
 // let games: Array<gamestateinterface|null> = [];
 let matching: Array<Gameloop> = [];
 let invited: Array<Gameloop> = [];
-var fps: number = 30; // Default frames per second
+var fps: number = 10; // Default frames per second
 startGame(); // Start the game loop
 // async function gameturn(gamestate:gamestateinterface, use_ai: boolean) {
 // 	// Check if the game is paused
@@ -525,10 +525,10 @@ fastify.post('/move', async (req, reply) => {
 		reply.status(400).send({ status: 'inactive' });
 		return;
 	}
-	if (game.getState().gamePause) {
-		reply.status(400).send({ status: 'paused' });
-		return;
-	}
+	// if (game.getState().gamePause) {
+	// 	reply.status(400).send({ status: 'paused' });
+	// 	return;
+	// }
 	if (game.getState().gametype === 'local') {
 		player = (req.query as { player: 1|2 }).player;
 	}

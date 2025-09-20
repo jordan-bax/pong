@@ -194,7 +194,7 @@ async function tester() {
 export async function joinGame(gametype :string): Promise<void> {
     // window.location.href = '/pong/game'; // Redirect to the game page
     const text = await getText();
-	await tester();
+	// await tester();
 	var frame = document.getElementById('content') as HTMLElement;
 	const games = await getopengames();
 	if (games.length === 0) {

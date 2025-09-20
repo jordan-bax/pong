@@ -1,9 +1,11 @@
-als iemand weg gaat de score is word niet geupdated -> Luuk
+wat te doen als user niet online is in tournament?? -> Luuk
+guest vs guest db error maak guest negatief en testen -> Luuk
+
 bounce en hit -> Jordan
 
-// na game state Siebe gaat dat waarschijnlijk doen als die thuis is
-Page tournament doet raar als je op vorige drukt -> ??
-game-history 'page not found' -> ??
-game local 'druk op vorige' = menu dubbel -> ??
-game-history 'druk op vorige' = double table -> ??
-game->local->vorige triple alles -> ??
+cleaning code -> iedereen
+
+// nice to have
+end screen als de game af gelopen is -> Luuk of Siebe
+pause scherm voor als game op pause staat -> Luuk of Siebe
+countdown voor auto game start en als we van pause naar game play gaan -> Luuk of Siebe

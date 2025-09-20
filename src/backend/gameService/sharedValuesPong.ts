@@ -59,7 +59,7 @@ export const gameWall: gameWallsInterface = {
 	wallTickness2x: 20,
 	egdeThickness: 15
 };
-export var player1Template: pcInterface = {
+export let player1Template: pcInterface = {
 	id: null,
 	active: false,
 	name: "Player 1",
@@ -70,7 +70,7 @@ export var player1Template: pcInterface = {
 	width: 4,
 	score: 0
 };
-export var player2Template: pcInterface = {
+export let player2Template: pcInterface = {
 	id: null,
 	active: false,
 	name: "Player 2",
@@ -81,11 +81,11 @@ export var player2Template: pcInterface = {
 	width: 4,
 	score: 0
 };
-export var ai_var: aiInterface = {
+export let ai_var: aiInterface = {
 	//The average (median) reaction time is 273 milliseconds
 	reactionTime: 100 // Default reaction time in milliseconds
 };
-export var ballvarTemplate: ballInterface = {
+export let ballvarTemplate: ballInterface = {
 	x: 98,
 	y: 98,
 	dx: 2,
@@ -95,6 +95,6 @@ export var ballvarTemplate: ballInterface = {
 	height: 4,
 	width: 4
 };
-export var sizeAduster: number = 1;
-export var fps: number = 10; // Frames per second
-export var pauze: boolean = true; // Variable to control the pause state
+export let sizeAduster: number = 1;
+export let fps: number = 10; // Frames per second
+export let pauze: boolean = true; // Variable to control the pause state

@@ -44,7 +44,7 @@ interface ierrors {
     errorPasswordNoString: string;
     errorUsernameNoString: string;
     errorNoPath: string;
-    unprocessableEntity:string;
+    unprocessableEntity: string;
 }
 
 export interface searchUser {
@@ -90,6 +90,7 @@ async function getErrorMessages(): Promise<ierrors> {
     } catch (err) {
         throw new Error('Server Error');
     }
+
     const errors = await getPageContent(language.toLowerCase(), errorMessages);
     const output = errors.get('row') as ierrors;
     return output;
@@ -101,14 +102,16 @@ export async function getFriends(): Promise<string | null> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async (response) => {
-            if (!response.ok) return null;
-            const data = await response.text();
-            return data;
-        })
-        .catch(() => { });
-    if (response) return response;
+    }).then(async (response) => {
+        if (!response.ok) return null;
+        const data = await response.text();
+        return data;
+    }).catch(() => { });
+
+    if (response) {
+        return response;
+    }
+
     return null;
 }
 
@@ -118,16 +121,18 @@ export async function getRequestedFriends(): Promise<string | null> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                return null;
-            }
-            const data = await response.text();
-            return data;
-        })
-        .catch(() => { });
-    if (response) return response;
+    }).then(async (response) => {
+        if (!response.ok) {
+            return null;
+        }
+        const data = await response.text();
+        return data;
+    }).catch(() => { });
+
+    if (response) {
+        return response;
+    }
+
     return null;
 }
 
@@ -137,16 +142,18 @@ export async function getPendingFriends(): Promise<string | null> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                return null;
-            }
-            const data = await response.text();
-            return data;
-        })
-        .catch(() => { });
-    if (response) return response;
+    }).then(async (response) => {
+        if (!response.ok) {
+            return null;
+        }
+        const data = await response.text();
+        return data;
+    }).catch(() => { });
+
+    if (response) {
+        return response;
+    }
+
     return null;
 }
 
@@ -158,13 +165,11 @@ export async function sendFriendRequest(user: searchUser): Promise<void> {
             "x-internal": "true"
         },
         body: user.email || user.googleEmail
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                console.error('failed to set friend request', response.statusText);
-            }
-        })
-        .catch(() => { });
+    }).then(async (response) => {
+        if (!response.ok) {
+            console.error('failed to set friend request', response.statusText);
+        }
+    }).catch(() => { });
 }
 
 export async function searchUsers(query: string): Promise<searchUser[] | null> {
@@ -173,15 +178,18 @@ export async function searchUsers(query: string): Promise<searchUser[] | null> {
         headers: {
             "x-internal": "true"
         }
-    }).catch(() => { })
-        .then(async (response) => {
-            if (!response) {
-                return null;
-            }
-            const data = await response.json();
-            return data as searchUser[];
-        });
-    if (response) return response;
+    }).catch(() => { }).then(async (response) => {
+        if (!response) {
+            return null;
+        }
+        const data = await response.json();
+        return data as searchUser[];
+    });
+
+    if (response) {
+        return response;
+    }
+
     return null;
 }
 
@@ -193,16 +201,18 @@ export async function removeRequest(email: string): Promise<boolean> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(response => {
-            if (!response.ok) {
-                console.error('failed to remove request');
-                return false;
-            }
-            return true;
-        })
-        .catch(() => { });
-    if (typeof response === 'boolean') return response;
+    }).then(response => {
+        if (!response.ok) {
+            console.error('failed to remove request');
+            return false;
+        }
+        return true;
+    }).catch(() => { });
+
+    if (typeof response === 'boolean') {
+        return response;
+    }
+
     return false;
 }
 
@@ -214,16 +224,17 @@ export async function acceptFriendRequest(email: string): Promise<boolean> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(response => {
-            if (!response.ok) {
-                console.error('failed to accept friend request');
-                return false;
-            }
-            return true;
-        })
-        .catch(() => { });
-    if (typeof response === 'boolean') return response;
+    }).then(response => {
+        if (!response.ok) {
+            console.error('failed to accept friend request');
+            return false;
+        }
+        return true;
+    }).catch(() => { });
+    if (typeof response === 'boolean') {
+        return response;
+    }
+
     return false;
 }
 
@@ -241,16 +252,18 @@ export async function getCsrfToken(): Promise<string | null> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                return null;
-            }
-            const data = await response.json();
-            return data.csrfToken as string;
-        })
-        .catch(() => { });
-    if (csrf) return csrf;
+    }).then(async (response) => {
+        if (!response.ok) {
+            return null;
+        }
+        const data = await response.json();
+        return data.csrfToken as string;
+    }).catch(() => { });
+
+    if (csrf) {
+        return csrf;
+    }
+
     return null;
 }
 
@@ -260,13 +273,15 @@ export async function getLogginServer(): Promise<string | null> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async (resonse) => {
-            const data = await resonse.json();
-            return data.user.email as string;
-        })
-        .catch(() => { });
-    if (userEmail) return userEmail;
+    }).then(async (resonse) => {
+        const data = await resonse.json();
+        return data.user.email as string;
+    }).catch(() => { });
+
+    if (userEmail) {
+        return userEmail;
+    }
+
     return null;
 }
 
@@ -276,17 +291,18 @@ export async function getLogginUserData(): Promise<userInfo | null> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                return null;
-            }
-            const data = await response.json()
-            const user = data.user as userInfo;
-            return user;
-        })
-        .catch(() => { });
-    if (userData) return userData;
+    }).then(async (response) => {
+        if (!response.ok) {
+            return null;
+        }
+        const data = await response.json()
+        const user = data.user as userInfo;
+        return user;
+    }).catch(() => { });
+    if (userData) {
+        return userData;
+    }
+
     return null;
 }
 
@@ -307,45 +323,45 @@ export async function updateUserInfo(
             'x-csrf-token': formData.get('_csrf') as string,
             "x-internal": "true"
         }
-    })
-        .then(async (response) => {
-            const content = document.getElementById('error');
-            if (!response.ok) {
-                const mainContent = document.getElementById('content');
-                const updateDiv = document.getElementById('secureUpdate');
-                if (mainContent && updateDiv) {
-                    mainContent.removeChild(updateDiv)
-                }
-                const errorData = await response.json();
-                const errors = await getErrorMessages();
-                let message = [];
-                if (errorData.error) {
-                    const name = errorData.error as string;
-                    message.push(errors[name as keyof ierrors]);
-                } else if (errorData.errors) {
-                    const serverErrors = errorData.errors as string[];
-                    const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
-                    for (let err = 0; err < displayErrors.length; ++err) {
-                        message.push(displayErrors[err]);
-                    }
-                }
-                if (content) {
-                    content.innerHTML = '';
-                    for (const error of message) {
-                        const paragraph = document.createElement('p');
-                        paragraph.style.color = 'red';
+    }).then(async (response) => {
+        const content = document.getElementById('error');
+        if (!response.ok) {
+            const mainContent = document.getElementById('content');
+            const updateDiv = document.getElementById('secureUpdate');
+            if (mainContent && updateDiv) {
+                mainContent.removeChild(updateDiv)
+            }
 
-                        const text = document.createTextNode(error);
-                        paragraph.appendChild(text);
-                        content.appendChild(paragraph);
-                    }
-                    return;
+            const errorData = await response.json();
+            const errors = await getErrorMessages();
+            let message = [];
+            if (errorData.error) {
+                const name = errorData.error as string;
+                message.push(errors[name as keyof ierrors]);
+            } else if (errorData.errors) {
+                const serverErrors = errorData.errors as string[];
+                const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+                for (let err = 0; err < displayErrors.length; ++err) {
+                    message.push(displayErrors[err]);
                 }
             }
-            history.pushState({}, '', '/profile');
-            await checkSession();
-        })
-        .catch(() => { });
+
+            if (content) {
+                content.innerHTML = '';
+                for (const error of message) {
+                    const paragraph = document.createElement('p');
+                    paragraph.style.color = 'red';
+
+                    const text = document.createTextNode(error);
+                    paragraph.appendChild(text);
+                    content.appendChild(paragraph);
+                }
+                return;
+            }
+        }
+        history.pushState({}, '', '/profile');
+        await checkSession();
+    }).catch(() => { });
 }
 
 export async function googleUserUpdate(formData: FormData): Promise<void> {
@@ -357,45 +373,45 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
             'x-csrf-token': formData.get('_csrf') as string,
             "x-internal": "true"
         }
-    })
-        .then(async (response) => {
-            const content = document.getElementById('error');
-            if (!response.ok) {
-                const mainContent = document.getElementById('content');
-                const updateDiv = document.getElementById('secureUpdate');
-                if (mainContent && updateDiv) {
-                    mainContent.removeChild(updateDiv);
-                }
-                const errorData = await response.json();
-                const errors = await getErrorMessages();
-                let message = [];
-                if (errorData.error) {
-                    const name = errorData.error as string;
-                    message.push(errors[name as keyof ierrors]);
-                } else if (errorData.errors) {
-                    const serverErrors = errorData.errors as string[];
-                    const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
-                    for (let err = 0; err < displayErrors.length; ++err) {
-                        message.push(displayErrors[err]);
-                    }
-                }
-                if (content) {
-                    content.innerHTML = '';
-                    for (const error of message) {
-                        const paragraph = document.createElement('p');
-                        paragraph.style.color = 'red';
+    }).then(async (response) => {
+        const content = document.getElementById('error');
+        if (!response.ok) {
+            const mainContent = document.getElementById('content');
+            const updateDiv = document.getElementById('secureUpdate');
+            if (mainContent && updateDiv) {
+                mainContent.removeChild(updateDiv);
+            }
 
-                        const text = document.createTextNode(error);
-                        paragraph.appendChild(text);
-                        content.appendChild(paragraph);
-                    }
-                    return;
+            const errorData = await response.json();
+            const errors = await getErrorMessages();
+            let message = [];
+            if (errorData.error) {
+                const name = errorData.error as string;
+                message.push(errors[name as keyof ierrors]);
+            } else if (errorData.errors) {
+                const serverErrors = errorData.errors as string[];
+                const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+                for (let err = 0; err < displayErrors.length; ++err) {
+                    message.push(displayErrors[err]);
                 }
             }
-            history.pushState({}, '', '/profile');
-            await checkSession();
-        })
-        .catch(() => { });
+
+            if (content) {
+                content.innerHTML = '';
+                for (const error of message) {
+                    const paragraph = document.createElement('p');
+                    paragraph.style.color = 'red';
+
+                    const text = document.createTextNode(error);
+                    paragraph.appendChild(text);
+                    content.appendChild(paragraph);
+                }
+                return;
+            }
+        }
+        history.pushState({}, '', '/profile');
+        await checkSession();
+    }).catch(() => { });
 }
 
 export async function checkSession() {
@@ -404,23 +420,19 @@ export async function checkSession() {
             "x-internal": "true"
         },
         credentials: 'include'
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                isLoggedIn = false;
-                await renderContent(routeFromPath[window.location.pathname] || 'not found');
-                await renderNavbar();
-                return;
-            }
-            const data = await response.json();
-            isLoggedIn = data.loggedIn ? true : false;
+    }).then(async (response) => {
+        if (!response.ok) {
+            isLoggedIn = false;
             await renderContent(routeFromPath[window.location.pathname] || 'not found');
             await renderNavbar();
-        })
-        .catch(() => { });
-    // isLoggedIn = false;
-    // renderNavbar();
-    // renderContent(routeFromPath[window.location.pathname] || 'not found');
+            return;
+        }
+
+        const data = await response.json();
+        isLoggedIn = data.loggedIn ? true : false;
+        await renderContent(routeFromPath[window.location.pathname] || 'not found');
+        await renderNavbar();
+    }).catch(() => { });
 }
 
 export async function login(formData: FormData): Promise<void> {
@@ -432,44 +444,44 @@ export async function login(formData: FormData): Promise<void> {
             "x-internal": "true"
         },
         credentials: 'include'
-    })
-        .then(async (response) => {
-            const content = document.getElementById('error');
-            if (!response.ok) {
-                const errorData = await response.json();
-                const errors = await getErrorMessages();
-                let messages = [];
-                if (errorData.error) {
-                    const name = errorData.error as string;
+    }).then(async (response) => {
+        const content = document.getElementById('error');
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errors = await getErrorMessages();
+            let messages = [];
+            if (errorData.error) {
+                const name = errorData.error as string;
 
-                    messages.push(errors[name as keyof ierrors]);
-                }
-                if (errorData.errors) {
-                    const serverErrors = errorData.errors as string[];
-                    const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
-                    for (let err = 0; err < displayErrors.length; ++err) {
-                        messages.push(displayErrors[err]);
-                    }
-                }
-                if (content) {
-                    content.innerHTML = '';
-                    for (const error of messages) {
-                        const paragraph = document.createElement('p');
-                        paragraph.style.color = 'red';
-
-                        const text = document.createTextNode(error);
-                        paragraph.appendChild(text);
-                        content.appendChild(paragraph);
-                    }
-                }
-            } else {
-                isLoggedIn = true;
-                history.pushState({}, '', '/profile');
-                await setGameSession();
-                await checkSession();
+                messages.push(errors[name as keyof ierrors]);
             }
-        })
-        .catch(() => { });
+
+            if (errorData.errors) {
+                const serverErrors = errorData.errors as string[];
+                const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+                for (let err = 0; err < displayErrors.length; ++err) {
+                    messages.push(displayErrors[err]);
+                }
+            }
+
+            if (content) {
+                content.innerHTML = '';
+                for (const error of messages) {
+                    const paragraph = document.createElement('p');
+                    paragraph.style.color = 'red';
+
+                    const text = document.createTextNode(error);
+                    paragraph.appendChild(text);
+                    content.appendChild(paragraph);
+                }
+            }
+        } else {
+            isLoggedIn = true;
+            history.pushState({}, '', '/profile');
+            await setGameSession();
+            await checkSession();
+        }
+    }).catch(() => { });
 }
 
 export async function register(formData: FormData): Promise<void> {
@@ -481,41 +493,41 @@ export async function register(formData: FormData): Promise<void> {
             "x-internal": "true"
         },
         credentials: 'include'
-    })
-        .then(async (response) => {
-            const content = document.getElementById('error');
-            if (!response.ok) {
-                const errorData = await response.json();
-                const errors = await getErrorMessages();
-                let messages = [];
-                if (errorData.error) {
-                    messages.push(errors[(errorData.error as string) as keyof ierrors]);
-                }
-                if (errorData.errors) {
-                    const serverErrors = errorData.errors as string[];
-                    const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
-                    for (let error = 0; error < displayErrors.length; ++error) {
-                        messages.push(displayErrors[error]);
-                    }
-                }
-                if (content) {
-                    content.innerHTML = '';
-                    for (const error of messages) {
-                        const paragraph = document.createElement('p');
-                        paragraph.style.color = 'red';
-                        const text = document.createTextNode(error);
-                        paragraph.appendChild(text);
-                        content.appendChild(paragraph);
-                    }
-                }
-            } else {
-                isLoggedIn = true;
-                history.pushState({}, '', '/profile');
-                await setGameSession();
-                await checkSession();
+    }).then(async (response) => {
+        const content = document.getElementById('error');
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errors = await getErrorMessages();
+            let messages = [];
+            if (errorData.error) {
+                messages.push(errors[(errorData.error as string) as keyof ierrors]);
             }
-        })
-        .catch(() => { });
+
+            if (errorData.errors) {
+                const serverErrors = errorData.errors as string[];
+                const displayErrors = serverErrors.filter((key): key is keyof ierrors => key in errors).map((key) => errors[key]);
+                for (let error = 0; error < displayErrors.length; ++error) {
+                    messages.push(displayErrors[error]);
+                }
+            }
+
+            if (content) {
+                content.innerHTML = '';
+                for (const error of messages) {
+                    const paragraph = document.createElement('p');
+                    paragraph.style.color = 'red';
+                    const text = document.createTextNode(error);
+                    paragraph.appendChild(text);
+                    content.appendChild(paragraph);
+                }
+            }
+        } else {
+            isLoggedIn = true;
+            history.pushState({}, '', '/profile');
+            await setGameSession();
+            await checkSession();
+        }
+    }).catch(() => { });
 }
 
 export async function logout(): Promise<void> {
@@ -524,16 +536,14 @@ export async function logout(): Promise<void> {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async () => {
-            isLoggedIn = false;
-            currentUser = null;
-            await clearGameSession();
-            await checkSession();
-            history.pushState({}, '', '/');
-            localStorage.removeItem('notifications')
-        })
-        .catch(() => { });
+    }).then(async () => {
+        isLoggedIn = false;
+        currentUser = null;
+        await clearGameSession();
+        await checkSession();
+        history.pushState({}, '', '/');
+        sessionStorage.removeItem('notifications')
+    }).catch(() => { });
 }
 
 let csrfToken: string | null = null;
@@ -544,20 +554,21 @@ async function fetchCsrfToken() {
         headers: {
             "x-internal": "true"
         }
-    })
-        .then(async (res) => {
-            if (!res.ok) {
-                console.error('no csrf-token given');
-                return;
-            }
-            const data = await res.json();
-            csrfToken = data.csrfToken;
-        })
-        .catch(() => { });
+    }).then(async (res) => {
+        if (!res.ok) {
+            console.error('no csrf-token given');
+            return;
+        }
+
+        const data = await res.json();
+        csrfToken = data.csrfToken;
+    }).catch(() => { });
 }
 
 export async function handleGoogleCredentials(request: { credential: string }): Promise<void> {
-    if (!csrfToken) await fetchCsrfToken();
+    if (!csrfToken) {
+        await fetchCsrfToken();
+    }
 
     await fetch('api/user/google', {
         method: 'POST',
@@ -568,25 +579,24 @@ export async function handleGoogleCredentials(request: { credential: string }): 
         },
         body: JSON.stringify({ idToken: request.credential }),
         credentials: 'include',
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                let errorMessage;
-                try {
-                    errorMessage = response.json();
-                } catch (e) {
-                    const text = await response.text();
-                    errorMessage = { error: text };
-                }
-                console.error('google login failed:', errorMessage);
-                return;
+    }).then(async (response) => {
+        if (!response.ok) {
+            let errorMessage;
+            try {
+                errorMessage = response.json();
+            } catch (e) {
+                const text = await response.text();
+                errorMessage = { error: text };
             }
-            isLoggedIn = true;
-            history.pushState({}, '', '/profile');
-            await setGameSession();
-            await checkSession();
-        })
-        .catch(() => { });
+            console.error('google login failed:', errorMessage);
+            return;
+        }
+
+        isLoggedIn = true;
+        history.pushState({}, '', '/profile');
+        await setGameSession();
+        await checkSession();
+    }).catch(() => { });
 }
 
 export async function getIdFromMe(): Promise<number | null> {
@@ -595,17 +605,18 @@ export async function getIdFromMe(): Promise<number | null> {
             "x-internal": "true"
         },
         credentials: 'include',
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                console.error('failed to get user ID');
-                return null;
-            }
-            const data = await response.json();
-            return data.user.userId as number;
-        })
-        .catch(() => { });
-    if (typeof id === 'number') return id;
+    }).then(async (response) => {
+        if (!response.ok) {
+            console.error('failed to get user ID');
+            return null;
+        }
+        const data = await response.json();
+        return data.user.userId as number;
+    }).catch(() => { });
+    if (typeof id === 'number') {
+        return id;
+    }
+
     return null;
 }
 
@@ -613,17 +624,18 @@ export async function getUsernameFromMeData(): Promise<string | null> {
     const username = await fetch('/api/user/me/data', {
         headers: { "x-internal": "true" },
         credentials: 'include',
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                console.error('failed to get usr data');
-                return null;
-            }
-            const data = await response.json();
-            return data.user.username as string || null;
-        })
-        .catch(() => { });
-    if (username) return username;
+    }).then(async (response) => {
+        if (!response.ok) {
+            console.error('failed to get usr data');
+            return null;
+        }
+        const data = await response.json();
+        return data.user.username as string || null;
+    }).catch(() => { });
+    if (username) {
+        return username;
+    }
+
     return null;
 }
 
@@ -636,13 +648,11 @@ async function createPlayer(params: { id: number; username: string }): Promise<v
         },
         body: JSON.stringify(params),
         credentials: 'include',
-    })
-        .then(response => {
-            if (!response.ok) {
-                console.error('failed to create player');
-            }
-        })
-        .catch(() => { });
+    }).then(response => {
+        if (!response.ok) {
+            console.error('failed to create player');
+        }
+    }).catch(() => { });
 }
 
 async function setGameSession(): Promise<void> {
@@ -652,6 +662,7 @@ async function setGameSession(): Promise<void> {
         console.error('cannot set game session, missing user data', { myId, username });
         return;
     }
+
     await fetch('/api/game/setsession', {
         method: 'POST',
         headers: {
@@ -660,15 +671,14 @@ async function setGameSession(): Promise<void> {
         },
         body: JSON.stringify({ username: username, id: myId }),
         credentials: 'include'
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                console.error('failed to set game session');
-                return;
-            }
-            await createPlayer({ id: myId, username: username });
-        })
-        .catch(() => { });
+    }).then(async (response) => {
+        if (!response.ok) {
+            console.error('failed to set game session');
+            return;
+        }
+
+        await createPlayer({ id: myId, username: username });
+    }).catch(() => { });
 }
 
 export async function clearGameSession(): Promise<void> {
@@ -678,13 +688,11 @@ export async function clearGameSession(): Promise<void> {
             "x-internal": "true"
         },
         credentials: 'include'
-    })
-        .then(response => {
-            if (!response.ok) {
-                console.error('failed to clear game session');
-            }
-        })
-        .catch(() => { });
+    }).then(response => {
+        if (!response.ok) {
+            console.error('failed to clear game session');
+        }
+    }).catch(() => { });
 }
 
 export async function handleGoogleCheck(request: { idToken: string, user: userInfo }) {
@@ -700,20 +708,19 @@ export async function handleGoogleCheck(request: { idToken: string, user: userIn
         },
         body: JSON.stringify({ idToken: request.idToken }),
         credentials: 'include'
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                let errorMessage;
-                try {
-                    errorMessage = await response.json();
-                } catch (err) {
-                    const text = await response.text();
-                    errorMessage = { error: text };
-                }
-                console.error('google login failed:', errorMessage);
-                return;
+    }).then(async (response) => {
+        if (!response.ok) {
+            let errorMessage;
+            try {
+                errorMessage = await response.json();
+            } catch (err) {
+                const text = await response.text();
+                errorMessage = { error: text };
             }
-            await googleUserUpdate(formData);
-        })
-        .catch(() => { });
+            console.error('google login failed:', errorMessage);
+            return;
+        }
+
+        await googleUserUpdate(formData);
+    }).catch(() => { });
 }

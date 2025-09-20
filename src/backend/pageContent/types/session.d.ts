@@ -8,12 +8,3 @@ declare module '@fastify/session' {
         language?: string
     }
 }
-// declare module 'fastify' {
-//     interface Session {
-//         language?: string;
-//     }
-
-//     interface FastifyRequest {
-//         session: Session;
-//     }
-// }

@@ -1,8 +1,7 @@
-// import { getCurrentUser, getLoggin, login, updateUserInfo , register, handleGoogleCredentials, getLogginUserData } from "./routing.js";
 import { getLanguage } from "./index.js";
 import { pongbutton } from "./pongMenu.js";
-import { getLoggin, login, updateUserInfo, handleGoogleCheck, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, userInfo, checkSession, searchUsers, searchUser, getFriends , sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getCurrentUser, getLogginServer, getIdFromMe } from "./routing.js";
-import { getContent, openSettings } from "./settings.js";
+import { getLoggin, login, updateUserInfo, handleGoogleCheck, register, handleGoogleCredentials, getLogginUserData, getCsrfToken, checkSession, searchUsers, searchUser, getFriends, sendFriendRequest, getRequestedFriends, getPendingFriends, removeRequest, acceptFriendRequest, getIdFromMe } from "./routing.js";
+import { getContent } from "./settings.js";
 import { renderTournament } from "./renderTournament.js"
 import { createGameHistoryTable } from "./gameHistoryTable.js";
 
@@ -45,12 +44,6 @@ function queryStringBuilder(language: string, array: string[]): string {
     array.forEach(tag => output.append('textKey', tag));
     return output.toString();
 
-}
-
-function replacePlaceholders(original: string, values: Record<string, string>) {
-    return original.replace(/{(\w+)}/g, (_, key) => {
-        return values[key] ?? `{${key}}`;
-    });
 }
 
 function createRow(leftContent: any, rightContent: any): HTMLTableRowElement {
@@ -108,6 +101,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
         console.error('no searchDiv');
         return;
     }
+
     let resultList = document.getElementById('searchList');
     if (resultList) {
         resultList.innerHTML = '';
@@ -116,6 +110,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
         resultList.id = 'searchList';
         resultList.style.listStyleType = 'none';
     }
+
     const listItem = document.createElement('li');
     if (Array.isArray(users)) {
         if (users.length === 0) {
@@ -124,6 +119,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
             searchDiv.appendChild(resultList);
             return;
         }
+
         const friends = await getFriends() as string;
         let friendArray: string[] = [];
         if (friends !== null) {
@@ -133,6 +129,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
                 friendArray[0] = friends;
             }
         }
+
         const requested = await getRequestedFriends() as string;
         let requestedArray: string[] = [];
         if (requested !== null) {
@@ -142,6 +139,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
                 requestedArray[0] = requested;
             }
         }
+
         const pending = await getPendingFriends() as string;
         let pendingArray: string[] = [];
         if (pending !== null) {
@@ -151,6 +149,7 @@ async function renderResult(users: searchUser[] | null): Promise<void> {
                 pendingArray[0] = pending;
             }
         }
+
         let i = 0;
         users.forEach(user => {
             const item = document.createElement('li');
@@ -205,6 +204,7 @@ function addOnlineCircle(status: number, username: string | null) {
     } else {
         statusCircle.id = '';
     }
+
     if (status === 1) {
         statusCircle.style.backgroundColor = 'green';
     } else {
@@ -226,6 +226,7 @@ async function friendsList(): Promise<HTMLTableRowElement> {
     if (!friends) {
         return listRow;
     }
+
     const data = document.createElement('td');
     const list = document.createElement('ul');
     list.style.listStyleType = 'none';
@@ -236,6 +237,7 @@ async function friendsList(): Promise<HTMLTableRowElement> {
             if (!user) {
                 return;
             }
+
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
             const online = addOnlineCircle(user[0].isLoggedIn, user[0].username);
@@ -247,6 +249,7 @@ async function friendsList(): Promise<HTMLTableRowElement> {
         if (!user) {
             return listRow;
         }
+
         if (user.length) {
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
@@ -255,6 +258,7 @@ async function friendsList(): Promise<HTMLTableRowElement> {
             listItem.appendChild(online);
         }
     }
+
     data.appendChild(list);
     listRow.appendChild(data);
     return listRow;
@@ -272,6 +276,7 @@ async function pendingList(): Promise<HTMLTableRowElement> {
     if (!friends) {
         return listRow;
     }
+
     const data = document.createElement('td');
     const list = document.createElement('ul');
     list.style.listStyleType = 'none';
@@ -282,6 +287,7 @@ async function pendingList(): Promise<HTMLTableRowElement> {
             if (!user) {
                 return;
             }
+
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
             const removeRequestButton = document.createElement('button');
@@ -293,6 +299,7 @@ async function pendingList(): Promise<HTMLTableRowElement> {
                 if (user[0].email) {
                     await removeRequest(user[0].email);
                 }
+
                 e.preventDefault();
                 await renderContent('profile')
             };
@@ -304,6 +311,7 @@ async function pendingList(): Promise<HTMLTableRowElement> {
         if (!user) {
             return listRow;
         }
+
         const listItem = document.createElement('li');
         listItem.textContent = user[0].username;
         const removeRequestButton = document.createElement('button');
@@ -315,13 +323,16 @@ async function pendingList(): Promise<HTMLTableRowElement> {
             if (user[0].email) {
                 await removeRequest(user[0].email);
             }
+
             e.preventDefault();
             history.pushState({}, '', '/profile');
             await renderContent('profile')
         };
+
         listItem.appendChild(removeRequestButton);
         list.appendChild(listItem);
     }
+
     data.appendChild(list);
     listRow.appendChild(data);
     return listRow;
@@ -339,6 +350,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
     if (!friends) {
         return listRow;
     }
+
     const data = document.createElement('td');
     const list = document.createElement('ul');
     list.style.listStyleType = 'none';
@@ -349,6 +361,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
             if (!user) {
                 return;
             }
+
             const listItem = document.createElement('li');
             listItem.textContent = user[0].username;
             const acceptRequestButton = document.createElement('button');
@@ -360,6 +373,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
                 if (user[0].email) {
                     await acceptFriendRequest(user[0].email);
                 }
+
                 e.preventDefault();
                 await renderContent('profile');
             }
@@ -374,6 +388,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
                 if (user[0].email) {
                     await removeRequest(user[0].email);
                 }
+
                 e.preventDefault();
                 await renderContent('profile')
             };
@@ -385,6 +400,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
         if (!user) {
             return listRow;
         }
+
         const listItem = document.createElement('li');
         listItem.textContent = user[0].username;
         const acceptRequestButton = document.createElement('button');
@@ -396,6 +412,7 @@ async function requestedList(): Promise<HTMLTableRowElement> {
             if (user[0].email) {
                 await acceptFriendRequest(user[0].email);
             }
+
             e.preventDefault();
             await renderContent('profile');
         }
@@ -410,12 +427,14 @@ async function requestedList(): Promise<HTMLTableRowElement> {
             if (user[0].email) {
                 await removeRequest(user[0].email);
             }
+
             e.preventDefault();
             await renderContent('profile');
         };
         listItem.appendChild(removeRequestButton);
         list.appendChild(listItem);
     }
+
     data.appendChild(list);
     listRow.appendChild(data);
     return listRow;
@@ -490,6 +509,7 @@ async function renderLogin(text: content): Promise<HTMLFormElement> {
         const formData = new FormData(loginForm);
         await login(formData);
     };
+
     return loginForm;
 }
 
@@ -579,12 +599,16 @@ async function renderRegister(text: content): Promise<HTMLFormElement> {
         const formData = new FormData(registerForm);
         await register(formData);
     };
+
     return registerForm;
 }
 
 async function rendderConformation(text: content): Promise<HTMLElement | null> {
     const user = await getLogginUserData();
-    if (!user) return null;
+    if (!user) {
+        return null;
+    }
+
     const passwordOverlay = document.createElement('div');
     passwordOverlay.id = 'secureUpdate';
     passwordOverlay.style.position = 'fixed';
@@ -633,6 +657,7 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
             if (!error) {
                 return;
             }
+
             const text = document.createTextNode('password is required');
             const errorParagraph = document.createElement('p');
             errorParagraph.appendChild(text);
@@ -662,6 +687,7 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
             });
         }
     });
+
     window.google.accounts.id.renderButton(overlayGoogleLogin, {
         theme: 'outline',
         size: 'large',
@@ -691,6 +717,7 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
     if (!user) {
         return null;
     }
+
     await fetch('/api/user/me', {
         method: 'GET',
         credentials: 'include',
@@ -788,8 +815,8 @@ async function renderProfileData(text: content): Promise<HTMLFormElement | null>
             console.error('secureUpdate not found');
             return;
         }
+
         confirm.style.display = 'flex';
-        // updateUserInfo(user.email, user.username, user.password, formData);
     };
 
     return profileForm;
@@ -808,6 +835,7 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
                     if (response.status == 404) return null;
                     throw new Error(`Failed to load image:${response.statusText}`);
                 }
+
                 const blob = await response.blob();
                 const imageUrl = URL.createObjectURL(blob);
                 const imgElement = document.createElement('img');
@@ -827,6 +855,7 @@ async function renderProfilePicture(): Promise<HTMLImageElement | null> {
         console.error('Error loading profile picture', err);
         return null;
     }
+
     return null;
 }
 
@@ -847,6 +876,7 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
                 'x-internal': 'true'
             }
         });
+
         if (!user.ok) {
             console.error('user is returns with error')
             return null;
@@ -857,6 +887,7 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
             credentials: 'include',
             method: 'GET'
         });
+
         if (!players.ok) {
             console.error('getGameStates returns with error');
             return null;
@@ -875,6 +906,7 @@ async function renderGameData(): Promise<HTMLDivElement | null> {
         if (!ctx) {
             return null;
         }
+
         ctx.font = `24px sans-serif`;
         const textWidth = ctx.measureText(circleText).width;
         const strokeWidth = 20;
@@ -947,7 +979,13 @@ interface kindOfGames {
     local: number;
 };
 
-function makeBar(value: number, maxValue: number, charHeight: number, padding: number, index: number, height: number, barWidth: number): SVGRectElement {
+function makeBar(value: number,
+    maxValue: number,
+    charHeight: number,
+    padding: number,
+    index: number,
+    height: number,
+    barWidth: number): SVGRectElement {
     const barHeight = (value / maxValue) * charHeight;
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -959,7 +997,12 @@ function makeBar(value: number, maxValue: number, charHeight: number, padding: n
     return rect;
 }
 
-function makeValueText(value: number, padding: number, index: number, height: number, barWidth: number, barHeight: number): SVGTextElement {
+function makeValueText(value: number,
+    padding: number,
+    index: number,
+    height: number,
+    barWidth: number,
+    barHeight: number): SVGTextElement {
     const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     valueText.setAttribute('x', (padding + index * barWidth + barWidth / 2).toString());
     valueText.setAttribute('y', (height - padding - barHeight - 5).toString());
@@ -971,7 +1014,11 @@ function makeValueText(value: number, padding: number, index: number, height: nu
     return valueText;
 }
 
-function makeLabel(name: string, padding: number, index: number, height: number, barWidth: number): SVGTextElement {
+function makeLabel(name: string,
+    padding: number,
+    index: number,
+    height: number,
+    barWidth: number): SVGTextElement {
     const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     label.setAttribute('x', (padding + index * barWidth + barWidth / 2).toString());
     label.setAttribute('y', (height - padding + 20).toString());
@@ -984,14 +1031,14 @@ function makeLabel(name: string, padding: number, index: number, height: number,
 }
 
 interface Game {
-    id: number | null; // Game ID, can be null for new games
-    type?: string; // Optional type field for future use
+    id: number | null;
+    type?: string;
     player1: player;
     player2: player;
     player1Score: number;
     player2Score: number;
     winner: string;
-    createdAt: Date | null; // Date when the game was created, can be null for new games
+    createdAt: Date | null;
 }
 
 async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
@@ -1013,35 +1060,37 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
         credentials: 'include',
         method: 'GET'
     });
+
     if (!games.ok) {
         console.error('failed to get game data');
         return null;
     }
+
     const gameData = await games.json() as Game[];
 
     let data: kindOfGames = {
-            random: 0,
-            friends: 0,
-            ai: 0,
-            tournaments: 0,
-            local: 0,
-        };
-        const self = await getIdFromMe();
-        if (!self) {
-            console.error("failed to get own data");
-            return null;
-        }
+        random: 0,
+        friends: 0,
+        ai: 0,
+        tournaments: 0,
+        local: 0,
+    };
+    const self = await getIdFromMe();
+    if (!self) {
+        console.error("failed to get own data");
+        return null;
+    }
 
-        gameData.forEach(async (game) => {
+    gameData.forEach(async (game) => {
         if (typeof game.type !== 'undefined') {
-            if(game.type === 'local') {
+            if (game.type === 'local') {
                 if (game.player2.userId === 0) {
                     data.ai += 1;
                 } else {
                     data.local += 1;
                 }
             } else if (game.type === 'ai') {
-                data.ai +=1;
+                data.ai += 1;
             } else {
                 if (game.type === 'tournament') {
                     data.tournaments += 1;
@@ -1060,6 +1109,7 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
                         if (!response.ok) {
                             return null;
                         }
+
                         const isFriendData = await response.json();
                         if (isFriendData) {
                             data.friends += 1;
@@ -1078,9 +1128,11 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
                                 'x-internal': 'true'
                             }
                         });
+
                         if (!response.ok) {
                             return null;
                         }
+
                         const isFriendData = await response.json();
                         if (isFriendData) {
                             data.friends += 1;
@@ -1093,7 +1145,7 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
                 }
             }
         }
-         return null;
+        return null;
     });
 
     const lang = await getLanguage();
@@ -1127,13 +1179,13 @@ async function gameDataBrakedown(): Promise<HTMLDivElement | null> {
 
     bar = makeBar(data.tournaments, max, charHeigth, padding, 3, height, barWidth);
     valueText = makeValueText(data.tournaments, padding, 3, height, barWidth, (data.tournaments / max) * charHeigth);
-    label = makeLabel(text.tournamentStat , padding, 3, height, barWidth);
+    label = makeLabel(text.tournamentStat, padding, 3, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
     svg.appendChild(label);
 
     bar = makeBar(data.local, max, charHeigth, padding, 4, height, barWidth);
-    valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.tournaments / max) * charHeigth);
+    valueText = makeValueText(data.local, padding, 4, height, barWidth, (data.local / max) * charHeigth);
     label = makeLabel(text.localStat, padding, 4, height, barWidth);
     svg.appendChild(bar);
     svg.appendChild(valueText);
@@ -1194,15 +1246,20 @@ let g_intervalId: number = 0;
 
 export async function renderContent(route: string): Promise<void> {
     const content = document.getElementById('content');
-    if (!content) return;
+    if (!content) {
+        return;
+    }
+
     const child = content.querySelector('#secureUpdate');
     if (child) {
         content.removeChild(child);
     }
+
     if (g_intervalId != null) {
         clearInterval(g_intervalId);
         g_intervalId = 0;
     }
+
     content.innerHTML = '';
     content.style.display = 'flex';
     content.style.margin = '1em 0em';
@@ -1212,10 +1269,12 @@ export async function renderContent(route: string): Promise<void> {
     if (checkTextMap(textMap)) {
         throw new Error('textMap is not correct');
     }
+
     const textData = textMap.get('row') as any;
     if (typeof textData === 'undefined') {
         throw new Error('textData is undefined');
     }
+
     switch (route) {
         case 'home':
             content.textContent = textData.homePageText;
@@ -1267,7 +1326,6 @@ export async function renderContent(route: string): Promise<void> {
             content.appendChild(registerForm);
             break;
         case 'game':
-            // content.textContent = 'Game page is under construction.';
             await pongbutton();
             break;
         case 'tournament':
@@ -1305,6 +1363,7 @@ export async function getPageContent(language: string, textKeys: string[]): Prom
     if (!response) {
         throw new Error('page content needed');
     }
+
     return response;
 }
 
@@ -1313,6 +1372,7 @@ export function getMapFromJson(data: any): Map<string, object> {
     for (const key in data) {
         map.set(key, data[key]);
     }
+
     return map;
 }
 
@@ -1320,9 +1380,13 @@ export function initGoogleSignInIfNeeded(): void {
     const path = window.location.pathname;
     const isLogin = path == '/login';
     const singInContainer = document.getElementById('google-signin');
-    if (!isLogin || !singInContainer) return;
+    if (!isLogin || !singInContainer) {
+        return;
+    }
 
-    if (singInContainer.childNodes.length > 0) return;
+    if (singInContainer.childNodes.length > 0) {
+        return;
+    }
 
     window.google.accounts.id.initialize({
         client_id: '51710532102-br37sgrm5iodlnhsa2kahmcjr6lh8f8n.apps.googleusercontent.com', // my own google client id

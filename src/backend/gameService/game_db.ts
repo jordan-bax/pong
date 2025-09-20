@@ -7,7 +7,7 @@ export interface player {
 	username: string;
 	// gameRef: Game[]; // Reference to games played by the player
 }
-// game id is string == game 
+// game id is string == game
 export interface Game {
 	id: number | null; // Game ID, can be null for new games
 	type?: string; // Optional type field for future use
@@ -118,7 +118,7 @@ export async function createPlayer(id: number, username: string): Promise<player
 	);
 	return { id, username };
 }
-// export 
+// export
 export async function createGame(game: Game): Promise<Game> {
 	const db = await dbPromise;
 	const { type, player1, player2, player1Score, player2Score, winner } = game;
@@ -129,10 +129,10 @@ export async function createGame(game: Game): Promise<Game> {
 	if (!player1) {
 		throw new Error("Both players must be specified to create a game");
 	}
-	var result : any;
+	let result : any;
 	if (!player2) {
 		result = await db.run(
-			`INSERT INTO game (type, player1_id, player1Score, player2Score, winner) 
+			`INSERT INTO game (type, player1_id, player1Score, player2Score, winner)
 			 VALUES (?, ?, ?, ?, ?)`,
 			type,
 			player1.id,
@@ -143,7 +143,7 @@ export async function createGame(game: Game): Promise<Game> {
 	}
 	else {
 	result = await db.run(
-		`INSERT INTO game (type, player1_id, player2_id, player1Score, player2Score, winner) 
+		`INSERT INTO game (type, player1_id, player2_id, player1Score, player2Score, winner)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		type,
 		player1.id,
@@ -167,7 +167,7 @@ export async function updateGame(game: Game): Promise<Game> {
 		throw new Error("Game ID is required for update");
 	}
 	await db.run(
-		`UPDATE game SET player1_id = ?, player2_id = ?, player1Score = ?, player2Score = ?, winner = ? 
+		`UPDATE game SET player1_id = ?, player2_id = ?, player1Score = ?, player2Score = ?, winner = ?
 		 WHERE id = ?`,
 		player1.id,
 		player2.id,

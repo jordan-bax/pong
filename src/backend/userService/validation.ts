@@ -2,7 +2,11 @@ import bcrypt from 'bcryptjs';
 import type { patchBody, registerBody, loginBody } from './server.js';
 import fs from 'fs';
 import type { MultipartFile } from '@fastify/multipart';
-import path from 'path';
+import path,  { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class Validator {
     private passwordPattern: RegExp;
@@ -114,7 +118,6 @@ class Validator {
 
     private validateNewPassword(password: string | null): string[] {
         const errors = [];
-        console.log('password in validateNewPassword is', password);
         if (typeof password !== 'string' && password !== null) {
             errors.push('errorPasswordType');
         } else if (typeof password === 'string') {
@@ -123,7 +126,6 @@ class Validator {
                 password = null;
             } else {
                 if (!this.testPasswordPattern(password) || password.length < 12) {
-                    console.log('in validateNewPassword error');
                     errors.push('errorNewPassword');
                 }
             }
@@ -171,16 +173,13 @@ class Validator {
     }
 
     private validateOldPassword(password: string | null): string[] {
-        console.log('password is validateOldPassword', password);
         const errors = [];
         if ((typeof password !== 'string' && password !== null) || password === '') {
-            console.log('password is not a string and not null or a empty string');
             errors.push('errorPasswordNoString');
         } else {
             if (password !== null) {
                 password = password.trim();
                 if (!this.testPasswordPattern(password) || password.length < 12) {
-                    console.log('password is string but not correct pattern');
                     errors.push('errorNewPassword');
                 }
             }
@@ -256,7 +255,7 @@ class Validator {
     }
 
     private checkMimeType(type: string): boolean {
-        for (const item in this.mimeTypeList) {
+        for (const item of this.mimeTypeList) {
             if (type === item) {
                 return true;
             }

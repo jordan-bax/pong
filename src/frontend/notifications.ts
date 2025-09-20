@@ -158,7 +158,7 @@ class NotificationSystem {
     }
 
     private loadNotifications(): void {
-        const notificationsJson = localStorage.getItem('notifications');
+        const notificationsJson = sessionStorage.getItem('notifications');
         if (notificationsJson) {
             const notificationsData = JSON.parse(notificationsJson);
             this.notifications = notificationsData.map((n: any) => ({
@@ -169,8 +169,8 @@ class NotificationSystem {
     }
 
     private saveNotifications(): void {
-        localStorage.setItem('notifications',
-            JSON.stringify(this.storageNotifications));
+        sessionStorage.setItem('notifications',
+            JSON.stringify(this.storageNotifications))
     }
 }
 

@@ -33,7 +33,7 @@ fastify.register(fastifyCookie, {
 });
 
 async function getUserIdFromSession(req: any): Promise<number | null> {
-    var userId: number | null = null;
+    let userId: number | null = null;
     const user = await fetch('http://user:3001/me', {
         method: 'GET',
         credentials: 'include',

@@ -1,6 +1,6 @@
 import { renderContent, getPageContent } from "./contentRenderer.js";
 import { getLanguage, setLanguage } from "./index.js";
-import { checkSession, clearGameSession, getLoggin, getLogginServer, logout } from "./routing.js";
+import { checkSession, getLoggin, getLogginServer, logout } from "./routing.js";
 import { dropdowngamemenu } from "./settings.js";
 import { renderNotification } from "./notifications.js"
 
@@ -16,7 +16,8 @@ interface navbarContent {
     languageSettingText: string;
 }
 
-async function getNavbarContent(language:string, textKeys: string[]): Promise<Map<string, object>> {
+async function getNavbarContent(language: string,
+    textKeys: string[]): Promise<Map<string, object>> {
     const navbarMap = await getPageContent(language, textKeys);
     return navbarMap;
 }
@@ -46,17 +47,6 @@ export async function renderNavbar(): Promise<void> {
 
     await dropdowngamemenu(navbar);
 
-    // let settingsLink = document.createElement('a');
-    // settingsLink.href = '/settings';
-    // settingsLink.textContent = navbarText.settingNavText;
-    // // settingsLink.textContent = navbarText.settingsNavbarText;
-    // settingsLink.className = 'btn navItem';
-    // settingsLink.onclick = async (e) => {
-    //     e.preventDefault();
-    //     history.pushState({}, '', '/settings');
-    //     await renderContent('settings');
-    // };
-
     let languageButton = document.createElement('select');
     languageButton.id = 'languageSelector';
     const options = ['NL', 'EN', 'DE'];
@@ -64,7 +54,7 @@ export async function renderNavbar(): Promise<void> {
         const opt = document.createElement('option');
         opt.value = options[index];
         opt.textContent = text;
-        languageButton.appendChild(opt); 
+        languageButton.appendChild(opt);
     });
 
     Array.from(languageButton.options).forEach((option) => {
@@ -94,14 +84,14 @@ export async function renderNavbar(): Promise<void> {
         profileLink.className = 'btn navItem'
         profileLink.textContent = navbarText.profileNavbarText;
         profileLink.onclick = async (e) => {
-        e.preventDefault();
-        history.pushState({}, '', '/profile');
-        await renderContent('profile');
+            e.preventDefault();
+            history.pushState({}, '', '/profile');
+            await renderContent('profile');
         };
         navbar.appendChild(profileLink);
 
         const logoutBtn = document.createElement('a');
-        logoutBtn.className= 'btn navItem';
+        logoutBtn.className = 'btn navItem';
         logoutBtn.textContent = navbarText.logoutNavbarText;
         logoutBtn.onclick = async () => {
             await logout();
@@ -120,7 +110,7 @@ export async function renderNavbar(): Promise<void> {
         navbar.appendChild(loginLink);
 
         let registerLink = document.createElement('a');
-        registerLink.textContent= navbarText.registerNavbarText;
+        registerLink.textContent = navbarText.registerNavbarText;
         registerLink.href = '/register';
         registerLink.className = 'btn navItem';
         registerLink.onclick = async (e) => {

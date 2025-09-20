@@ -7,6 +7,7 @@ import {
     getToursSchema,
     joinSchema,
     leaveSchema,
+    updateUsernameSchema,
     userTours
 } from "../schemas/responseSchema"
 import { DBError } from "./tournamentDB"
@@ -130,18 +131,20 @@ server.post('/create',
     { schema: createSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const { name, maxPlayers, userID, lockTime } = request.body as {
+            const { name, maxPlayers, userID, lockTime, username } = request.body as {
                 name: string,
                 maxPlayers: number,
                 userID: number,
-                lockTime: number | undefined
+                lockTime: number | undefined,
+                username: string
             }
 
             const tournament = await tour.create(
                 name,
                 maxPlayers,
                 userID,
-                lockTime)
+                lockTime,
+                username)
 
             reply.status(201).send(tournament)
         } catch (error) {
@@ -160,12 +163,13 @@ server.post('/join',
     { schema: joinSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const { tournamentID, userID } = request.body as {
+            const { tournamentID, userID, username } = request.body as {
                 tournamentID: number,
-                userID: number
+                userID: number,
+                username: string
             }
 
-            await tour.join(tournamentID, userID)
+            await tour.join(tournamentID, userID, username)
             reply.status(201).send({ 'tournamentID': tournamentID })
         } catch (error) {
             console.error('join tournament error:', error)
@@ -192,7 +196,7 @@ server.post('/leave',
             reply.status(201).send({ 'tournamentID': tournamentID })
         } catch (error) {
             if (error instanceof DBError) {
-            console.error('leave tournament error:', error)
+                console.error('leave tournament error:', error)
                 reply.status(500).send({ error: "Internal server error" })
             } else {
                 reply.status(400).send({
@@ -205,13 +209,13 @@ server.post('/leave',
 server.post('/done',
     { schema: gameDoneSchema },
     async (request: FastifyRequest, reply: FastifyReply) => {
-        const { tournamentID, player1ID, player2ID, player1Score, player2Score} = request.body as {
-                tournamentID: number,
-                player1ID: number,
-                player2ID: number
-                player1Score: number,
-                player2Score: number
-            }
+        const { tournamentID, player1ID, player2ID, player1Score, player2Score } = request.body as {
+            tournamentID: number,
+            player1ID: number,
+            player2ID: number
+            player1Score: number,
+            player2Score: number
+        }
 
         try {
             await tour.matchDone(
@@ -235,11 +239,35 @@ server.post('/done',
         }
     })
 
+server.post('/updatename',
+    { schema: updateUsernameSchema },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+        const { userID, username } = request.body as {
+            userID: number,
+            username: string
+        }
+
+        console.log(username, userID)
+        try {
+            await tour.updateName(userID, username)
+            reply.status(201).send({ 'message': 'OK' })
+        } catch (error) {
+            console.error('updatename error:', error)
+            if (error instanceof DBError) {
+                reply.status(500).send({ error: "Internal server error" })
+            } else {
+                reply.status(400).send({
+                    error: error instanceof Error ? error.message : String(error)
+                })
+            }
+
+        }
+    })
+
 const start = async () => {
     try {
-        console.log(DBPATH)
         await tour.init(DBPATH)
-        await server.listen({host: ADDRESS, port: parseInt(PORT, 10) });
+        await server.listen({ host: ADDRESS, port: parseInt(PORT, 10) });
         const address = server.server.address();
         if (typeof address === 'string') {
             console.log(`Server listening at ${address}`);

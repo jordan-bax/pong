@@ -24,7 +24,12 @@ class TourService {
         }
     }
 
-    async create(name: string, maxPlayers: number, userID: number, duration: number | undefined) {
+    async create(name: string,
+        maxPlayers: number,
+        userID: number,
+        duration: number | undefined,
+        username: string) {
+
         if (duration === undefined || duration < 1) {
             duration = 60
         }
@@ -46,7 +51,8 @@ class TourService {
                 name,
                 maxPlayers,
                 Math.round(Date.now() + (duration * 1000)),
-                userID)
+                userID,
+                username)
             return dbObj
         } catch (error) {
             console.error(error)
@@ -81,7 +87,7 @@ class TourService {
     }
 
 
-    async join(tourID: number, userID: number) {
+    async join(tourID: number, userID: number, username: string) {
         if (tourID < 0) {
             throw new Error('tournamentID must be more then 0')
         }
@@ -91,7 +97,7 @@ class TourService {
         }
 
         try {
-            await db.join(tourID, userID)
+            await db.join(tourID, userID, username)
         } catch (error) {
             console.error(error)
             throw error
@@ -179,6 +185,27 @@ class TourService {
             throw error
 
         }
+    }
+
+    async updateName(userID: number, username: string) {
+        if (userID < 1) {
+            throw new Error('userID must be more then 0')
+        }
+
+        const newName = username.trim()
+        if (!newName) {
+            throw new Error('username can not be empty')
+        }
+
+        console.log(username, userID, "send to DB");
+
+        try {
+            await db.updateName(userID, username)
+        } catch(error) {
+            console.error(error)
+            throw error
+        }
+
     }
 
     private async match(tourID: number) {
@@ -269,7 +296,7 @@ class TourService {
         const len = maxPlayers - playerCount
         for (let index = 0; index < len; index++) {
             try {
-                await db.join(tourID, aiID)
+                await db.join(tourID, aiID, `AI ${Math.abs(aiID)}`)
             } catch (error) {
                 console.error(error)
                 throw error
@@ -304,7 +331,6 @@ class TourService {
             playerCount--
 
             if (player1 < 0 && player2 > 0) {
-                console.log("swap");
                 subMatch[0] = player2
                 subMatch[1] = player1
             }

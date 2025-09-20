@@ -25,7 +25,7 @@ class Gameloop {
 	private ball_dx: number = 0;
 	private ball_dy: number = 0;
 	private ghost : ghostballInterface = { x: 0, y: 0};
-	private ball_speed: number = 10;
+	private ball_speed: number = 5;
 	private ball_staticSpeed: number = 20;
 	// private getRandomInt(): number {
 	// 	return Math.floor(Math.random() * 21) - 10;
@@ -411,7 +411,7 @@ class Gameloop {
 		else if (gamestate.ball.x >= gameWall.width - gamestate.ball.width) {
 			this.gamestate.ball.x = gameWall.width - gamestate.ball.width;
 		}
-		this.gamestate.gamePause = true;
+		// this.gamestate.gamePause = true;
 	}
 	simplePadleCollisionPlayer1(ball: ballInterface, gamestate: gamestateinterface) {
 		let player: pcInterface = gamestate.player1;

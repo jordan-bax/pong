@@ -8,7 +8,6 @@ COPY ./tsconfig.json ./
 RUN npm install
 
 RUN mkdir db
-COPY ./schemas/ ./schemas/
 COPY ./src/ ./src/
 
 RUN npm run build

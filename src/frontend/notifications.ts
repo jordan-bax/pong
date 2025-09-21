@@ -35,14 +35,15 @@ class NotificationSystem {
                     this.storageNotifications.push(notification);
                     this.saveNotifications();
 
-                    notification.showed = false;
-                    this.notifications.push(notification);
+                    const tmpNot = JSON.parse(JSON.stringify(notification))
+                    tmpNot.showed = false;
+                    this.notifications.push(tmpNot);
 
                     if (this.dropdown) {
                         this.addMessageToDropdown(
                             this.dropdown,
-                            notification.message,
-                            notification.timestamp.toLocaleString()
+                            tmpNot.message,
+                            tmpNot.timestamp.toLocaleString()
                         );
 
                         const emptyState = this.dropdown.querySelector('.empty-state');

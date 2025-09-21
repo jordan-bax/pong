@@ -1,6 +1,6 @@
 # IMAGE_NAME = type
 # SOURCEFILE = pong.html
-# all: 
+# all:
 # 	docker build -t ${IMAGE_NAME} .
 # 	open http://localhost:8080/${SOURCEFILE}
 # 	docker run -p 8080:8080 --rm ${IMAGE_NAME}
@@ -17,6 +17,7 @@ USER_PROFILE_PICTURE = ~/data/user/uploads/profile_pictures
 PAGE_CONTENT_DATA = ~/data/page_content
 GAME_DATA = ~/data/game
 TOURNAMENT_DATA = ~/data/tournament
+GUEST_DATA = ~/data/guest
 
 all: up
 
@@ -26,11 +27,13 @@ up: build
 	@mkdir -p $(GAME_DATA)
 	@mkdir -p $(TOURNAMENT_DATA)
 	@mkdir -p $(USER_PROFILE_PICTURE)
+	@mkdir -p $(GUEST_DATA)
 	@chmod 777 $(USER_DATA)
 	@chmod 777 $(PAGE_CONTENT_DATA)
 	@chmod 777 $(GAME_DATA)
 	@chmod 777 $(TOURNAMENT_DATA)
 	@chmod 777 $(USER_PROFILE_PICTURE)
+	@chmod 777 $(GUEST_DATA)
 	docker-compose -f src/docker-compose.yml up -d --force-recreate
 
 build:

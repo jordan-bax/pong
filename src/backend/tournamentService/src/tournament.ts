@@ -206,6 +206,10 @@ class TourService {
 
     }
 
+    async close() {
+        await db.closeDB()
+    }
+
     private async match(tourID: number) {
         try {
             const tour = await db.getTour(tourID)

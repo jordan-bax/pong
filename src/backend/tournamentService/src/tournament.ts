@@ -197,11 +197,9 @@ class TourService {
             throw new Error('username can not be empty')
         }
 
-        console.log(username, userID, "send to DB");
-
         try {
             await db.updateName(userID, username)
-        } catch(error) {
+        } catch (error) {
             console.error(error)
             throw error
         }

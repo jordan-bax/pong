@@ -601,7 +601,7 @@ class server {
                     },
                     body: JSON.stringify({
                         "userID": user.id,
-                        "username": user.username
+                        "username": userData.newUsername
                     })
                 })
 

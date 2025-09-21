@@ -15,7 +15,7 @@ interface Tour {
     playerCount: number
     maxPlayers: number
     players: number[]
-    winner: string
+    username: string
 }
 
 interface ToursDict {
@@ -182,7 +182,7 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
                     isInTour,
                     userID,
                     type.key,
-                    tournament.winner))
+                    tournament.username))
         }
 
         section.appendChild(table)

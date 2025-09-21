@@ -1,3 +1,4 @@
+import { log } from 'console';
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
@@ -298,9 +299,11 @@ class TourDB {
                         SELECT GROUP_CONCAT(p.userID)
                         FROM players p
                         WHERE p.tourID = t.id
-                    ), '') AS player_ids
+                    ), '') AS player_ids,
+                    winner.username AS username
                 FROM tournament t
-                WHERE isFinished = ?`,
+                LEFT JOIN players winner ON t.winner = winner.userID AND winner.tourID = t.id
+                WHERE t.isFinished = ?`,
                 [1])
 
             return result.map(({ player_ids, ...row }) => ({
@@ -332,8 +335,10 @@ class TourDB {
                         SELECT MAX(round)
                         FROM match
                         WHERE tourID = t.id
-                    ), 0) AS currentRound
-                FROM tournament t`)
+                    ), 0) AS currentRound,
+                    winner.username AS username
+                FROM tournament t
+                LEFT JOIN players winner ON t.winner = winner.userID AND winner.tourID = t.id`)
 
             let data = result.map(({ player_ids, ...row }) => ({
                 ...row,
@@ -413,7 +418,7 @@ class TourDB {
             const result = await this.db.get(`
                 SELECT
                     CASE WHEN m.winnerID IS NOT NULL THEN 1 ELSE 0 END AS result,
-                    p.username
+                    p.userID
                 FROM
                     (SELECT rounds FROM tournament WHERE id = ?) AS t
                 LEFT JOIN
@@ -428,7 +433,7 @@ class TourDB {
                 [tourID, tourID, tourID])
 
             if (result.result) {
-                await this.setTourDone(tourID, result.username)
+                await this.setTourDone(tourID, result.userID)
                 return true
             }
 
@@ -660,12 +665,9 @@ class TourDB {
         }
 
         try {
-            const result = await this.db.run(`
+            await this.db.run(`
                 UPDATE players SET username = ? WHERE userID = ?`,
                 [username, userID])
-            console.log(result);
-
-            console.log("update done??");
         } catch (error) {
             throw new DBError(error)
         }

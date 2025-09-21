@@ -247,7 +247,6 @@ server.post('/updatename',
             username: string
         }
 
-        console.log(username, userID)
         try {
             await tour.updateName(userID, username)
             reply.status(201).send({ 'message': 'OK' })

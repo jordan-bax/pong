@@ -1,7 +1,7 @@
 {
-    "name": "tournament-service",
+    "name": "guest-service",
     "version": "1.0.0",
-    "description": "tournament microservice for pong tournaments",
+    "description": "guest microservice",
     "scripts": {
         "build": "tsc --build",
         "start": "node dist/src/index.js"

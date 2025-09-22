@@ -25,7 +25,8 @@ class Gameloop {
 	private ball_dx: number = 0;
 	private ball_dy: number = 0;
 	private ghost : ghostballInterface = { x: 0, y: 0};
-	private ball_speed: number = 5;
+	// private ball_speed: number = 5;
+	private ball_speed: number = 15;
 	private ball_staticSpeed: number = 20;
 	// private getRandomInt(): number {
 	// 	return Math.floor(Math.random() * 21) - 10;
@@ -189,7 +190,7 @@ class Gameloop {
 		}
 		this.ballmove(gamestate);
 
-		if (use_ai && !(gamestate.player2.id === null) && gamestate.player2.id <= GameTypeId.AI) {
+		if (use_ai && !(gamestate.player2.id === null) && gamestate.player2.id <= GameTypeId.AI && gamestate.player2.id > -3600) {
 			this.simpleAi(gamestate);
 		}
 		this.playerMoveCheck(gamestate.player1);
@@ -271,6 +272,10 @@ class Gameloop {
 		return overshootY;
 	}
 	private paddelleftbounce(): void {
+		if (this.ghost.x < this.gamestate.player1.x + this.gamestate.player1.width) {
+			console.log("No left paddle bounce ghost", this.ghost.x, this.gamestate.player1.x + this.gamestate.player1.width);
+			return; // Ball was to the left of the paddle last frame
+		}
 		if (this.gamestate.ball.x > this.gamestate.player1.x + this.gamestate.player1.width) {
 			return; // Ball is to the right of the paddle
 		}
@@ -281,15 +286,23 @@ class Gameloop {
 		}
 		var dx = this.gamestate.ball.dx * this.ball_speed;
 		var dy = this.gamestate.ball.dy * this.ball_speed;
+		// if (dx < 0) {
+		// 	dx *= -1;
+		// }
+		// if (overshootX > dx) {
+		// 	console.log("overshootX greater than movement", overshootX, dx);
+		// 	return; // No overshoot
+		// }
 		var ytoPaddle = this.percentof(dx, overshootX, dy);
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootX, "ytoPaddle", ytoPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player1.y, "paddle height", this.gamestate.player1.height);
-		if  (this.gamestate.ball.y + (this.gamestate.ball.height) + ytoPaddle < this.gamestate.player1.y || this.gamestate.ball.y  + ytoPaddle > this.gamestate.player1.y + this.gamestate.player1.height) {
+		if  (this.gamestate.ball.y + (this.gamestate.ball.height / 2) + ytoPaddle < this.gamestate.player1.y || this.gamestate.ball.y + (this.gamestate.ball.height / 2)  + ytoPaddle > this.gamestate.player1.y + this.gamestate.player1.height) {
 			console.log("Ball is above or below the paddle", overshootX, ytoPaddle, this.gamestate.ball.y, this.gamestate.player1.y, this.gamestate.player1.height);
 			return; // Ball is above or below the paddle
 		}
 		this.gamestate.ball.x += overshootX;
+		this.gamestate.ball.y += ytoPaddle;
 		// Ball hit left paddle: reflect horizontal angle
 		this.angle = 180 - this.angle;
 		console.log("Left paddle bounce angle: " + this.angle + " DX: " + dx + " DY: " + dy + " LL: " + this.gamestate.ball.x + " Distance to paddle: " + overshootX + " Y to paddle: " + ytoPaddle);
@@ -309,11 +322,12 @@ class Gameloop {
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootX, "ytoPaddle", ytoPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player2.y, "paddle height", this.gamestate.player2.height);
-		if  (this.gamestate.ball.y + (this.gamestate.ball.height) - ytoPaddle < this.gamestate.player2.y || this.gamestate.ball.y  - ytoPaddle > this.gamestate.player2.y + this.gamestate.player2.height) {
+		if  ((this.gamestate.ball.y + this.gamestate.ball.height) - ytoPaddle < this.gamestate.player2.y || this.gamestate.ball.y  - ytoPaddle > this.gamestate.player2.y + this.gamestate.player2.height) {
 			console.log("Ball is above or below the paddle", overshootX, ytoPaddle, this.gamestate.ball.y, this.gamestate.player2.y, this.gamestate.player2.height);
 			return; // Ball is above or below the paddle
 		}
 		this.gamestate.ball.x -= overshootX;
+		this.gamestate.ball.y -= ytoPaddle;
 		// Ball hit right paddle: reflect horizontal angle
 		this.angle = 180 - this.angle;
 		console.log("Right paddle bounce angle: " + this.angle + " DX: " + dx + " DY: " + dy + " LL: " + this.gamestate.ball.x + " Distance to paddle: " + overshootX + " Y to paddle: " + ytoPaddle);
@@ -371,19 +385,14 @@ class Gameloop {
 	private ballbounce(): void {
 	}
 	ballmove(gamestate:gamestateinterface): void {
-		// Move the ball
 		if (gamestate.ball.x <= 0 || gamestate.ball.x >= gameWall.width - gamestate.ball.width) {
-			gamestate.ball.dx *= -1; // Reverse the x direction
-			// this.angle = this.getStartAngle();
-			// Check which player scored
 			if (gamestate.ball.x <= 0) {
-				gamestate.player2.score++; // Player 2 scores
+				gamestate.player2.score++;
 				this.angle = this.getRandomAngleLeft();
 			} else {
-				gamestate.player1.score++; // Player 1 scores
+				gamestate.player1.score++;
 				this.angle = this.getRandomAngleRight();
 			}
-			// Reset the ball position
 			gamestate.ball.x = gameWall.width / 2 - gamestate.ball.width / 2; // Center the ball horizontally
 			gamestate.ball.y = gameWall.height / 2 - gamestate.ball.height / 2; // Center the ball vertically
 		}
@@ -391,22 +400,8 @@ class Gameloop {
 		let oldBall : ballInterface = gamestate.ball;
 		this.moveBallByAngle(gamestate.ball, this.angle, this.ball_speed);
 		this.ballbounceByAngle(this.angle);
-		// gamestate.ball.x += gamestate.ball.dx * gamestate.ball.speed;
-		// gamestate.ball.y += gamestate.ball.dy * gamestate.ball.speed;
-		const WallHeight = gameWall.height - gamestate.ball.height;
-		// // Check for collision with the walls
-		// if (gamestate.ball.y <= 0 || gamestate.ball.y >= gameWall.height - gamestate.ball.height) {
-		// 	gamestate.ball.dy *= -1; // Reverse the y direction
-		// 	if (gamestate.ball.y <= 0) {
-		// 		gamestate.ball.y *= -1; // Prevent the ball from going above the top wall
-		// 	} else {
-		// 		gamestate.ball.y -= (gamestate.ball.y - WallHeight)*2; // Prevent the ball from going below the bottom wall
-		// 	}
-		// }
-		// this.simplePadleCollisionPlayer1(oldBall, gamestate);
-		// this.simplePadleCollisionPlayer2(oldBall, gamestate);
 		if (gamestate.ball.x <= 0 ) {
-			this.gamestate.ball.x =0;
+			this.gamestate.ball.x = 0;
 		}
 		else if (gamestate.ball.x >= gameWall.width - gamestate.ball.width) {
 			this.gamestate.ball.x = gameWall.width - gamestate.ball.width;

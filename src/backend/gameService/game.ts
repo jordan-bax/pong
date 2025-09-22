@@ -33,7 +33,7 @@ let ballSpeed: number;
 let active: Array<Gameloop> = [];
 let matching: Array<Gameloop> = [];
 let invited: Array<Gameloop> = [];
-let fps: number = 30;
+let fps: number = 10;
 
 startGame();
 
@@ -456,10 +456,10 @@ fastify.post('/move', async (req, reply) => {
 		reply.status(400).send({ status: 'inactive' });
 		return;
 	}
-	if (game.getState().gamePause) {
-		reply.status(400).send({ status: 'paused' });
-		return;
-	}
+	// if (game.getState().gamePause) {
+	// 	reply.status(400).send({ status: 'paused' });
+	// 	return;
+	// }
 	if (game.getState().gametype === 'local') {
 		player = (req.query as { player: 1|2 }).player;
 	}
@@ -734,7 +734,7 @@ fastify.post('/join', async (req: FastifyRequest, reply: FastifyReply) => {
 });
 
 async function getUserNameById(userId: number): Promise<string> {
-    if (userId <= 0) {
+    if (userId <= 0 && userId > -3600) {
         return 'ai';
     }
 

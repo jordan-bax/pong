@@ -44,8 +44,6 @@ export interface ballInterface {
 	y: number;
 	dx: number;
 	dy: number;
-	speed: number;
-	staticSpeed: number;
 	height: number;
 	width: number;
 }
@@ -90,8 +88,6 @@ export let ballvarTemplate: ballInterface = {
 	y: 98,
 	dx: 2,
 	dy: 5,
-	speed: 2,
-	staticSpeed: 20,
 	height: 4,
 	width: 4
 };

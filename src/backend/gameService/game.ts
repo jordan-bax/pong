@@ -29,11 +29,10 @@ let ai_var: aiInterface = {
     reactionTime: 100
 };
 
-let ballSpeed: number;
 let active: Array<Gameloop> = [];
 let matching: Array<Gameloop> = [];
 let invited: Array<Gameloop> = [];
-let fps: number = 10;
+let fps: number = 30;
 
 startGame();
 
@@ -88,7 +87,7 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
     let newGame: gamestateinterface = {
         player1: { ...player1Template, id: playerid, name: playername },
         player2: { ...player2Template, id: player2Id, name: 'Player 2' },
-        ball: { ...ballvarTemplate, speed: ballSpeed },
+        ball: { ...ballvarTemplate },
         gameActive: true,
         gamePause: false,
         gameID: gameid,
@@ -223,7 +222,9 @@ async function startGame() {
 
     }
 }
-
+export function getFPS(): number {
+    return fps;
+}
 function gamespeed(): number {
     if (fps < 1) {
         fps = 1;
@@ -231,7 +232,7 @@ function gamespeed(): number {
         fps = 60;
     }
 
-    ballSpeed = ballvarTemplate.staticSpeed / fps;
+    // ballSpeed = ballvarTemplate.staticSpeed / fps;
     return 1000 / fps;
 }
 
@@ -772,7 +773,7 @@ fastify.post('/preparegame', { schema: { body: matchingBodySchema } }, async (re
     const newGame: gamestateinterface = {
         player1: { ...player1Template, id: playerid1, name: player1Name },
         player2: { ...player2Template, id: playerid2, name: player2Name },
-        ball: { ...ballvarTemplate, speed: ballSpeed },
+        ball: { ...ballvarTemplate },
         gameActive: true,
         gamePause: true,
         gameID: gameid,

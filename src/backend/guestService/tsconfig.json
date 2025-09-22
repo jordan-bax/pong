@@ -9,5 +9,5 @@
         "typeRoots": ["node_modules/@types"],
         "moduleResolution": "NodeNext",
     },
-    "include": ["./src", "./db", "./schemas/"]
+    "include": ["./src", "./db", "./types/session.d.ts"]
 }

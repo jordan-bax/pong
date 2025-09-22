@@ -417,7 +417,8 @@ export async function googleUserUpdate(formData: FormData): Promise<void> {
 export async function checkSession() {
     await fetch('/api/user/me', {
         headers: {
-            "x-internal": "true"
+            "x-internal": "true",
+            "info": "checkSession"
         },
         credentials: 'include'
     }).then(async (response) => {

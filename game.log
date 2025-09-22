@@ -1,0 +1,1594 @@
+
+> game-service@1.0.0 start
+> node dist/game.js
+
+Starting game loop...
+{"level":40,"time":1758568623197,"pid":19,"hostname":"45cc0d683bbe","msg":"\"root\" path \"/app/dist/dist\" must exist"}
+{"level":30,"time":1758568623273,"pid":19,"hostname":"45cc0d683bbe","msg":"Server listening at http://127.0.0.1:3002"}
+{"level":30,"time":1758568623273,"pid":19,"hostname":"45cc0d683bbe","msg":"Server listening at http://172.18.0.2:3002"}
+Database prepared
+{"level":30,"time":1758568852002,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1","req":{"method":"POST","url":"/start","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":35698},"msg":"incoming request"}
+Forwarding cookies: pageContent=ndIvlfnwgyuDhn3PmQsS5-JhAalotRJT.9J4r4lH9E%2FA3llHOxYyXm2UL0roEMe1LatRaaDdEJy8; gameSession=XkrQAR_vxXJrA8br0qWqtkAfLzTI6Tq3.J1inX%2BKl59oJXc5Eb%2F39NcMDeR8SL9MAE36Yhgu5GxE
+Starting game with AI: online Player Name: Guest error
+New game created: {
+  player1: {
+    id: 2,
+    active: false,
+    name: 'Guest error',
+    x: 2,
+    y: 50,
+    speed: 10,
+    height: 25,
+    width: 4,
+    score: 0
+  },
+  player2: {
+    id: 2,
+    active: false,
+    name: 'Player 2',
+    x: 194,
+    y: 50,
+    speed: 10,
+    height: 25,
+    width: 4,
+    score: 0
+  },
+  ball: {
+    x: 98,
+    y: 98,
+    dx: 2,
+    dy: 5,
+    speed: 2,
+    staticSpeed: 20,
+    height: 4,
+    width: 4
+  },
+  gameActive: true,
+  gamePause: false,
+  gameID: 1,
+  gametype: 'online'
+}
+Start angle before adjustment: 241.64268818813653
+Start angle after adjustment: 301.6426881881365
+Game added: Gameloop {
+  gamestate: {
+    player1: {
+      id: 2,
+      active: false,
+      name: 'Guest error',
+      x: 2,
+      y: 50,
+      speed: 10,
+      height: 25,
+      width: 4,
+      score: 0
+    },
+    player2: {
+      id: 2,
+      active: false,
+      name: 'Player 2',
+      x: 194,
+      y: 50,
+      speed: 10,
+      height: 25,
+      width: 4,
+      score: 0
+    },
+    ball: {
+      x: 98,
+      y: 98,
+      dx: 2,
+      dy: 5,
+      speed: 2,
+      staticSpeed: 20,
+      height: 4,
+      width: 4
+    },
+    gameActive: true,
+    gamePause: false,
+    gameID: 1,
+    gametype: 'online'
+  },
+  tournamentId: -1,
+  gameId: 1,
+  currentTurn: 0,
+  paddleSpeed: 10,
+  fps: 60,
+  gameInterval: null,
+  gameloopInterval: null,
+  angle: 301.6426881881365,
+  distance: 0,
+  ball_dx: 0,
+  ball_dy: 0,
+  ghost: { x: 0, y: 0 },
+  ball_speed: 15,
+  ball_staticSpeed: 20
+} Total games: 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+}
+{"level":30,"time":1758568852046,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1","res":{"statusCode":200},"responseTime":43.5356639996171,"msg":"request completed"}
+{"level":30,"time":1758568852060,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":35706},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852061,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2","res":{"statusCode":200},"responseTime":1.0619940012693405,"msg":"request completed"}
+{"level":30,"time":1758568852106,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":35716},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852107,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3","res":{"statusCode":200},"responseTime":0.7374170050024986,"msg":"request completed"}
+{"level":30,"time":1758568852146,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-4","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":35732},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852147,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-4","res":{"statusCode":200},"responseTime":0.7866569980978966,"msg":"request completed"}
+{"level":30,"time":1758568852186,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-5","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57130},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852187,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-5","res":{"statusCode":200},"responseTime":0.816100001335144,"msg":"request completed"}
+{"level":30,"time":1758568852226,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-6","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57134},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852227,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-6","res":{"statusCode":200},"responseTime":0.7039910033345222,"msg":"request completed"}
+{"level":30,"time":1758568852268,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-7","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57142},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852269,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-7","res":{"statusCode":200},"responseTime":0.7282030060887337,"msg":"request completed"}
+{"level":30,"time":1758568852310,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-8","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57146},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852311,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-8","res":{"statusCode":200},"responseTime":0.798665001988411,"msg":"request completed"}
+{"level":30,"time":1758568852358,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-9","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57154},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852359,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-9","res":{"statusCode":200},"responseTime":1.5276720002293587,"msg":"request completed"}
+{"level":30,"time":1758568852398,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-a","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57160},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852399,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-a","res":{"statusCode":200},"responseTime":0.8298289999365807,"msg":"request completed"}
+{"level":30,"time":1758568852438,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-b","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57162},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852438,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-b","res":{"statusCode":200},"responseTime":0.6715570017695427,"msg":"request completed"}
+{"level":30,"time":1758568852477,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-c","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57178},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852477,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-c","res":{"statusCode":200},"responseTime":0.491286002099514,"msg":"request completed"}
+{"level":30,"time":1758568852518,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-d","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57190},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852519,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-d","res":{"statusCode":200},"responseTime":0.5151939988136292,"msg":"request completed"}
+{"level":30,"time":1758568852562,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-e","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57200},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852562,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-e","res":{"statusCode":200},"responseTime":0.5482870042324066,"msg":"request completed"}
+{"level":30,"time":1758568852610,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-f","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57206},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852611,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-f","res":{"statusCode":200},"responseTime":0.5507740005850792,"msg":"request completed"}
+{"level":30,"time":1758568852652,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-g","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57222},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852653,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-g","res":{"statusCode":200},"responseTime":0.6277130022644997,"msg":"request completed"}
+{"level":30,"time":1758568852711,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-h","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57230},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852712,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-h","res":{"statusCode":200},"responseTime":0.5525339990854263,"msg":"request completed"}
+{"level":30,"time":1758568852752,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-i","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57242},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852752,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-i","res":{"statusCode":200},"responseTime":0.4425169974565506,"msg":"request completed"}
+{"level":30,"time":1758568852791,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-j","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57246},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852792,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-j","res":{"statusCode":200},"responseTime":0.4843459948897362,"msg":"request completed"}
+{"level":30,"time":1758568852832,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-k","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57260},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852833,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-k","res":{"statusCode":200},"responseTime":0.5043380036950111,"msg":"request completed"}
+{"level":30,"time":1758568852872,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-l","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57270},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852872,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-l","res":{"statusCode":200},"responseTime":0.5055579990148544,"msg":"request completed"}
+{"level":30,"time":1758568852913,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-m","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57280},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852914,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-m","res":{"statusCode":200},"responseTime":0.47878599911928177,"msg":"request completed"}
+{"level":30,"time":1758568852954,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-n","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57296},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852954,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-n","res":{"statusCode":200},"responseTime":0.5350420027971268,"msg":"request completed"}
+{"level":30,"time":1758568852993,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-o","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57306},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568852993,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-o","res":{"statusCode":200},"responseTime":0.46817000210285187,"msg":"request completed"}
+{"level":30,"time":1758568853032,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-p","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57320},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853032,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-p","res":{"statusCode":200},"responseTime":0.5035889968276024,"msg":"request completed"}
+{"level":30,"time":1758568853071,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-q","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57324},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853072,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-q","res":{"statusCode":200},"responseTime":0.5721909999847412,"msg":"request completed"}
+{"level":30,"time":1758568853114,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-r","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57338},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853114,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-r","res":{"statusCode":200},"responseTime":0.493367999792099,"msg":"request completed"}
+{"level":30,"time":1758568853157,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-s","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57346},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853157,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-s","res":{"statusCode":200},"responseTime":0.5620260015130043,"msg":"request completed"}
+{"level":30,"time":1758568853200,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-t","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57352},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853201,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-t","res":{"statusCode":200},"responseTime":0.6502749994397163,"msg":"request completed"}
+{"level":30,"time":1758568853239,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-u","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57364},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853240,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-u","res":{"statusCode":200},"responseTime":0.5763360038399696,"msg":"request completed"}
+{"level":30,"time":1758568853279,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-v","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57366},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853280,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-v","res":{"statusCode":200},"responseTime":0.5320240035653114,"msg":"request completed"}
+{"level":30,"time":1758568853321,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-w","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57378},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853322,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-w","res":{"statusCode":200},"responseTime":0.4980119988322258,"msg":"request completed"}
+{"level":30,"time":1758568853365,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-x","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57380},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853366,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-x","res":{"statusCode":200},"responseTime":0.5278820022940636,"msg":"request completed"}
+{"level":30,"time":1758568853405,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-y","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57388},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853405,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-y","res":{"statusCode":200},"responseTime":0.5732380002737045,"msg":"request completed"}
+{"level":30,"time":1758568853449,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-z","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57400},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853449,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-z","res":{"statusCode":200},"responseTime":0.4748479947447777,"msg":"request completed"}
+{"level":30,"time":1758568853488,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-10","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57406},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853489,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-10","res":{"statusCode":200},"responseTime":0.523327000439167,"msg":"request completed"}
+{"level":30,"time":1758568853532,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-11","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57410},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853532,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-11","res":{"statusCode":200},"responseTime":0.4537460058927536,"msg":"request completed"}
+{"level":30,"time":1758568853571,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-12","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57420},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853572,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-12","res":{"statusCode":200},"responseTime":0.578743003308773,"msg":"request completed"}
+{"level":30,"time":1758568853615,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-13","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57428},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853615,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-13","res":{"statusCode":200},"responseTime":0.5399959981441498,"msg":"request completed"}
+{"level":30,"time":1758568853666,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-14","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57440},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853667,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-14","res":{"statusCode":200},"responseTime":0.4753350019454956,"msg":"request completed"}
+{"level":30,"time":1758568853705,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-15","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57454},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853706,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-15","res":{"statusCode":200},"responseTime":0.5444800034165382,"msg":"request completed"}
+{"level":30,"time":1758568853749,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-16","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57470},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853749,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-16","res":{"statusCode":200},"responseTime":0.5589030012488365,"msg":"request completed"}
+{"level":30,"time":1758568853788,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-17","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57474},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853789,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-17","res":{"statusCode":200},"responseTime":0.46491599828004837,"msg":"request completed"}
+{"level":30,"time":1758568853828,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-18","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57476},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853829,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-18","res":{"statusCode":200},"responseTime":0.4982970058917999,"msg":"request completed"}
+{"level":30,"time":1758568853868,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-19","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57490},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853868,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-19","res":{"statusCode":200},"responseTime":0.4855390042066574,"msg":"request completed"}
+{"level":30,"time":1758568853907,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1a","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57496},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853908,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1a","res":{"statusCode":200},"responseTime":0.48786500096321106,"msg":"request completed"}
+{"level":30,"time":1758568853949,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1b","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57508},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853949,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1b","res":{"statusCode":200},"responseTime":0.47490299493074417,"msg":"request completed"}
+{"level":30,"time":1758568853989,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1c","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57516},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568853989,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1c","res":{"statusCode":200},"responseTime":0.4961850047111511,"msg":"request completed"}
+{"level":30,"time":1758568854028,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1d","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57530},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854029,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1d","res":{"statusCode":200},"responseTime":0.5529899969696999,"msg":"request completed"}
+{"level":30,"time":1758568854068,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1e","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57544},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854069,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1e","res":{"statusCode":200},"responseTime":0.5740360021591187,"msg":"request completed"}
+{"level":30,"time":1758568854108,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1f","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57560},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854108,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1f","res":{"statusCode":200},"responseTime":0.5528080016374588,"msg":"request completed"}
+{"level":30,"time":1758568854148,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1g","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57574},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854149,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1g","res":{"statusCode":200},"responseTime":0.5041579976677895,"msg":"request completed"}
+{"level":30,"time":1758568854188,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1h","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57580},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854188,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1h","res":{"statusCode":200},"responseTime":0.5127490013837814,"msg":"request completed"}
+{"level":30,"time":1758568854228,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1i","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57590},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854228,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1i","res":{"statusCode":200},"responseTime":0.5075670033693314,"msg":"request completed"}
+{"level":30,"time":1758568854269,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1j","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57604},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854269,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1j","res":{"statusCode":200},"responseTime":0.5025480017066002,"msg":"request completed"}
+{"level":30,"time":1758568854308,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1k","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57616},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854308,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1k","res":{"statusCode":200},"responseTime":0.5353669971227646,"msg":"request completed"}
+{"level":30,"time":1758568854349,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1l","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57630},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854349,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1l","res":{"statusCode":200},"responseTime":0.5335960015654564,"msg":"request completed"}
+{"level":30,"time":1758568854389,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1m","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57644},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854389,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1m","res":{"statusCode":200},"responseTime":0.5042349994182587,"msg":"request completed"}
+{"level":30,"time":1758568854428,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1n","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57648},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854429,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1n","res":{"statusCode":200},"responseTime":0.6954079940915108,"msg":"request completed"}
+{"level":30,"time":1758568854469,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1o","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57664},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854470,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1o","res":{"statusCode":200},"responseTime":0.5093140006065369,"msg":"request completed"}
+{"level":30,"time":1758568854509,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1p","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57678},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854510,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1p","res":{"statusCode":200},"responseTime":0.4617369994521141,"msg":"request completed"}
+{"level":30,"time":1758568854549,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1q","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57682},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854550,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1q","res":{"statusCode":200},"responseTime":0.5426260009407997,"msg":"request completed"}
+{"level":30,"time":1758568854588,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1r","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57696},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854589,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1r","res":{"statusCode":200},"responseTime":0.5097719952464104,"msg":"request completed"}
+{"level":30,"time":1758568854628,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1s","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57712},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854628,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1s","res":{"statusCode":200},"responseTime":0.4670170024037361,"msg":"request completed"}
+{"level":30,"time":1758568854670,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1t","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57716},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854670,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1t","res":{"statusCode":200},"responseTime":0.5667759999632835,"msg":"request completed"}
+{"level":30,"time":1758568854709,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1u","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57728},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854710,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1u","res":{"statusCode":200},"responseTime":0.5002729967236519,"msg":"request completed"}
+{"level":30,"time":1758568854749,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1v","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57734},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854749,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1v","res":{"statusCode":200},"responseTime":0.4263879954814911,"msg":"request completed"}
+{"level":30,"time":1758568854788,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1w","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57750},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854789,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1w","res":{"statusCode":200},"responseTime":0.6239719986915588,"msg":"request completed"}
+{"level":30,"time":1758568854828,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1x","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57754},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854828,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1x","res":{"statusCode":200},"responseTime":0.4318310022354126,"msg":"request completed"}
+{"level":30,"time":1758568854870,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1y","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57768},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854871,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1y","res":{"statusCode":200},"responseTime":0.5092380046844482,"msg":"request completed"}
+{"level":30,"time":1758568854909,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1z","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57778},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854910,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-1z","res":{"statusCode":200},"responseTime":0.5392870008945465,"msg":"request completed"}
+{"level":30,"time":1758568854949,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-20","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57794},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854950,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-20","res":{"statusCode":200},"responseTime":0.470770999789238,"msg":"request completed"}
+{"level":30,"time":1758568854989,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-21","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57810},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568854989,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-21","res":{"statusCode":200},"responseTime":0.47141900658607483,"msg":"request completed"}
+{"level":30,"time":1758568855028,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-22","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57826},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855029,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-22","res":{"statusCode":200},"responseTime":0.5410410016775131,"msg":"request completed"}
+{"level":30,"time":1758568855071,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-23","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57836},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855072,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-23","res":{"statusCode":200},"responseTime":0.46985500305891037,"msg":"request completed"}
+{"level":30,"time":1758568855110,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-24","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57852},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855111,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-24","res":{"statusCode":200},"responseTime":0.5670460015535355,"msg":"request completed"}
+{"level":30,"time":1758568855150,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-25","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57868},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855150,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-25","res":{"statusCode":200},"responseTime":0.5632519945502281,"msg":"request completed"}
+{"level":30,"time":1758568855190,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-26","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57874},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855190,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-26","res":{"statusCode":200},"responseTime":0.5572530031204224,"msg":"request completed"}
+{"level":30,"time":1758568855229,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-27","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57882},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855230,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-27","res":{"statusCode":200},"responseTime":0.5115029960870743,"msg":"request completed"}
+{"level":30,"time":1758568855271,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-28","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57896},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855272,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-28","res":{"statusCode":200},"responseTime":0.535130001604557,"msg":"request completed"}
+{"level":30,"time":1758568855311,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-29","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57900},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855312,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-29","res":{"statusCode":200},"responseTime":0.5414899960160255,"msg":"request completed"}
+{"level":30,"time":1758568855351,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2a","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57912},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855351,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2a","res":{"statusCode":200},"responseTime":0.5029549971222878,"msg":"request completed"}
+{"level":30,"time":1758568855390,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2b","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57916},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855390,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2b","res":{"statusCode":200},"responseTime":0.541933998465538,"msg":"request completed"}
+{"level":30,"time":1758568855429,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2c","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57930},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855430,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2c","res":{"statusCode":200},"responseTime":0.46263600140810013,"msg":"request completed"}
+{"level":30,"time":1758568855471,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2d","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57942},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855472,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2d","res":{"statusCode":200},"responseTime":0.4694879949092865,"msg":"request completed"}
+{"level":30,"time":1758568855511,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2e","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57950},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855511,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2e","res":{"statusCode":200},"responseTime":0.48399099707603455,"msg":"request completed"}
+{"level":30,"time":1758568855552,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2f","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57952},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855552,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2f","res":{"statusCode":200},"responseTime":0.46034299582242966,"msg":"request completed"}
+{"level":30,"time":1758568855594,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2g","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57958},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855594,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2g","res":{"statusCode":200},"responseTime":0.4383290037512779,"msg":"request completed"}
+{"level":30,"time":1758568855636,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2h","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57966},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855637,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2h","res":{"statusCode":200},"responseTime":0.5078940019011497,"msg":"request completed"}
+{"level":30,"time":1758568855676,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2i","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57972},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855676,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2i","res":{"statusCode":200},"responseTime":0.45668699592351913,"msg":"request completed"}
+{"level":30,"time":1758568855716,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2j","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57984},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855716,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2j","res":{"statusCode":200},"responseTime":0.5220070034265518,"msg":"request completed"}
+{"level":30,"time":1758568855758,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2k","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57988},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855759,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2k","res":{"statusCode":200},"responseTime":0.4993239939212799,"msg":"request completed"}
+{"level":30,"time":1758568855798,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2l","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":57990},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855798,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2l","res":{"statusCode":200},"responseTime":0.613927997648716,"msg":"request completed"}
+{"level":30,"time":1758568855874,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2m","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58006},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855874,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2m","res":{"statusCode":200},"responseTime":0.5594139993190765,"msg":"request completed"}
+{"level":30,"time":1758568855922,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2n","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58016},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855923,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2n","res":{"statusCode":200},"responseTime":0.49503299593925476,"msg":"request completed"}
+{"level":30,"time":1758568855966,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2o","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58028},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568855966,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2o","res":{"statusCode":200},"responseTime":0.5492370054125786,"msg":"request completed"}
+{"level":30,"time":1758568856006,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2p","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58038},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856006,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2p","res":{"statusCode":200},"responseTime":0.5117059946060181,"msg":"request completed"}
+{"level":30,"time":1758568856049,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2q","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58046},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856049,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2q","res":{"statusCode":200},"responseTime":0.47317299991846085,"msg":"request completed"}
+{"level":30,"time":1758568856088,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2r","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58056},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856089,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2r","res":{"statusCode":200},"responseTime":0.4509640038013458,"msg":"request completed"}
+{"level":30,"time":1758568856128,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2s","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58062},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856128,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2s","res":{"statusCode":200},"responseTime":0.48388100415468216,"msg":"request completed"}
+{"level":30,"time":1758568856167,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2t","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58074},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856168,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2t","res":{"statusCode":200},"responseTime":0.49657800048589706,"msg":"request completed"}
+{"level":30,"time":1758568856211,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2u","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58080},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856211,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2u","res":{"statusCode":200},"responseTime":0.47600699961185455,"msg":"request completed"}
+{"level":30,"time":1758568856250,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2v","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58094},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856250,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2v","res":{"statusCode":200},"responseTime":0.5214259997010231,"msg":"request completed"}
+{"level":30,"time":1758568856290,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2w","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58100},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856291,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2w","res":{"statusCode":200},"responseTime":0.4971790015697479,"msg":"request completed"}
+{"level":30,"time":1758568856329,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2x","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58114},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856330,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2x","res":{"statusCode":200},"responseTime":0.4335069954395294,"msg":"request completed"}
+{"level":30,"time":1758568856368,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2y","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58124},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856369,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2y","res":{"statusCode":200},"responseTime":0.5323880016803741,"msg":"request completed"}
+{"level":30,"time":1758568856411,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2z","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58136},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856411,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-2z","res":{"statusCode":200},"responseTime":0.44724100083112717,"msg":"request completed"}
+{"level":30,"time":1758568856450,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-30","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58152},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856451,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-30","res":{"statusCode":200},"responseTime":0.5372229963541031,"msg":"request completed"}
+{"level":30,"time":1758568856490,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-31","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58166},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856491,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-31","res":{"statusCode":200},"responseTime":0.5440889969468117,"msg":"request completed"}
+{"level":30,"time":1758568856530,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-32","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58172},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856530,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-32","res":{"statusCode":200},"responseTime":0.554467000067234,"msg":"request completed"}
+{"level":30,"time":1758568856569,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-33","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58174},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856570,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-33","res":{"statusCode":200},"responseTime":0.5319639965891838,"msg":"request completed"}
+{"level":30,"time":1758568856612,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-34","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58190},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856612,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-34","res":{"statusCode":200},"responseTime":0.5069929957389832,"msg":"request completed"}
+{"level":30,"time":1758568856651,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-35","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58196},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856652,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-35","res":{"statusCode":200},"responseTime":0.544394001364708,"msg":"request completed"}
+{"level":30,"time":1758568856693,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-36","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58212},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856693,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-36","res":{"statusCode":200},"responseTime":0.47233400493860245,"msg":"request completed"}
+{"level":30,"time":1758568856732,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-37","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58228},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856732,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-37","res":{"statusCode":200},"responseTime":0.47065000236034393,"msg":"request completed"}
+{"level":30,"time":1758568856771,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-38","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58236},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856772,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-38","res":{"statusCode":200},"responseTime":0.537272997200489,"msg":"request completed"}
+{"level":30,"time":1758568856813,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-39","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58242},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856813,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-39","res":{"statusCode":200},"responseTime":0.5606569945812225,"msg":"request completed"}
+{"level":30,"time":1758568856852,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3a","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58252},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856852,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3a","res":{"statusCode":200},"responseTime":0.5235690027475357,"msg":"request completed"}
+{"level":30,"time":1758568856892,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3b","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58264},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856892,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3b","res":{"statusCode":200},"responseTime":0.5213629975914955,"msg":"request completed"}
+{"level":30,"time":1758568856931,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3c","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58276},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856931,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3c","res":{"statusCode":200},"responseTime":0.5375740006566048,"msg":"request completed"}
+{"level":30,"time":1758568856971,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3d","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58290},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568856971,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3d","res":{"statusCode":200},"responseTime":0.506415992975235,"msg":"request completed"}
+{"level":30,"time":1758568857013,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3e","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58304},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857013,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3e","res":{"statusCode":200},"responseTime":0.49534300714731216,"msg":"request completed"}
+{"level":30,"time":1758568857052,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3f","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58318},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857053,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3f","res":{"statusCode":200},"responseTime":0.5518999993801117,"msg":"request completed"}
+{"level":30,"time":1758568857092,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3g","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58322},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857093,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3g","res":{"statusCode":200},"responseTime":0.5556740015745163,"msg":"request completed"}
+{"level":30,"time":1758568857137,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3h","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58326},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857137,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3h","res":{"statusCode":200},"responseTime":0.4886780008673668,"msg":"request completed"}
+{"level":30,"time":1758568857185,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3i","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58332},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857185,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3i","res":{"statusCode":200},"responseTime":0.48102499544620514,"msg":"request completed"}
+{"level":30,"time":1758568857227,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3j","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58348},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857227,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3j","res":{"statusCode":200},"responseTime":0.510223001241684,"msg":"request completed"}
+{"level":30,"time":1758568857270,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3k","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58356},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857270,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3k","res":{"statusCode":200},"responseTime":0.48347199708223343,"msg":"request completed"}
+{"level":30,"time":1758568857309,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3l","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58360},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857309,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3l","res":{"statusCode":200},"responseTime":0.45439400523900986,"msg":"request completed"}
+{"level":30,"time":1758568857353,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3m","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58366},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857354,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3m","res":{"statusCode":200},"responseTime":0.5700989961624146,"msg":"request completed"}
+{"level":30,"time":1758568857393,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3n","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58374},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857393,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3n","res":{"statusCode":200},"responseTime":0.5223139971494675,"msg":"request completed"}
+{"level":30,"time":1758568857436,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3o","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58388},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857437,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3o","res":{"statusCode":200},"responseTime":0.5493530035018921,"msg":"request completed"}
+{"level":30,"time":1758568857485,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3p","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58402},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857485,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3p","res":{"statusCode":200},"responseTime":0.4327219948172569,"msg":"request completed"}
+{"level":30,"time":1758568857531,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3q","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58406},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857531,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3q","res":{"statusCode":200},"responseTime":0.7011299952864647,"msg":"request completed"}
+{"level":30,"time":1758568857574,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3r","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58412},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857574,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3r","res":{"statusCode":200},"responseTime":0.47958099842071533,"msg":"request completed"}
+{"level":30,"time":1758568857614,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3s","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58424},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857614,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3s","res":{"statusCode":200},"responseTime":0.4837830066680908,"msg":"request completed"}
+{"level":30,"time":1758568857653,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3t","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58430},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857653,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3t","res":{"statusCode":200},"responseTime":0.5268850028514862,"msg":"request completed"}
+{"level":30,"time":1758568857693,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3u","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58434},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857693,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3u","res":{"statusCode":200},"responseTime":0.48652199655771255,"msg":"request completed"}
+{"level":30,"time":1758568857735,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3v","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58448},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857735,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3v","res":{"statusCode":200},"responseTime":0.4949579983949661,"msg":"request completed"}
+{"level":30,"time":1758568857774,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3w","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58458},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857774,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3w","res":{"statusCode":200},"responseTime":0.4834059998393059,"msg":"request completed"}
+{"level":30,"time":1758568857813,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3x","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58474},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857814,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3x","res":{"statusCode":200},"responseTime":0.5282879993319511,"msg":"request completed"}
+{"level":30,"time":1758568857853,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3y","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58488},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857853,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3y","res":{"statusCode":200},"responseTime":0.5167799964547157,"msg":"request completed"}
+{"level":30,"time":1758568857892,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3z","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58496},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857893,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-3z","res":{"statusCode":200},"responseTime":0.4939190000295639,"msg":"request completed"}
+{"level":30,"time":1758568857934,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-40","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58504},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857935,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-40","res":{"statusCode":200},"responseTime":0.4607419967651367,"msg":"request completed"}
+{"level":30,"time":1758568857974,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-41","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58518},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568857974,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-41","res":{"statusCode":200},"responseTime":0.5650040060281754,"msg":"request completed"}
+{"level":30,"time":1758568858013,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-42","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58522},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568858014,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-42","res":{"statusCode":200},"responseTime":0.5195979997515678,"msg":"request completed"}
+{"level":30,"time":1758568858053,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-43","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58538},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568858053,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-43","res":{"statusCode":200},"responseTime":0.4789320006966591,"msg":"request completed"}
+{"level":30,"time":1758568858092,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-44","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58542},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568858093,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-44","res":{"statusCode":200},"responseTime":0.4804840013384819,"msg":"request completed"}
+{"level":30,"time":1758568858136,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-45","req":{"method":"GET","url":"/state","host":"game:3002","remoteAddress":"172.18.0.8","remotePort":58556},"msg":"incoming request"}
+Fetching game state... 0
+Player session: {
+  username: 'Guest error',
+  id: 2,
+  player: 1,
+  gameid: 1,
+  loggedin: false
+} session ID: undefined
+{"level":30,"time":1758568858137,"pid":19,"hostname":"45cc0d683bbe","reqId":"req-45","res":{"statusCode":200},"responseTime":0.39754100143909454,"msg":"request completed"}

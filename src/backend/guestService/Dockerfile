@@ -9,6 +9,7 @@ RUN npm install
 
 RUN mkdir db
 COPY ./src/ ./src/
+COPY ./types/ ./types/
 
 RUN npm run build
 

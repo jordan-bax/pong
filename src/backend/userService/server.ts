@@ -3,7 +3,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import csrfProtection from '@fastify/csrf-protection';
 import fastifyMultipart from '@fastify/multipart';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
@@ -45,7 +45,7 @@ export interface patchBody {
     oldEmail: string | null;
     googleEmail: string | null;
     pathToProfileP: string | null;
-	isGoogleLogin: string | null;
+    isGoogleLogin: string | null;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -187,11 +187,84 @@ class server {
             reply.send({ csrfToken: token });
         });
 
-        this.fastify.get('/me', (req, reply) => {
+        this.fastify.get('/me', async (req: FastifyRequest, reply: FastifyReply) => {
+            const referrer = req.headers.referer || req.headers.referrer;
+            console.log('Call came from:', referrer);
+            const origin = req.headers.origin;
+            console.log('Origin:', origin);
+
+            console.log('=== Request Details ===');
+            console.log('URL:', req.url);
+            console.log('Method:', req.method);
+            console.log('Headers:', req.headers);
+            console.log('IP:', req.ip);
+            console.log('Hostname:', req.hostname);
+            console.log('Protocol:', req.protocol);
+            console.log("req.session.user user_server:", req.session.user)
+            console.log("\n\n\n")
             if (req.session.user) {
                 return reply.send({ loggedIn: true, user: req.session.user });
             } else {
-                return reply.code(404).send({ loggedIn: false });
+                try {
+                    const result = await fetch('http://guest:3006/create', {
+                        credentials: 'include',
+                    })
+
+                    console.log(result)
+                    if (result.status === 200) {
+                        const data = await result.json()
+                        req.session.user = {
+                            username: data.username,
+                            userId: data.id,
+                            email: `guest${-data.id}@guest.nl`,
+                            loginMethod: 'normal'
+                        }
+                        await req.session.save();
+
+                        await fetch('http://game:3002/setsession', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                "x-internal": "true",
+                                "cookie": req.headers.cookie || ''
+                            },
+                            body: JSON.stringify({
+                                username: data.username,
+                                id: data.id }),
+                            credentials: 'include'
+                        }).then(async (response) => {
+                            if (!response.ok) {
+                                console.error('failed to set game session');
+                                return reply.status(400).send({
+                                    "message": "failed to set game session" });
+                            }
+                        })
+
+                        await fetch('http://game:3002/db/addPlayer', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                "x-internal": "true",
+                                "cookie": req.headers.cookie || ''
+                            },
+                            body: JSON.stringify({
+                                "username": data.username,
+                                "id": data.id }),
+                            credentials: 'include',
+                        }).then(response => {
+                            if (!response.ok) {
+                                console.error('failed to create player');
+                                return reply.status(400).send({
+                                    "message": "failed to create player" });
+                            }
+                        })
+                        return reply.send({ loggedIn: false, user: req.session.user })
+                    } else {
+                        return reply.code(404).send({ loggedIn: false });
+                    }
+                } catch (error) {
+                    return reply.code(404).send({ loggedIn: false });
+                }
             }
         });
 

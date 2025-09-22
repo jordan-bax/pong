@@ -11,9 +11,13 @@ class DBError extends Error {
 
 class guestDB {
     private db: Database | null
+    private path: string
+    private startID: number;
 
     constructor() {
         this.db = null
+        this.path = ""
+        this.startID = 3600
     }
 
     async initDB(path: string) {
@@ -22,6 +26,7 @@ class guestDB {
         }
 
         try {
+            this.path = path
             await this.openDB(path)
             if (this.db === null) {
                 throw new DBError("Failed to open the DB")
@@ -59,16 +64,18 @@ class guestDB {
 
     async create() {
         if (!this.db) {
-            throw new DBError("DB is not open")
+            this.openDB(this.path)
+            console.error("nog steeds??")
+            // throw new DBError("DB is not open")
         }
 
         try {
             const resultCount = await this.db.get(`
                 SELECT COUNT(*) AS userCount FROM guests`)
 
-            const newID = resultCount.userCount + 1
+            const newID = (resultCount.userCount + 1) + this.startID;
             const result = await this.db.run(`
-                INSERT INTO tournament (username)
+                INSERT INTO guests (username)
                 VALUES (?)`,
                 [`guest ${newID}`])
 
@@ -76,12 +83,7 @@ class guestDB {
                 new DBError("Could not insert in database")
             }
 
-            const id = result.lastID
-            if (id === undefined) {
-                new DBError("Could not get the last ID in the DB")
-            }
-
-            return {'username': `guest ${resultCount.userCount}`, 'id': -newID}
+            return { 'username': `guest ${newID}`, 'id': -newID }
         } catch (error) {
             throw error
         }

@@ -1348,17 +1348,17 @@ export async function renderContent(route: string): Promise<void> {
 export async function getPageContent(language: string, textKeys: string[]): Promise<Map<string, object>> {
     const neededKeys = queryStringBuilder(language, textKeys);
     const response = await fetch(`/api/page_content/getContent?${neededKeys}`, {
-        method: 'GET'
+        method: 'GET',
+        credentials: "include"
+    }).then(async (result) => {
+        if (!result.ok) {
+            console.error('error result for page content not ok');
+            throw new Error(`HTTP error! status ${result.status}`);
+        }
+        const body = await result.json();
+        const map = getMapFromJson(body);
+        return map;
     })
-        .then(async (result) => {
-            if (!result.ok) {
-                console.error('error result for page content not ok');
-                throw new Error(`HTTP error! status ${result.status}`);
-            }
-            const body = await result.json();
-            const map = getMapFromJson(body);
-            return map;
-        })
         .catch(() => { });
     if (!response) {
         throw new Error('page content needed');

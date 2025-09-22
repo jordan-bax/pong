@@ -108,7 +108,7 @@ export async function updateGameInDB(game: gamestateinterface): Promise<void> {
     if (id1 < 0 && id1 > -3600) {
         id1 = 0;
     }
-    
+
     let id2 = game.player2.id;
     if (id2 === null || id2 === undefined || id2 < 0) {
         id2 = 0;
@@ -349,11 +349,12 @@ fastify.post('/start', async (req: FastifyRequest, reply: FastifyReply) => {
             if (userId) {
                 playid = userId;
                 online = true;
+                playername = req.session.player?.username || "waarom";
                 console.log('User ID from usersession:', playid);
             } else {
                 playid = GameTypeId.UNKNOWN;
                 online = false;
-                playername = 'Guest';
+                playername = 'Guest error';
                 console.error('User ID not found in session', playid);
             }
         });

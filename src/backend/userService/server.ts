@@ -188,77 +188,63 @@ class server {
         });
 
         this.fastify.get('/me', async (req: FastifyRequest, reply: FastifyReply) => {
-            const referrer = req.headers.referer || req.headers.referrer;
-            console.log('Call came from:', referrer);
-            const origin = req.headers.origin;
-            console.log('Origin:', origin);
-
-            console.log('=== Request Details ===');
-            console.log('URL:', req.url);
-            console.log('Method:', req.method);
-            console.log('Headers:', req.headers);
-            console.log('IP:', req.ip);
-            console.log('Hostname:', req.hostname);
-            console.log('Protocol:', req.protocol);
-            console.log("req.session.user user_server:", req.session.user)
-            console.log("\n\n\n")
             if (req.session.user) {
                 return reply.send({ loggedIn: true, user: req.session.user });
             } else {
                 try {
                     const result = await fetch('http://guest:3006/create', {
                         credentials: 'include',
-                    })
+                    });
 
-                    console.log(result)
                     if (result.status === 200) {
-                        const data = await result.json()
+                        const data = await result.json();
                         req.session.user = {
                             username: data.username,
                             userId: data.id,
                             email: `guest${-data.id}@guest.nl`,
                             loginMethod: 'normal'
-                        }
+                        };
                         await req.session.save();
+
+                        const sessionToken = {
+                            username: data.username,
+                            userId: data.id,
+                            sessionId: req.session.sessionId,
+                            timestamp: Date.now()
+                        };
 
                         await fetch('http://game:3002/setsession', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                "x-internal": "true",
-                                "cookie": req.headers.cookie || ''
+                                "x-internal": "true"
                             },
-                            body: JSON.stringify({
-                                username: data.username,
-                                id: data.id }),
+                            body: JSON.stringify(sessionToken),
                             credentials: 'include'
                         }).then(async (response) => {
                             if (!response.ok) {
                                 console.error('failed to set game session');
-                                return reply.status(400).send({
-                                    "message": "failed to set game session" });
                             }
-                        })
+                        });
 
                         await fetch('http://game:3002/db/addPlayer', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                "x-internal": "true",
-                                "cookie": req.headers.cookie || ''
+                                "x-internal": "true"
                             },
                             body: JSON.stringify({
                                 "username": data.username,
-                                "id": data.id }),
+                                "id": data.id
+                            }),
                             credentials: 'include',
                         }).then(response => {
                             if (!response.ok) {
                                 console.error('failed to create player');
-                                return reply.status(400).send({
-                                    "message": "failed to create player" });
                             }
-                        })
-                        return reply.send({ loggedIn: false, user: req.session.user })
+                        });
+
+                        return reply.send({ loggedIn: false, user: req.session.user });
                     } else {
                         return reply.code(404).send({ loggedIn: false });
                     }

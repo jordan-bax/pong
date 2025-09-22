@@ -11,12 +11,10 @@ class DBError extends Error {
 
 class guestDB {
     private db: Database | null
-    private path: string
     private startID: number;
 
     constructor() {
         this.db = null
-        this.path = ""
         this.startID = 3600
     }
 
@@ -26,7 +24,6 @@ class guestDB {
         }
 
         try {
-            this.path = path
             await this.openDB(path)
             if (this.db === null) {
                 throw new DBError("Failed to open the DB")
@@ -64,9 +61,7 @@ class guestDB {
 
     async create() {
         if (!this.db) {
-            this.openDB(this.path)
-            console.error("nog steeds??")
-            // throw new DBError("DB is not open")
+            throw new DBError("DB is not open")
         }
 
         try {

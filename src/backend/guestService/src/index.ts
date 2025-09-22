@@ -1,4 +1,6 @@
 import { fastify, FastifyRequest, FastifyReply } from 'fastify'
+import fastifyCookie from '@fastify/cookie';
+import fastifySession from '@fastify/session';
 import { guestDB, DBError } from "./guestDB.ts"
 
 const db = new guestDB
@@ -9,6 +11,30 @@ const server = fastify()
 
 const start = async () => {
     try {
+        const sessionSecret = process.env.SESSION_SECRET;
+        const cookieSecret = process.env.COOKIE_SECRET;
+
+        if (!sessionSecret || !cookieSecret) {
+            throw new Error('ENV Variables Missing!');
+        }
+
+        await server.register(fastifyCookie, {
+            secret: cookieSecret,
+            parseOptions: {}
+        });
+
+        await server.register(fastifySession, {
+            secret: sessionSecret,
+            cookieName: 'guestInfo',
+            cookie: {
+                httpOnly: true,
+                secure: false,
+                maxAge: 1000 * 60 * 60 * 24,
+                sameSite: 'strict'
+            },
+            saveUninitialized: false
+        });
+
         console.error(DBPATH)
         await db.initDB(DBPATH)
 
@@ -23,33 +49,33 @@ const start = async () => {
     } catch (err) {
         console.error(err)
         process.exit(1)
-    } finally {
-        await db.closeDB()
     }
 }
 start();
 
 server.get('/create', async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-        if (request.session.user) {
-            console.log("guest user does exists")
+        try {
+        if (request.session && request.session.user) {
+            console.log("guest user exists");
             return reply.status(200).send({
                 "username": request.session.user.username,
-                "id": request.session.user.userId })
+                "id": request.session.user.userId
+            });
         }
 
-        console.log("guest user create")
-        const result = await db.create()
-        reply.status(200).send(result)
+        console.log("creating new guest user");
+        const result = await db.create();
+
+        request.session.user = {
+            username: result.username,
+            userId: result.id
+        };
+
+        await request.session.save();
+
+        reply.status(200).send(result);
     } catch (error) {
-        console.error('updatename error:', error)
-        if (error instanceof DBError) {
-            reply.status(500).send({ error: "Internal server error" })
-        } else {
-            reply.status(400).send({
-                error: error instanceof Error ? error.message : String(error)
-            })
-        }
+        console.error('guest creation error:', error);
+        reply.status(500).send({ error: "Internal server error" });
     }
 })
-

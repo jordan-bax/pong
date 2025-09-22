@@ -13,6 +13,8 @@ import * as dbfunc from './game_db.js';
 import { player1Template, player2Template, ballvarTemplate, gamestateinterface, aiInterface } from './sharedValuesPong.js';
 import { Gameloop } from './gameloop.js';
 
+import { PlayerSession, GameSession } from './gameTypes';
+
 export enum GameTypeId {
     AI = 0,
     LOCAL = 1,
@@ -102,7 +104,7 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 
 export async function updateGameInDB(game: gamestateinterface): Promise<void> {
     let id1 = game.player1.id;
-    if (id1 === null || id1 === undefined ) {
+    if (id1 === null || id1 === undefined) {
         id1 = 0;
     }
     if (id1 < 0 && id1 > -3600) {
@@ -447,46 +449,46 @@ fastify.post('/pause', async (req: FastifyRequest, reply: FastifyReply) => {
 
 // move the player paddle
 fastify.post('/move', async (req, reply) => {
-	if (!req.session.player) {
-		reply.status(401).send({ status: 'Unauthorized' });
-		console.error('Unauthorized access: Player session not found');
-		return;
-	}
-	const { direction } = req.body as { direction: 'up' | 'down' };
-	var player: 1|2 | null = req.session.player?.player;
-	const game = findGamebyGameId(req.session.player?.gameid);
-	if (!game) {
-		reply.status(404).send({ status: 'no Game' });
-		return;
-	}
-	if (game.getState().gameActive === false) {
-		reply.status(400).send({ status: 'inactive' });
-		return;
-	}
-	// if (game.getState().gamePause) {
-	// 	reply.status(400).send({ status: 'paused' });
-	// 	return;
-	// }
-	if (game.getState().gametype === 'local') {
-		player = (req.query as { player: 1|2 }).player;
-	}
-	console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.getId());
-	if (player == 1) {
-		if (direction === 'up') {
-			game.getState().player1.y -= game.getState().player1.speed;
-		} else if (direction === 'down') {
-			game.getState().player1.y += game.getState().player1.speed;
-		}
-		game.playerMoveCheck(game.getState().player1);
-	} else if (player == 2) {
-		if (direction === 'up') {
-			game.getState().player2.y -= game.getState().player2.speed;
-		} else if (direction === 'down') {
-			game.getState().player2.y += game.getState().player2.speed;
-		}
-		game.playerMoveCheck(game.getState().player2);
-	}
-	reply.send({ status: 'moved'});
+    if (!req.session.player) {
+        reply.status(401).send({ status: 'Unauthorized' });
+        console.error('Unauthorized access: Player session not found');
+        return;
+    }
+    const { direction } = req.body as { direction: 'up' | 'down' };
+    var player: 1 | 2 | null = req.session.player?.player;
+    const game = findGamebyGameId(req.session.player?.gameid);
+    if (!game) {
+        reply.status(404).send({ status: 'no Game' });
+        return;
+    }
+    if (game.getState().gameActive === false) {
+        reply.status(400).send({ status: 'inactive' });
+        return;
+    }
+    // if (game.getState().gamePause) {
+    // 	reply.status(400).send({ status: 'paused' });
+    // 	return;
+    // }
+    if (game.getState().gametype === 'local') {
+        player = (req.query as { player: 1 | 2 }).player;
+    }
+    console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.getId());
+    if (player == 1) {
+        if (direction === 'up') {
+            game.getState().player1.y -= game.getState().player1.speed;
+        } else if (direction === 'down') {
+            game.getState().player1.y += game.getState().player1.speed;
+        }
+        game.playerMoveCheck(game.getState().player1);
+    } else if (player == 2) {
+        if (direction === 'up') {
+            game.getState().player2.y -= game.getState().player2.speed;
+        } else if (direction === 'down') {
+            game.getState().player2.y += game.getState().player2.speed;
+        }
+        game.playerMoveCheck(game.getState().player2);
+    }
+    reply.send({ status: 'moved' });
 });
 
 fastify.get('/state', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -622,215 +624,238 @@ const sessionBodySchema = {
     required: ['username', 'id']
 };
 
-fastify.post('/setsession', { schema: { body: sessionBodySchema } }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const { username, id } = req.body as { username: string; id: number };
-    if (!username || !id) {
-        reply.status(400).send({ error: 'Username and ID are required' });
-        return;
-    }
-
-    req.session.player = {
-        username: username,
-        id: id,
-        player: 1,
-        gameid: 0,
-        loggedin: true
+fastify.post('/setsession', async (req: FastifyRequest, reply: FastifyReply) => {
+    const { username, userId, sessionId } = req.body as {
+        username: string;
+        userId: number;
+        sessionId: string;
     };
 
-    if (!req.session.player) {
-        reply.status(500).send({ error: 'Failed to set session in set session' });
-        return;
-    }
+    const session = req.session as GameSession;
 
-    console.log('Session set for user:', req.session.player);
-    reply.send({ status: 'session set', player: req.session.player });
-});
+    session.player = {
+        username: username,
+        id: userId,
+        player: 1,
+        gameid: 0,
+        loggedin: true,
+        originalSessionId: sessionId
+    };
 
-fastify.post('/clearsession', async (req: FastifyRequest, reply: FastifyReply) => {
-    req.session.player = undefined;
-    console.log('Session cleared');
-    reply.send({ status: 'session cleared' });
-});
+    console.log('Player session set:', session.player);
+    reply.send({ status: 'session set', player: session.player });
+    // fastify.post('/setsession', { schema: { body: sessionBodySchema } }, async (req: FastifyRequest, reply: FastifyReply) => {
+    //         const { username, userId, sessionId } = req.body as {
+    //         username: string;
+    //         userId: number;
+    //         sessionId: string;
+    //     };
+    //
+    //     if (!username || !userId) {
+    //         reply.status(400).send({ error: 'Username and ID are required' });
+    //         return;
+    //     }
+    //
+    //     req.session.player = {
+    //         username: username,
+    //         id: userId,
+    //         player: 1,
+    //         gameid: 0,
+    //         loggedin: true
+    //     };
+    //
+    //     // Also store the original session ID for reference
+    //     req.session.originalSessionId = sessionId;
+    //
+    //     console.log('Player session set:', req.session.player, 'session ID:', sessionId);
+    //     reply.send({ status: 'session set', player: req.session.player });
+    // });
 
-async function sendNotificationToUser(userId: number, message: string) {
-    const response = await fetch(`http://notification:3005/add?userId=${userId}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message })
+    fastify.post('/clearsession', async (req: FastifyRequest, reply: FastifyReply) => {
+        req.session.player = undefined;
+        console.log('Session cleared');
+        reply.send({ status: 'session cleared' });
     });
 
-    if (!response.ok) {
-        console.error('Failed to send notification:', response.statusText);
-    } else {
-        const data = await response.json();
-        console.log('Notification sent successfully:', data);
-    }
-}
+    async function sendNotificationToUser(userId: number, message: string) {
+        const response = await fetch(`http://notification:3005/add?userId=${userId}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
 
-fastify.get('/getopengames', async (req: FastifyRequest, reply: FastifyReply) => {
-    let id = await getUserIdFromRequest(req);
-    if (!id) {
-        id = GameTypeId.UNKNOWN;
-    }
-
-    const openGames = invited.filter(game => game.getState().player1.id == id || game.getState().player2.id == id);
-    let open: gamestateinterface[] = [];
-    for (const game of openGames) {
-        open.push(game.getState());
+        if (!response.ok) {
+            console.error('Failed to send notification:', response.statusText);
+        } else {
+            const data = await response.json();
+            console.log('Notification sent successfully:', data);
+        }
     }
 
-    console.log('Open games for player ID:', id, 'Number of open games:', open.length);
-    reply.send(open);
-});
+    fastify.get('/getopengames', async (req: FastifyRequest, reply: FastifyReply) => {
+        let id = await getUserIdFromRequest(req);
+        if (!id) {
+            id = GameTypeId.UNKNOWN;
+        }
 
-const matchingBodySchema = {
-    type: 'object',
-    properties: {
-        playerid1: { type: 'number' },
-        playerid2: { type: 'number' },
-        gametype: { type: 'string' },
-        tournamentId: { type: 'number' }
-    },
-    required: ['playerid1', 'playerid2', 'gametype']
-};
+        const openGames = invited.filter(game => game.getState().player1.id == id || game.getState().player2.id == id);
+        let open: gamestateinterface[] = [];
+        for (const game of openGames) {
+            open.push(game.getState());
+        }
 
-fastify.post('/join', async (req: FastifyRequest, reply: FastifyReply) => {
-    if (!req.session.player || !req.session.player.id) {
-        reply.status(401).send({ status: 'Unauthorized' });
-        console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
-        return;
-    }
+        console.log('Open games for player ID:', id, 'Number of open games:', open.length);
+        reply.send(open);
+    });
 
-    const { gameid } = req.body as { gameid: number };
-    console.log('Joining game with ID:', gameid);
-    const gameIndex = invited.findIndex(game => game && game.getId() === gameid);
-    if (gameIndex === -1) {
-        reply.status(404).send({ error: 'Game not found' });
-        return;
-    }
+    const matchingBodySchema = {
+        type: 'object',
+        properties: {
+            playerid1: { type: 'number' },
+            playerid2: { type: 'number' },
+            gametype: { type: 'string' },
+            tournamentId: { type: 'number' }
+        },
+        required: ['playerid1', 'playerid2', 'gametype']
+    };
 
-    if (!invited[gameIndex]) {
-        reply.status(404).send({ error: 'Game not found' });
-        return;
-    }
+    fastify.post('/join', async (req: FastifyRequest, reply: FastifyReply) => {
+        if (!req.session.player || !req.session.player.id) {
+            reply.status(401).send({ status: 'Unauthorized' });
+            console.log('Unauthorized access: Player session not found', req.cookies.sessionId);
+            return;
+        }
 
-    if (invited[gameIndex].getState().player1.id === req.session.player.id) {
-        invited[gameIndex].getState().player1.active = true;
-    } else if (invited[gameIndex].getState().player2.id === req.session.player.id) {
-        invited[gameIndex].getState().player2.active = true;
-    }
-
-    req.session.player.gameid = gameid;
-    if (invited[gameIndex].getState().player1.active && invited[gameIndex].getState().player2.active) {
-        const game = invited.splice(gameIndex, 1)[0];
-        if (!game) {
+        const { gameid } = req.body as { gameid: number };
+        console.log('Joining game with ID:', gameid);
+        const gameIndex = invited.findIndex(game => game && game.getId() === gameid);
+        if (gameIndex === -1) {
             reply.status(404).send({ error: 'Game not found' });
             return;
         }
 
-        active.push(game);
-        game.getState().gameActive = true;
-        game.getState().gamePause = true;
-        console.log('Game joined and moved to active games:', game);
-    }
-
-    reply.send({ status: 'joined', gameid: gameid });
-});
-
-async function getUserNameById(userId: number): Promise<string> {
-    if (userId <= 0 && userId > -3600) {
-        return 'ai';
-    }
-
-    const player = await dbfunc.getPlayerById(userId);
-    if (player) {
-        return player.username;
-    }
-
-    return 'Guest';
-}
-
-fastify.post('/preparegame', { schema: { body: matchingBodySchema } }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const { playerid1, playerid2, gametype } = req.body as { playerid1: number; playerid2: number; gametype: string };
-    console.log('Matching players:', playerid1, playerid2, 'Game type:', gametype);
-    if (playerid1 === undefined || playerid2 === undefined || !gametype) {
-        reply.status(400).send({ error: 'Invalid player IDs or game type' });
-        return;
-    }
-
-    if (playerid1 === playerid2) {
-        reply.status(400).send({ error: 'Player IDs must be different' });
-        return;
-    }
-
-    const player1Name = await getUserNameById(playerid1);
-    const player2Name = await getUserNameById(playerid2);
-    console.log('Player names:', player1Name, player2Name);
-    const gameid = await lastId().then(id => id + 1);
-    const newGame: gamestateinterface = {
-        player1: { ...player1Template, id: playerid1, name: player1Name },
-        player2: { ...player2Template, id: playerid2, name: player2Name },
-        ball: { ...ballvarTemplate, speed: ballSpeed },
-        gameActive: true,
-        gamePause: true,
-        gameID: gameid,
-        gametype: gametype,
-    };
-
-    if (newGame.player1.id !== null && newGame.player1.id <= 0 && newGame.player1.id > -3600) {
-        newGame.player1.active = true;
-    }
-
-    if (newGame.player2.id !== null && newGame.player2.id <= 0 && newGame.player2.id > -3600) {
-        newGame.player2.active = true;
-    }
-
-    console.log('New game created for matching:', newGame);
-    const games = new Gameloop(newGame);
-    if (gametype === 'tournament') {
-        const { tournamentId } = req.body as { tournamentId: number };
-        console.error("tournammentID from backend: ", tournamentId)
-        games.setTournamentId(tournamentId);
-    }
-
-    invited.push(games);
-    if (gametype == 'tournament') {
-        if (playerid1 > 0) {
-            await sendNotificationToUser(playerid1, `You have been matched for a tournament game`);
+        if (!invited[gameIndex]) {
+            reply.status(404).send({ error: 'Game not found' });
+            return;
         }
 
-        if (playerid2 > 0) {
-            await sendNotificationToUser(playerid2, `You have been matched for a tournament game`);
-        }
-    } else {
-        if (playerid1 > 0) {
-            await sendNotificationToUser(playerid1, `You have been invited to play a game`);
+        if (invited[gameIndex].getState().player1.id === req.session.player.id) {
+            invited[gameIndex].getState().player1.active = true;
+        } else if (invited[gameIndex].getState().player2.id === req.session.player.id) {
+            invited[gameIndex].getState().player2.active = true;
         }
 
-        if (playerid2 > 0) {
-            await sendNotificationToUser(playerid2, `You have been invited to play a game`);
+        req.session.player.gameid = gameid;
+        if (invited[gameIndex].getState().player1.active && invited[gameIndex].getState().player2.active) {
+            const game = invited.splice(gameIndex, 1)[0];
+            if (!game) {
+                reply.status(404).send({ error: 'Game not found' });
+                return;
+            }
+
+            active.push(game);
+            game.getState().gameActive = true;
+            game.getState().gamePause = true;
+            console.log('Game joined and moved to active games:', game);
         }
+
+        reply.send({ status: 'joined', gameid: gameid });
+    });
+
+    async function getUserNameById(userId: number): Promise<string> {
+        if (userId <= 0 && userId > -3600) {
+            return 'ai';
+        }
+
+        const player = await dbfunc.getPlayerById(userId);
+        if (player) {
+            return player.username;
+        }
+
+        return 'Guest';
     }
 
-    reply.status(201).send({ matchID: gameid, status: 'matched' });
-});
+    fastify.post('/preparegame', { schema: { body: matchingBodySchema } }, async (req: FastifyRequest, reply: FastifyReply) => {
+        const { playerid1, playerid2, gametype } = req.body as { playerid1: number; playerid2: number; gametype: string };
+        console.log('Matching players:', playerid1, playerid2, 'Game type:', gametype);
+        if (playerid1 === undefined || playerid2 === undefined || !gametype) {
+            reply.status(400).send({ error: 'Invalid player IDs or game type' });
+            return;
+        }
 
-async function prepareDatabase() {
-    await dbfunc.initializeDatabase().catch(console.error);
+        if (playerid1 === playerid2) {
+            reply.status(400).send({ error: 'Player IDs must be different' });
+            return;
+        }
 
-    await dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
-    await dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
-    await dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
-    console.log('Database prepared');
-}
+        const player1Name = await getUserNameById(playerid1);
+        const player2Name = await getUserNameById(playerid2);
+        console.log('Player names:', player1Name, player2Name);
+        const gameid = await lastId().then(id => id + 1);
+        const newGame: gamestateinterface = {
+            player1: { ...player1Template, id: playerid1, name: player1Name },
+            player2: { ...player2Template, id: playerid2, name: player2Name },
+            ball: { ...ballvarTemplate, speed: ballSpeed },
+            gameActive: true,
+            gamePause: true,
+            gameID: gameid,
+            gametype: gametype,
+        };
 
-fastify.listen({ host: "0.0.0.0", port: 3002 }, err => {
-    if (err) {
-        fastify.log.error((err));
-        process.exit(1);
+        if (newGame.player1.id !== null && newGame.player1.id <= 0 && newGame.player1.id > -3600) {
+            newGame.player1.active = true;
+        }
+
+        if (newGame.player2.id !== null && newGame.player2.id <= 0 && newGame.player2.id > -3600) {
+            newGame.player2.active = true;
+        }
+
+        console.log('New game created for matching:', newGame);
+        const games = new Gameloop(newGame);
+        if (gametype === 'tournament') {
+            const { tournamentId } = req.body as { tournamentId: number };
+            console.error("tournammentID from backend: ", tournamentId)
+            games.setTournamentId(tournamentId);
+        }
+
+        invited.push(games);
+        if (gametype == 'tournament') {
+            if (playerid1 > 0) {
+                await sendNotificationToUser(playerid1, `You have been matched for a tournament game`);
+            }
+
+            if (playerid2 > 0) {
+                await sendNotificationToUser(playerid2, `You have been matched for a tournament game`);
+            }
+        } else {
+            if (playerid1 > 0) {
+                await sendNotificationToUser(playerid1, `You have been invited to play a game`);
+            }
+
+            if (playerid2 > 0) {
+                await sendNotificationToUser(playerid2, `You have been invited to play a game`);
+            }
+        }
+
+        reply.status(201).send({ matchID: gameid, status: 'matched' });
+    });
+
+    async function prepareDatabase() {
+        await dbfunc.initializeDatabase().catch(console.error);
+
+        await dbfunc.createPlayer(GameTypeId.AI, 'ai').catch(console.error);
+        await dbfunc.createPlayer(GameTypeId.LOCAL, 'local').catch(console.error);
+        await dbfunc.createPlayer(GameTypeId.UNKNOWN, 'anonymous').catch(console.error);
+        console.log('Database prepared');
     }
-    prepareDatabase().catch(console.error);
-});
+
+    fastify.listen({ host: "0.0.0.0", port: 3002 }, err => {
+        if (err) {
+            fastify.log.error((err));
+            process.exit(1);
+        }
+        prepareDatabase().catch(console.error);
+    });

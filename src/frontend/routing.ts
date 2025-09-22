@@ -657,12 +657,17 @@ async function createPlayer(params: { id: number; username: string }): Promise<v
 }
 
 async function setGameSession(): Promise<void> {
-    const myId = await getIdFromMe();
+        const myId = await getIdFromMe();
     const username = await getUsernameFromMeData();
     if (!myId || !username) {
         console.error('cannot set game session, missing user data', { myId, username });
         return;
     }
+
+    const userSession = await fetch('/api/user/me', {
+        credentials: 'include',
+        headers: { "x-internal": "true" }
+    }).then(response => response.json());
 
     await fetch('/api/game/setsession', {
         method: 'POST',
@@ -670,16 +675,21 @@ async function setGameSession(): Promise<void> {
             'Content-Type': 'application/json',
             "x-internal": "true"
         },
-        body: JSON.stringify({ username: username, id: myId }),
+        body: JSON.stringify({
+            username: username,
+            id: myId,
+            sessionId: userSession.sessionId || 'unknown'
+        }),
         credentials: 'include'
     }).then(async (response) => {
         if (!response.ok) {
             console.error('failed to set game session');
             return;
         }
-
         await createPlayer({ id: myId, username: username });
-    }).catch(() => { });
+    }).catch(error => {
+        console.error('Error setting game session:', error);
+    });
 }
 
 export async function clearGameSession(): Promise<void> {

@@ -102,12 +102,18 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 
 export async function updateGameInDB(game: gamestateinterface): Promise<void> {
     let id1 = game.player1.id;
-    if (id1 === null || id1 === undefined || id1 < 0) {
+    if (id1 === null || id1 === undefined ) {
         id1 = 0;
     }
-
+    if (id1 < 0 && id1 > -3600) {
+        id1 = 0;
+    }
+    
     let id2 = game.player2.id;
     if (id2 === null || id2 === undefined || id2 < 0) {
+        id2 = 0;
+    }
+    if (id2 < 0 && id2 > -3600) {
         id2 = 0;
     }
 
@@ -773,11 +779,11 @@ fastify.post('/preparegame', { schema: { body: matchingBodySchema } }, async (re
         gametype: gametype,
     };
 
-    if (newGame.player1.id !== null && newGame.player1.id <= 0) {
+    if (newGame.player1.id !== null && newGame.player1.id <= 0 && newGame.player1.id > -3600) {
         newGame.player1.active = true;
     }
 
-    if (newGame.player2.id !== null && newGame.player2.id <= 0) {
+    if (newGame.player2.id !== null && newGame.player2.id <= 0 && newGame.player2.id > -3600) {
         newGame.player2.active = true;
     }
 

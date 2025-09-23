@@ -11,9 +11,11 @@ class DBError extends Error {
 
 class TourDB {
     private db: Database | null
+    private guestID: number
 
     constructor() {
         this.db = null
+        this.guestID = -3600
     }
 
     async initDB(path: string) {
@@ -147,7 +149,7 @@ class TourDB {
         }
 
         try {
-            if (userID < 0) {
+            if (userID > this.guestID && userID < 0) {
                 await this.joinAI(tourID, userID, username);
                 return
             }

@@ -5,10 +5,12 @@ const db = new TourDB
 class TourService {
     private checkInterval: NodeJS.Timeout | null
     private isChecking: boolean
+    private guestID: number
 
     constructor() {
         this.checkInterval = null
         this.isChecking = false
+        this.guestID = -3600
     }
 
     async init(dbPath: string) {
@@ -235,7 +237,7 @@ class TourService {
                     }
                 } else {
                     for (let idx = 0; idx < tour.nextMatchs[index].length; idx++) {
-                        if (tour.nextMatchs[index][idx] < 0) {
+                        if (tour.nextMatchs[index][idx] > this.guestID && tour.nextMatchs[index][idx] < 0) {
                             continue
                         }
 

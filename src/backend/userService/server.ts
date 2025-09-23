@@ -56,12 +56,14 @@ class server {
     private client: OAuth2Client;
     private db: UserDatabase;
     private validate: Validator;
+    private guestId: number
 
     constructor() {
         this.fastify = Fastify({ logger: true });
         this.client = new OAuth2Client();
         this.db = new UserDatabase();
         this.validate = new Validator();
+        this.guestId = 3600
     }
 
     async init() {
@@ -189,7 +191,12 @@ class server {
 
         this.fastify.get('/me', async (req: FastifyRequest, reply: FastifyReply) => {
             if (req.session.user) {
-                return reply.send({ loggedIn: true, user: req.session.user });
+                let loggedIn = true;
+                if (req.session.user.userId < this.guestId) {
+                    loggedIn = false;
+                }
+
+                return reply.send({ loggedIn: loggedIn, user: req.session.user });
             } else {
                 try {
                     const result = await fetch('http://guest:3006/create', {

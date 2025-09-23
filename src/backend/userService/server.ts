@@ -3,7 +3,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import csrfProtection from '@fastify/csrf-protection';
 import fastifyMultipart from '@fastify/multipart';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
@@ -45,7 +45,7 @@ export interface patchBody {
     oldEmail: string | null;
     googleEmail: string | null;
     pathToProfileP: string | null;
-	isGoogleLogin: string | null;
+    isGoogleLogin: string | null;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -157,7 +157,7 @@ class server {
     }
 
     private async registerRoutes() {
-        this.fastify.get('/getLoggedInFriends', async (req, reply) => {
+        this.fastify.get('/getLoggedInFriends', async (req: FastifyRequest, reply: FastifyReply) => {
             if (!req.session.user) {
                 return reply.code(401).send({ error: 'unauthorized' });
             }
@@ -168,7 +168,7 @@ class server {
             return reply.send(loggedInFriends);
         })
 
-        this.fastify.get('/search', async (req, reply) => {
+        this.fastify.get('/search', async (req: FastifyRequest, reply: FastifyReply) => {
             if (!req.session.user) {
                 return reply.code(401).send({ error: 'unauthorized' });
             }
@@ -182,20 +182,84 @@ class server {
             return reply.send(users);
         });
 
-        this.fastify.get('/csrf-token', async (req, reply) => {
+        this.fastify.get('/csrf-token', async (req: FastifyRequest, reply: FastifyReply) => {
             const token = reply.generateCsrf();
             reply.send({ csrfToken: token });
         });
 
-        this.fastify.get('/me', (req, reply) => {
+        this.fastify.get('/me', async (req: FastifyRequest, reply: FastifyReply) => {
             if (req.session.user) {
                 return reply.send({ loggedIn: true, user: req.session.user });
             } else {
-                return reply.code(404).send({ loggedIn: false });
+                try {
+                    const result = await fetch('http://guest:3006/create', {
+                        credentials: 'include',
+                    })
+
+                    console.log(result)
+                    if (result.status === 200) {
+                        const data = await result.json()
+                        req.session.user = {
+                            username: data.username,
+                            userId: data.id,
+                            email: `guest${-data.id}@guest.nl`,
+                            loginMethod: 'normal'
+                        }
+
+                        await new Promise(resolve => setImmediate(resolve));
+
+                        await fetch('http://game:3002/setsession', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                "x-internal": "true",
+                                "cookie": req.headers.cookie || ''
+                            },
+                            body: JSON.stringify({
+                                username: data.username,
+                                id: data.id
+                            }),
+                            credentials: 'include'
+                        }).then(async (response) => {
+                            if (!response.ok) {
+                                console.error('failed to set game session');
+                                return reply.status(400).send({
+                                    "message": "failed to set game session"
+                                });
+                            }
+                        })
+
+                        await fetch('http://game:3002/db/addPlayer', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                "x-internal": "true",
+                                "cookie": req.headers.cookie || ''
+                            },
+                            body: JSON.stringify({
+                                "username": data.username,
+                                "id": data.id
+                            }),
+                            credentials: 'include',
+                        }).then(response => {
+                            if (!response.ok) {
+                                console.error('failed to create player');
+                                return reply.status(400).send({
+                                    "message": "failed to create player"
+                                });
+                            }
+                        })
+                        return reply.send({ loggedIn: false, user: req.session.user })
+                    } else {
+                        return reply.code(404).send({ loggedIn: false });
+                    }
+                } catch (error) {
+                    return reply.code(404).send({ loggedIn: false });
+                }
             }
         });
 
-        this.fastify.get('/me/data', async (req, reply) => {
+        this.fastify.get('/me/data', async (req: FastifyRequest, reply: FastifyReply) => {
             try {
                 const email = req.session.user?.email;
                 if (!email) {
@@ -213,7 +277,7 @@ class server {
             }
         });
 
-        this.fastify.get('/profile-picture', async (req, reply) => {
+        this.fastify.get('/profile-picture', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             if (!user) {
                 return reply.code(404).send({ error: 'noUser' });
@@ -237,7 +301,7 @@ class server {
             return reply.send(fs.createReadStream(imagePath));
         });
 
-        this.fastify.get('/friends', async (req, reply) => {
+        this.fastify.get('/friends', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
@@ -250,7 +314,7 @@ class server {
             return reply.send(friends);
         });
 
-        this.fastify.get('/pending', async (req, reply) => {
+        this.fastify.get('/pending', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
@@ -263,7 +327,7 @@ class server {
             return reply.send(pending);
         });
 
-        this.fastify.get('/requested', async (req, reply) => {
+        this.fastify.get('/requested', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
@@ -276,7 +340,7 @@ class server {
             return reply.send(requested);
         });
 
-        this.fastify.get('/isIdFriend', async (req, reply) => {
+        this.fastify.get('/isIdFriend', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
@@ -293,7 +357,7 @@ class server {
             return reply.send(false);
         });
 
-        this.fastify.post('/requested', async (req: FastifyRequest, reply) => {
+        this.fastify.post('/requested', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             const toEmail = req.body as string | null;
             if (!user) {
@@ -312,7 +376,7 @@ class server {
             return reply.send({ success: true });
         });
 
-        this.fastify.post('/heartbeat', async (req, reply) => {
+        this.fastify.post('/heartbeat', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
@@ -320,7 +384,7 @@ class server {
             await this.db.setLoggedStatus(user.email, Date.now());
         })
 
-        this.fastify.post('/acceptFriend', async (req, reply) => {
+        this.fastify.post('/acceptFriend', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             if (!user) {
                 return reply.code(401).send({ error: 'unauthorized' });
@@ -336,7 +400,7 @@ class server {
             return reply.send({ success: true });
         })
 
-        this.fastify.delete('/friendRequest', async (req, reply) => {
+        this.fastify.delete('/friendRequest', async (req: FastifyRequest, reply: FastifyReply) => {
             const user = req.session.user;
             const deleteRequest = req.body as string | null;
             if (!user) {
@@ -353,7 +417,7 @@ class server {
             return reply.send({ success: true });
         })
 
-        this.fastify.post('/register', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
+        this.fastify.post('/register', { preHandler: this.fastify.csrfProtection }, async (req: FastifyRequest, reply: FastifyReply) => {
             let userData = {} as registerBody;
 
             const parts = req.parts();
@@ -409,7 +473,7 @@ class server {
             }
         });
 
-        this.fastify.post('/login', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
+        this.fastify.post('/login', { preHandler: this.fastify.csrfProtection }, async (req: FastifyRequest, reply: FastifyReply) => {
             let userData = {} as loginBody;
             const parts = req.parts();
             for await (const part of parts) {
@@ -443,7 +507,7 @@ class server {
             }
         });
 
-        this.fastify.post('/logout', (req, reply) => {
+        this.fastify.post('/logout', (req: FastifyRequest, reply: FastifyReply) => {
             if (!req.session.user) {
                 return reply.code(400).send({ error: 'noLogin' });
             }
@@ -521,13 +585,13 @@ class server {
             return !!this.session?.user;
         });
 
-        this.fastify.addHook('preHandler', async (req, reply) => {
+        this.fastify.addHook('preHandler', async (req: FastifyRequest, reply: FastifyReply) => {
             if (req.routeOptions?.url?.startsWith('/update') && !req.isAuthenticated()) {
                 return reply.code(401).send({ error: 'unauthorized' });
             }
         });
 
-        this.fastify.patch('/update', { preHandler: this.fastify.csrfProtection }, async (req, reply) => {
+        this.fastify.patch('/update', { preHandler: this.fastify.csrfProtection }, async (req: FastifyRequest, reply: FastifyReply) => {
             let userData = {} as patchBody;
 
             const parts = req.parts();
@@ -612,7 +676,7 @@ class server {
             }
         });
 
-        this.fastify.patch('/update-google', async (req, reply) => {
+        this.fastify.patch('/update-google', async (req: FastifyRequest, reply: FastifyReply) => {
             let userData = {} as patchBody;
             const parts = req.parts();
             for await (const part of parts) {
@@ -699,7 +763,7 @@ class server {
             }
         });
 
-        this.fastify.setNotFoundHandler((req, reply) => {
+        this.fastify.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
             return reply.code(404).send({ error: 'Not Found' });
         });
     }

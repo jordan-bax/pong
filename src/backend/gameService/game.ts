@@ -101,15 +101,15 @@ async function makeNewGame(type: string, playername: string, playerid: number): 
 
 export async function updateGameInDB(game: gamestateinterface): Promise<void> {
     let id1 = game.player1.id;
-    if (id1 === null || id1 === undefined ) {
+    if (id1 === null || id1 === undefined) {
         id1 = 0;
     }
     if (id1 < 0 && id1 > -3600) {
         id1 = 0;
     }
-    
+
     let id2 = game.player2.id;
-    if (id2 === null || id2 === undefined || id2 < 0) {
+    if (id2 === null || id2 === undefined) {
         id2 = 0;
     }
     if (id2 < 0 && id2 > -3600) {
@@ -295,6 +295,7 @@ fastify.register(fastifyCors, { origin: true });
 
 async function getUserIdFromSession(req: any): Promise<number | null> {
     let userId: number | null = null;
+
     console.log('Forwarding cookies:', req.headers.cookie);
     const user = await fetch('http://user:3001/me', {
         method: 'GET',
@@ -307,16 +308,23 @@ async function getUserIdFromSession(req: any): Promise<number | null> {
     });
 
     if (user.ok) {
-        await user.json().then(async data => {
-            console.log('User data:', data);
-            userId = data.user.userId;
-            if (!userId) {
-                console.error('User ID not found in response data');
-                return null;
-            }
-        });
+        const data = await user.json();
+        console.log('User data:', data);
+        userId = data.user.userId;
+
+        req.session.player = {
+            username: data.user.username,
+            id: data.user.userId,
+            player: 1,
+            gameid: 0,
+            loggedin: true
+        };
+
+        console.log('Set session.player:', req.session.player);
+
     } else {
         console.error('Failed to fetch user data:', user.statusText);
+        userId = null;
     }
 
     return userId;
@@ -345,26 +353,21 @@ fastify.post('/start', async (req: FastifyRequest, reply: FastifyReply) => {
     let playid: number | null = null;
     let online: boolean = false;
     let { type, playername } = req.body as { type: string; playername: string };
+
     if (!req.session.player || !req.session.player.id) {
-        await getUserIdFromSession(req).then((userId) => {
-            if (userId) {
-                playid = userId;
-                online = true;
-                console.log('User ID from usersession:', playid);
-            } else {
-                playid = GameTypeId.UNKNOWN;
-                online = false;
-                playername = 'Guest';
-                console.error('User ID not found in session', playid);
-            }
-        });
+        playid = await getUserIdFromSession(req);
+        if (req.session.player) {
+            playername = req.session.player.username;
+            online = true;
+        }
     } else {
         playid = req.session.player.id;
         online = req.session.player.loggedin || false;
         playername = req.session.player.username || 'Guest';
     }
 
-    console.log('Starting game with AI:', type, 'Player Name:', playername);
+    console.log('Starting game with:', { type, playername, playid, online });
+
     if (!playid) {
         console.error('Invalid player ID', playid);
         reply.status(400).send({ error: 'Invalid player ID' });
@@ -390,7 +393,8 @@ fastify.post('/start', async (req: FastifyRequest, reply: FastifyReply) => {
         gameid: gameid?.id,
         loggedin: online
     };
-    console.log('Player session:', req.session.player);
+
+    console.log('Player session updated:', req.session.player);
 
     reply.send({ gameid: gameid, status: 'started' });
 });
@@ -447,46 +451,46 @@ fastify.post('/pause', async (req: FastifyRequest, reply: FastifyReply) => {
 
 // move the player paddle
 fastify.post('/move', async (req, reply) => {
-	if (!req.session.player) {
-		reply.status(401).send({ status: 'Unauthorized' });
-		console.error('Unauthorized access: Player session not found');
-		return;
-	}
-	const { direction } = req.body as { direction: 'up' | 'down' };
-	var player: 1|2 | null = req.session.player?.player;
-	const game = findGamebyGameId(req.session.player?.gameid);
-	if (!game) {
-		reply.status(404).send({ status: 'no Game' });
-		return;
-	}
-	if (game.getState().gameActive === false) {
-		reply.status(400).send({ status: 'inactive' });
-		return;
-	}
-	// if (game.getState().gamePause) {
-	// 	reply.status(400).send({ status: 'paused' });
-	// 	return;
-	// }
-	if (game.getState().gametype === 'local') {
-		player = (req.query as { player: 1|2 }).player;
-	}
-	console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.getId());
-	if (player == 1) {
-		if (direction === 'up') {
-			game.getState().player1.y -= game.getState().player1.speed;
-		} else if (direction === 'down') {
-			game.getState().player1.y += game.getState().player1.speed;
-		}
-		game.playerMoveCheck(game.getState().player1);
-	} else if (player == 2) {
-		if (direction === 'up') {
-			game.getState().player2.y -= game.getState().player2.speed;
-		} else if (direction === 'down') {
-			game.getState().player2.y += game.getState().player2.speed;
-		}
-		game.playerMoveCheck(game.getState().player2);
-	}
-	reply.send({ status: 'moved'});
+    if (!req.session.player) {
+        reply.status(401).send({ status: 'Unauthorized' });
+        console.error('Unauthorized access: Player session not found');
+        return;
+    }
+    const { direction } = req.body as { direction: 'up' | 'down' };
+    let player: 1 | 2 | null = req.session.player?.player;
+    const game = findGamebyGameId(req.session.player?.gameid);
+    if (!game) {
+        reply.status(404).send({ status: 'no Game' });
+        return;
+    }
+    if (game.getState().gameActive === false) {
+        reply.status(400).send({ status: 'inactive' });
+        return;
+    }
+    // if (game.getState().gamePause) {
+    // 	reply.status(400).send({ status: 'paused' });
+    // 	return;
+    // }
+    if (game.getState().gametype === 'local') {
+        player = (req.query as { player: 1 | 2 }).player;
+    }
+    console.log('Moving player:', player, 'Direction:', direction, 'Game ID:', game.getId());
+    if (player == 1) {
+        if (direction === 'up') {
+            game.getState().player1.y -= game.getState().player1.speed;
+        } else if (direction === 'down') {
+            game.getState().player1.y += game.getState().player1.speed;
+        }
+        game.playerMoveCheck(game.getState().player1);
+    } else if (player == 2) {
+        if (direction === 'up') {
+            game.getState().player2.y -= game.getState().player2.speed;
+        } else if (direction === 'down') {
+            game.getState().player2.y += game.getState().player2.speed;
+        }
+        game.playerMoveCheck(game.getState().player2);
+    }
+    reply.send({ status: 'moved' });
 });
 
 fastify.get('/state', async (req: FastifyRequest, reply: FastifyReply) => {

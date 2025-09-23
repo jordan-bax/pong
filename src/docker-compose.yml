@@ -61,6 +61,20 @@ services:
       - transcendanse
     restart: unless-stopped
 
+  guest:
+    build:
+      context: ./backend/guestService
+    container_name: guest
+    expose:
+      - "3006"
+    volumes:
+      - guest-db:/app/db
+    env_file:
+      - .env
+    networks:
+      - transcendanse
+    restart: unless-stopped
+
   notification:
     build:
       context: ./backend/notificationService
@@ -126,6 +140,13 @@ volumes:
     driver: local
     driver_opts:
       device: ~/data/tournament
+      o: bind
+      type: none
+  guest-db:
+    name: guest
+    driver: local
+    driver_opts:
+      device: ~/data/guest
       o: bind
       type: none
 

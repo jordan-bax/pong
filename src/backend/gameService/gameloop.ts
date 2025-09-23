@@ -33,7 +33,7 @@ class Gameloop {
 	// private getRandomInt(): number {
 	// 	return Math.floor(Math.random() * 21) - 10;
 	// }
-	
+
 	private anglecheck(angle: number, callback: () => number ): number {
 		if (angle < 160 && angle > 200) {
 			if (angle < 250 && angle > 290) {
@@ -48,7 +48,7 @@ class Gameloop {
 	}
 	// 90 = down 180 = left 270 = up 0 = right
 	private getStartAngle(): number {
-		var angle = Math.random() * 300;
+		let angle = Math.random() * 300;
 		console.log("Start angle before adjustment: " + angle);
 		if (angle > ( 90 - 15))
 			angle += 30;
@@ -60,16 +60,16 @@ class Gameloop {
 		return angle;
 		// return 90;
 	}
-	// number between 
+	// number between
 	private getRandomAngleLeft(): number {
-		var angle = Math.random() * 150 ;
+		let angle = Math.random() * 150 ;
 		angle += 90;
 		angle += 15;
 		return angle;
 	}
-	// number between 
+	// number between
 	private getRandomAngleRight(): number {
-		var angle = Math.random() * 150 ;
+		let angle = Math.random() * 150 ;
 		if (angle > 75)
 			angle = 270 + 15 + (angle - 75);
 		return angle;
@@ -251,7 +251,7 @@ class Gameloop {
 		// 	const relativeIntersectY = (this.gamestate.player1.y + this.gamestate.player1.height / 2) - (this.gamestate.ball.y + this.gamestate.ball.height / 2);
 		// 	const normalizedRelativeIntersectionY = relativeIntersectY / (this.gamestate.player1.height / 2);
 		// 	this.angle = 180 - this.angle + normalizedRelativeIntersectionY * 30;
-		// } 
+		// }
 		this.paddlerightbounce();
 		this.paddelrighttopbounce();
 		this.paddelrightbottombounce();
@@ -288,11 +288,11 @@ class Gameloop {
 	}
 	private percentof(dx: number, overshootX: number, dy: number): number {
 		console.log("pre % DX: " + dx + " overshootX: " + overshootX + " DY: " + dy);
-		var percentofx = (100 / dx) * overshootX;
+		let percentofx = (100 / dx) * overshootX;
 		if (percentofx < 0) {
 			percentofx *= -1;
 		}
-		var overshootY = (dy / 100) * percentofx;
+		let overshootY = (dy / 100) * percentofx;
 		console.log("post % Percent of X: " + percentofx + " Overshoot Y: " + overshootY);
 
 		return overshootY;
@@ -305,13 +305,13 @@ class Gameloop {
 		if (this.gamestate.ball.x > this.gamestate.player1.x + this.gamestate.player1.width) {
 			return; // Ball is to the right of the paddle
 		}
-		var overshootX =  this.gamestate.player1.x + this.gamestate.player1.width - this.gamestate.ball.x;
+		let overshootX =  this.gamestate.player1.x + this.gamestate.player1.width - this.gamestate.ball.x;
 		if (overshootX < 0) {
 			console.log("No overshoot Left", overshootX);
 			return; // No overshoot
 		}
-		var dx = this.gamestate.ball.dx * this.ball_speed;
-		var dy = this.gamestate.ball.dy * this.ball_speed;
+		let dx = this.gamestate.ball.dx * this.ball_speed;
+		let dy = this.gamestate.ball.dy * this.ball_speed;
 		// if (dx < 0) {
 		// 	dx *= -1;
 		// }
@@ -319,7 +319,7 @@ class Gameloop {
 		// 	console.log("overshootX greater than movement", overshootX, dx);
 		// 	return; // No overshoot
 		// }
-		var ytoPaddle = this.percentof(dx, overshootX, dy);
+		let ytoPaddle = this.percentof(dx, overshootX, dy);
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootX, "ytoPaddle", ytoPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player1.y, "paddle height", this.gamestate.player1.height);
@@ -348,13 +348,13 @@ class Gameloop {
 			console.log("tb ball is under or in the paddle", this.gamestate.ball.y, this.gamestate.player1.y);
 			return; // Ball is to the under or in the paddle
 		}
-		var overshootY =  this.gamestate.ball.y  + this.gamestate.ball.height - this.gamestate.player1.y;
+		let overshootY =  this.gamestate.ball.y  + this.gamestate.ball.height - this.gamestate.player1.y;
 		if (overshootY < 0) {
 			console.log("No overshoot Left", overshootY);
 			return; // No overshoot
 		}
-		var dx = this.gamestate.ball.dx * this.ball_speed;
-		var dy = this.gamestate.ball.dy * this.ball_speed;
+		let dx = this.gamestate.ball.dx * this.ball_speed;
+		let dy = this.gamestate.ball.dy * this.ball_speed;
 		// if (dx < 0) {
 		// 	dx *= -1;
 		// }
@@ -362,11 +362,11 @@ class Gameloop {
 		// 	console.log("overshootX greater than movement", overshootX, dx);
 		// 	return; // No overshoot
 		// }
-		var xToPaddle = this.percentof(dy, overshootY, dx);
+		let xToPaddle = this.percentof(dy, overshootY, dx);
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootY, "xtoPaddle", xToPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player1.y, "paddle height", this.gamestate.player1.height);
-		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) + xToPaddle < this.gamestate.player1.x 
+		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) + xToPaddle < this.gamestate.player1.x
 		|| this.gamestate.ball.x + xToPaddle > this.gamestate.player1.x + this.gamestate.player1.width) {
 			console.log("Ball sdfghjk is above or below the paddle", overshootY, xToPaddle, this.gamestate.ball.y, this.gamestate.player1.y, this.gamestate.player1.height);
 			return; // Ball is above or below the paddle
@@ -392,13 +392,13 @@ class Gameloop {
 			console.log("tb ball is under or in the paddle", this.gamestate.ball.y, this.gamestate.player1.y);
 			return; // Ball is to the under or in the paddle
 		}
-		var overshootY =  this.gamestate.player1.y  + this.gamestate.player1.height - (this.gamestate.ball.y);
+		let overshootY =  this.gamestate.player1.y  + this.gamestate.player1.height - (this.gamestate.ball.y);
 		if (overshootY < 0) {
 			console.log("No overshoot Left", overshootY);
 			return; // No overshoot
 		}
-		var dx = this.gamestate.ball.dx * this.ball_speed;
-		var dy = this.gamestate.ball.dy * this.ball_speed;
+		let dx = this.gamestate.ball.dx * this.ball_speed;
+		let dy = this.gamestate.ball.dy * this.ball_speed;
 		// if (dx < 0) {
 		// 	dx *= -1;
 		// }
@@ -406,11 +406,11 @@ class Gameloop {
 		// 	console.log("overshootX greater than movement", overshootX, dx);
 		// 	return; // No overshoot
 		// }
-		var xToPaddle = this.percentof(dy, overshootY, dx);
+		let xToPaddle = this.percentof(dy, overshootY, dx);
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootY, "xtoPaddle", xToPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player1.y, "paddle height", this.gamestate.player1.height);
-		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) - xToPaddle < this.gamestate.player1.x 
+		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) - xToPaddle < this.gamestate.player1.x
 		|| this.gamestate.ball.x - xToPaddle > this.gamestate.player1.x + this.gamestate.player1.width) {
 			console.log("Ball sdfghjk is above or below the paddle", overshootY, xToPaddle, this.gamestate.ball.y, this.gamestate.player1.y, this.gamestate.player1.height);
 			return; // Ball is above or below the paddle
@@ -436,13 +436,13 @@ class Gameloop {
 			console.log("tb ball is under or in the paddle", this.gamestate.ball.y, this.gamestate.player2.y);
 			return; // Ball is to the under or in the paddle
 		}
-		var overshootY =  this.gamestate.ball.y  + this.gamestate.ball.height - this.gamestate.player2.y;
+		let overshootY =  this.gamestate.ball.y  + this.gamestate.ball.height - this.gamestate.player2.y;
 		if (overshootY < 0) {
 			console.log("No overshoot right", overshootY);
 			return; // No overshoot
 		}
-		var dx = this.gamestate.ball.dx * this.ball_speed;
-		var dy = this.gamestate.ball.dy * this.ball_speed;
+		let dx = this.gamestate.ball.dx * this.ball_speed;
+		let dy = this.gamestate.ball.dy * this.ball_speed;
 		// if (dx < 0) {
 		// 	dx *= -1;
 		// }
@@ -450,11 +450,11 @@ class Gameloop {
 		// 	console.log("overshootX greater than movement", overshootX, dx);
 		// 	return; // No overshoot
 		// }
-		var xToPaddle = this.percentof(dy, overshootY, dx);
+		let xToPaddle = this.percentof(dy, overshootY, dx);
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootY, "xtoPaddle", xToPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player2.y, "paddle height", this.gamestate.player2.height);
-		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) + xToPaddle < this.gamestate.player2.x 
+		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) + xToPaddle < this.gamestate.player2.x
 		|| this.gamestate.ball.x + xToPaddle > this.gamestate.player2.x + this.gamestate.player2.width) {
 			console.log("Ball sdfghjk is above or below the paddle", overshootY, xToPaddle, this.gamestate.ball.y, this.gamestate.player2.y, this.gamestate.player2.height);
 			return; // Ball is above or below the paddle
@@ -480,13 +480,13 @@ class Gameloop {
 			console.log("tb ball is under or in the paddle", this.gamestate.ball.y, this.gamestate.player2.y);
 			return; // Ball is to the under or in the paddle
 		}
-		var overshootY =  this.gamestate.player2.y  + this.gamestate.player2.height - (this.gamestate.ball.y);
+		let overshootY =  this.gamestate.player2.y  + this.gamestate.player2.height - (this.gamestate.ball.y);
 		if (overshootY < 0) {
 			console.log("No overshoot right", overshootY);
 			return; // No overshoot
 		}
-		var dx = this.gamestate.ball.dx * this.ball_speed;
-		var dy = this.gamestate.ball.dy * this.ball_speed;
+		let dx = this.gamestate.ball.dx * this.ball_speed;
+		let dy = this.gamestate.ball.dy * this.ball_speed;
 		// if (dx < 0) {
 		// 	dx *= -1;
 		// }
@@ -494,11 +494,11 @@ class Gameloop {
 		// 	console.log("overshootX greater than movement", overshootX, dx);
 		// 	return; // No overshoot
 		// }
-		var xToPaddle = this.percentof(dy, overshootY, dx);
+		let xToPaddle = this.percentof(dy, overshootY, dx);
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootY, "xtoPaddle", xToPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player2.y, "paddle height", this.gamestate.player2.height);
-		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) - xToPaddle < this.gamestate.player2.x 
+		if  (this.gamestate.ball.x + (this.gamestate.ball.width ) - xToPaddle < this.gamestate.player2.x
 		|| this.gamestate.ball.x - xToPaddle > this.gamestate.player2.x + this.gamestate.player2.width) {
 			console.log("Ball sdfghjk is above or below the paddle", overshootY, xToPaddle, this.gamestate.ball.y, this.gamestate.player2.y, this.gamestate.player2.height);
 			return; // Ball is above or below the paddle
@@ -518,14 +518,14 @@ class Gameloop {
 		if (this.gamestate.ball.x + this.gamestate.ball.width < this.gamestate.player2.x) {
 			return; // Ball is to the left of the paddle
 		}
-		var overshootX = (this.gamestate.ball.x + this.gamestate.ball.width) - this.gamestate.player2.x;
+		let overshootX = (this.gamestate.ball.x + this.gamestate.ball.width) - this.gamestate.player2.x;
 		if (overshootX < 0) {
 			console.log("No overshoot Right", overshootX);
 			return; // No overshoot
 		}
-		var dx = this.gamestate.ball.dx * this.ball_speed;
-		var dy = this.gamestate.ball.dy * this.ball_speed;
-		var ytoPaddle = this.percentof(dx, overshootX, dy);
+		let dx = this.gamestate.ball.dx * this.ball_speed;
+		let dy = this.gamestate.ball.dy * this.ball_speed;
+		let ytoPaddle = this.percentof(dx, overshootX, dy);
 		// this.gamestate.ball.x += overshootX;
 		// this.gamestate.ball.y += ytoPaddle;
 		console.log("testing overshootX", overshootX, "ytoPaddle", ytoPaddle, "ball y", this.gamestate.ball.y, "paddle y", this.gamestate.player2.y, "paddle height", this.gamestate.player2.height);
@@ -542,7 +542,7 @@ class Gameloop {
 	private ballwallbounce(): void {
 		if (this.gamestate.ball.y <= 0 ) {
 			console.log("Top b wall bounce angle: " + this.angle + " DX: " + this.gamestate.ball.dx + " DY: " + this.gamestate.ball.dy + " LL: " + this.gamestate.ball.y + " Distance to wall: " + this.gamestate.ball.y);
-			var overshoot = -this.gamestate.ball.y;
+			let overshoot = -this.gamestate.ball.y;
 			this.gamestate.ball.y += overshoot;
 			if (this.gamestate.ball.y < 0) {
 				console.log("No overshoot", overshoot, "this.gamestate.ball.y", this.gamestate.ball.y);
@@ -550,10 +550,10 @@ class Gameloop {
 			}
 			else
 				console.log("Yes overshoot", overshoot, "this.gamestate.ball.y", this.gamestate.ball.y);
-			var dx = this.gamestate.ball.dx * this.ball_speed;
-			var dy = this.gamestate.ball.dy * this.ball_speed;
-			// var ytoWall = dy - overshoot;
-			// var xtoWall = dx - this.percentof(dy, overshoot, dx);
+			let dx = this.gamestate.ball.dx * this.ball_speed;
+			let dy = this.gamestate.ball.dy * this.ball_speed;
+			// let ytoWall = dy - overshoot;
+			// let xtoWall = dx - this.percentof(dy, overshoot, dx);
 			this.gamestate.ball.y = 0 + overshoot;
 			// Ball hit top/bottom wall: reflect vertical angle
 
@@ -561,7 +561,7 @@ class Gameloop {
 			console.log("Top wall bounce angle: " + this.angle + " DX: " + dx + " DY: " + dy );
 		}
 		if (this.gamestate.ball.y >= gameWall.height - this.gamestate.ball.height) {
-			var overshoot = this.gamestate.ball.y - (gameWall.height - this.gamestate.ball.height);
+			let overshoot = this.gamestate.ball.y - (gameWall.height - this.gamestate.ball.height);
 			this.gamestate.ball.y -= overshoot;
 			if (this.gamestate.ball.y >= gameWall.height - this.gamestate.ball.height) {
 				console.log("No overshoot", overshoot, "this.gamestate.ball.y", this.gamestate.ball.y);
@@ -569,10 +569,10 @@ class Gameloop {
 			}
 			else
 				console.log("Yes overshoot", overshoot, "this.gamestate.ball.y", this.gamestate.ball.y);
-			var dx = this.gamestate.ball.dx * this.ball_speed;
-			var dy = this.gamestate.ball.dy * this.ball_speed;
-			// var ytoWall = dy - overshoot;
-			// var xtoWall = dx - this.percentof(dy, overshoot, dx);
+			let dx = this.gamestate.ball.dx * this.ball_speed;
+			let dy = this.gamestate.ball.dy * this.ball_speed;
+			// let ytoWall = dy - overshoot;
+			// let xtoWall = dx - this.percentof(dy, overshoot, dx);
 			this.gamestate.ball.y = (gameWall.height - this.gamestate.ball.height) - overshoot;
 			// Ball hit top/bottom wall: reflect vertical angle
 

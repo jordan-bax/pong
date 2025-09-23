@@ -34,19 +34,19 @@ up: build
 	@chmod 777 $(TOURNAMENT_DATA)
 	@chmod 777 $(USER_PROFILE_PICTURE)
 	@chmod 777 $(GUEST_DATA)
-	docker-compose -f src/docker-compose.yml up -d --force-recreate
+	docker compose -f src/docker-compose.yml up -d --force-recreate
 
 build:
-	docker-compose -f src/docker-compose.yml build --no-cache
+	docker compose -f src/docker-compose.yml build --no-cache
 
 down:
-	docker-compose -f src/docker-compose.yml down
+	docker compose -f src/docker-compose.yml down
 
 stop:
-	docker-compose -f src/docker-compose.yml stop
+	docker compose -f src/docker-compose.yml stop
 
 start:
-	docker-compose -f src/docker-compose.yml start
+	docker compose -f src/docker-compose.yml start
 
 clean:
 	@docker stop $$(docker ps -qa) || true
@@ -68,24 +68,24 @@ prune: clean
 fresh: prune up
 
 rebuild-user:
-	docker-compose -f src/docker-compose.yml build --no-cache user
-	docker-compose -f src/docker-compose.yml up -d --force-recreate user
+	docker compose -f src/docker-compose.yml build --no-cache user
+	docker compose -f src/docker-compose.yml up -d --force-recreate user
 
 rebuild-page_content:
-	docker-compose -f src/docker-compose.yml build --no-cache page_content
-	docker-compose -f src/docker-compose.yml up -d --force-recreate page_content
+	docker compose -f src/docker-compose.yml build --no-cache page_content
+	docker compose -f src/docker-compose.yml up -d --force-recreate page_content
 
 rebuild-game:
-	docker-compose -f src/docker-compose.yml build --no-cache game
-	docker-compose -f src/docker-compose.yml up -d --force-recreate game
+	docker compose -f src/docker-compose.yml build --no-cache game
+	docker compose -f src/docker-compose.yml up -d --force-recreate game
 
 rebuild-nginx:
-	docker-compose -f src/docker-compose.yml build --no-cache nginx
-	docker-compose -f src/docker-compose.yml up -d --force-recreate nginx
+	docker compose -f src/docker-compose.yml build --no-cache nginx
+	docker compose -f src/docker-compose.yml up -d --force-recreate nginx
 
 rebuild-notification:
-	docker-compose -f src/docker-compose.yml build --no-cache notification
-	docker-compose -f src/docker-compose.yml up -d --force-recreate notification
+	docker compose -f src/docker-compose.yml build --no-cache notification
+	docker compose -f src/docker-compose.yml up -d --force-recreate notification
 
 rebuild-backend: rebuild-user rebuild-page_content rebuild-game
 

@@ -33,6 +33,7 @@ let active: Array<Gameloop> = [];
 let matching: Array<Gameloop> = [];
 let invited: Array<Gameloop> = [];
 let fps: number = 30;
+const guestID = 3600
 
 startGame();
 
@@ -807,19 +808,19 @@ fastify.post('/preparegame', { schema: { body: matchingBodySchema } }, async (re
 
     invited.push(games);
     if (gametype == 'tournament') {
-        if (playerid1 > 0) {
+        if (playerid1 > 0 || playerid1 < guestID) {
             await sendNotificationToUser(playerid1, `You have been matched for a tournament game`);
         }
 
-        if (playerid2 > 0) {
+        if (playerid2 > 0 || playerid2 < guestID) {
             await sendNotificationToUser(playerid2, `You have been matched for a tournament game`);
         }
     } else {
-        if (playerid1 > 0) {
+        if (playerid1 > 0 || playerid1 < guestID) {
             await sendNotificationToUser(playerid1, `You have been invited to play a game`);
         }
 
-        if (playerid2 > 0) {
+        if (playerid2 > 0 || playerid2 < guestID) {
             await sendNotificationToUser(playerid2, `You have been invited to play a game`);
         }
     }

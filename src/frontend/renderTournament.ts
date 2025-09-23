@@ -99,7 +99,7 @@ export async function renderTournament() {
     const tournamentFormContainer = document.createElement("div")
     tournamentFormContainer.style.display = "none"
 
-    await createTournamentForm(tournamentFormContainer, userID, () => {
+    await createTournamentForm(tournamentFormContainer, () => {
         tournamentFormContainer.style.display = "none"
         formButton.style.display = "block"
     })
@@ -201,7 +201,6 @@ function cleanupIntervals() {
 }
 
 async function createTournamentForm(container: HTMLDivElement,
-    userID: number,
     onSuccess: () => void) {
 
     const text = await getText();
@@ -233,7 +232,7 @@ async function createTournamentForm(container: HTMLDivElement,
     form.onsubmit = async function(e) {
         e.preventDefault()
         try {
-            const res = await fetch('/api/user/me',{
+            const res = await fetch('/api/user/me', {
                 credentials: 'include',
                 headers: { 'x-internal': 'true' }
             })
@@ -362,7 +361,7 @@ async function createRow(tournament: Tour,
         button.textContent = state
         button.classList.add("state-btn")
         button.addEventListener("click", async () => {
-            await changeTourstatus(tournament.id, userID, state)
+            await changeTourstatus(tournament.id, state)
         })
     }
 
@@ -388,10 +387,20 @@ function formatDateTime(timestamp: number): string {
 }
 
 async function changeTourstatus(tourID: number,
-    userID: number,
     status: string) {
 
     try {
+        const res = await fetch('/api/user/me', {
+            credentials: 'include',
+            headers: { 'x-internal': 'true' }
+        })
+
+        if (res.status !== 200) {
+            console.error("no correct data from me")
+            throw new Error("no correct data from me")
+        }
+        const userData = await res.json()
+
         const resp = await fetch(`/api/tournament/${status.toLocaleLowerCase()}`, {
             method: "POST",
             headers: {
@@ -399,8 +408,8 @@ async function changeTourstatus(tourID: number,
             },
             body: JSON.stringify({
                 "tournamentID": tourID,
-                "userID": userID,
-                "username": await getUsernameFromMeData()
+                "userID": userData.user.userId,
+                "username": userData.user.username
             })
         })
 

@@ -96,8 +96,13 @@ class TourService {
             throw new Error('tournamentID must be more then 0')
         }
 
+        const newUsername = username.trim()
+        if (!newUsername) {
+            throw new Error('username can not be empty')
+        }
+
         try {
-            await db.join(tourID, userID, username)
+            await db.join(tourID, userID, newUsername)
         } catch (error) {
             console.error(error)
             throw error

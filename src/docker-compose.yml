@@ -14,7 +14,7 @@ services:
     networks:
       - transcendanse
     env_file:
-      - .env
+      - ~/.local/.env
     restart: unless-stopped
 
   user:
@@ -28,7 +28,7 @@ services:
       - user-db:/app/db
       - user-profilePicture:/app/uploads/profile_pictures
     env_file:
-      - .env
+      - ~/.local/.env
     networks:
       - transcendanse
     restart: unless-stopped
@@ -42,7 +42,7 @@ services:
     volumes:
       - game-db:/app/db
     env_file:
-      - .env
+      - ~/.local/.env
     networks:
       - transcendanse
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
     volumes:
       - tournament-db:/app/db
     env_file:
-      - .env
+      - ~/.local/.env
     networks:
       - transcendanse
     restart: unless-stopped
@@ -70,7 +70,7 @@ services:
     volumes:
       - guest-db:/app/db
     env_file:
-      - .env
+      - ~/.local/.env
     networks:
       - transcendanse
     restart: unless-stopped
@@ -85,7 +85,7 @@ services:
     volumes:
       - notification-db:/app/db
     env_file:
-      - .env
+      - ~/.local/.env
     networks:
       - transcendanse
     restart: unless-stopped
@@ -100,7 +100,7 @@ services:
     volumes:
       - page_content-db:/app/db
     env_file:
-      - .env
+      - ~/.local/.env
     networks:
       - transcendanse
     restart: unless-stopped

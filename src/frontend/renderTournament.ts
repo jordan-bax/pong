@@ -233,7 +233,7 @@ async function createTournamentForm(container: HTMLDivElement,
     form.onsubmit = async function(e) {
         e.preventDefault()
         try {
-            const res = await fetch('http://user:3001/me',{
+            const res = await fetch('/api/user/me',{
                 credentials: 'include',
                 headers: { 'x-internal': 'true' }
             })

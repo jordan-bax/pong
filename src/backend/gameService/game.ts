@@ -473,10 +473,10 @@ fastify.post('/move', async (req, reply) => {
         reply.status(400).send({ status: 'inactive' });
         return;
     }
-    // if (game.getState().gamePause) {
-    // 	reply.status(400).send({ status: 'paused' });
-    // 	return;
-    // }
+    if (game.getState().gamePause) {
+    	reply.status(400).send({ status: 'paused' });
+    	return;
+    }
     if (game.getState().gametype === 'local') {
         player = (req.query as { player: 1 | 2 }).player;
     }

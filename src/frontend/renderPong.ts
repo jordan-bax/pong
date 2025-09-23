@@ -1,5 +1,6 @@
 import { gamestateinterface, ballvarTemplate, player1Template, player2Template, scoreInterface, pcInterface, ballInterface, gameWall } from './sharedValuesPong.js';
 import { checkSession } from './routing.js';
+import { renderContent } from './contentRenderer.js';
 
 let player1: pcInterface = player1Template
 let player2: pcInterface = player2Template;
@@ -278,6 +279,8 @@ async function leaveGame() {
         credentials: 'include',
         keepalive: true,
     });
+
+    history.go(0)
 }
 
 async function sendMove(direction: 'up' | 'down', player: 1 | 2) {

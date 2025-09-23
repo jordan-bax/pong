@@ -82,7 +82,7 @@ class TourService {
 
 
     async join(tourID: number, userID: number, username: string) {
-        if (tourID < 0) {
+        if (tourID < 1) {
             throw new Error('tournamentID must be more then 0')
         }
 
@@ -152,6 +152,7 @@ class TourService {
         player2ID: number,
         player1Score: number,
         player2Score: number) {
+
         if (tourID < 1) {
             throw new Error('tournamentID must be more then 0')
         }
@@ -196,7 +197,8 @@ class TourService {
         try {
             const tour = await db.getTour(tourID)
             for (let index = 0; index < tour.nextMatchs.length; index++) {
-                if (tour.nextMatchs[index][0] < 0 && tour.nextMatchs[index][1] < 0) {
+                if ((tour.nextMatchs[index][0] > this.guestID && tour.nextMatchs[index][0] < 0) &&
+                    (tour.nextMatchs[index][1] > this.guestID && tour.nextMatchs[index][1] < 0)) {
                     const winner = Math.random() < 0.5 ? 0 : 1
                     const winnerID = tour.nextMatchs[index][winner]
                     const loserScore = Math.floor(Math.random() * 11)
@@ -314,7 +316,8 @@ class TourService {
             players.splice(index, 1)
             playerCount--
 
-            if (player1 < 0 && player2 > 0) {
+            if ((player1 > this.guestID && player1 < 0) &&
+                (player2 < this.guestID || player2 > 0)) {
                 subMatch[0] = player2
                 subMatch[1] = player1
             }

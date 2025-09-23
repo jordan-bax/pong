@@ -44,13 +44,23 @@ class TourService {
             throw new Error('maxplayers must be more then 1')
         }
 
+        const newUsername = username.trim()
+        if (!newUsername) {
+            throw new Error('username can not be empty')
+        }
+
+        const newName = name.trim()
+        if (!newName) {
+            throw new Error('name can not be empty')
+        }
+
         try {
             const dbObj = await db.create(
-                name,
+                newName,
                 maxPlayers,
                 Math.round(Date.now() + (duration * 1000)),
                 userID,
-                username)
+                newUsername)
             return dbObj
         } catch (error) {
             console.error(error)

@@ -639,12 +639,17 @@ fastify.post('/setsession', { schema: { body: sessionBodySchema } }, async (req:
         return;
     }
 
+    let loggindin = false;
+    if (id > 0) {
+        loggindin = true;
+    }
+
     req.session.player = {
         username: username,
         id: id,
         player: 1,
         gameid: 0,
-        loggedin: true
+        loggedin: loggindin
     };
 
     if (!req.session.player) {

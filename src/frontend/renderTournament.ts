@@ -233,6 +233,14 @@ async function createTournamentForm(container: HTMLDivElement,
     form.onsubmit = async function(e) {
         e.preventDefault()
         try {
+            const res = await fetch('http://user:3001/me',
+                { 'credentials': 'include' })
+            if (res.status !== 200) {
+                console.error("no correct data from me")
+                throw new Error("no correct data from me")
+            }
+            const userData = await res.json()
+
             const resp = await fetch("/api/tournament/create", {
                 method: "POST",
                 headers: {
@@ -242,8 +250,8 @@ async function createTournamentForm(container: HTMLDivElement,
                     "name": (document.getElementById("tname") as HTMLInputElement).value,
                     "maxPlayers": (document.getElementById("tplayers") as HTMLInputElement).value,
                     "lockTime": (document.getElementById("tlock") as HTMLInputElement).value,
-                    "userID": userID,
-                    "username": await getUsernameFromMeData()
+                    "userID": userData.userId,
+                    "username": userData.username
                 })
             })
 

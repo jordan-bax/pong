@@ -256,6 +256,7 @@ function makeBackground(): HTMLDivElement {
 
 
 async function enableKeyListener() {
+    history.pushState({}, "/gameMenu")
     document.addEventListener('keydown', keyHandler);
     window.addEventListener('beforeunload', leaveGame);
     window.addEventListener('popstate', popstateHandler);

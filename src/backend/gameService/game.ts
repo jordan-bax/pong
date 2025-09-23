@@ -814,6 +814,7 @@ fastify.post('/preparegame', { schema: { body: matchingBodySchema } }, async (re
     }
 
     invited.push(games);
+    console.error(invited);
     if (gametype == 'tournament') {
         if (playerid1 > 0 || playerid1 < guestID) {
             await sendNotificationToUser(playerid1, `You have been matched for a tournament game`);

@@ -42,10 +42,6 @@ class TourService {
             throw new Error('maxplayers must be more then 1')
         }
 
-        if (userID < 1) {
-            throw new Error('userID must be more then 0')
-        }
-
         try {
             const dbObj = await db.create(
                 name,
@@ -74,10 +70,6 @@ class TourService {
     }
 
     async getUserTours(userID: number) {
-        if (userID < 1) {
-            throw new Error('userID must be more then 0')
-        }
-
         try {
             return await db.getToursByUserID(userID);
         } catch (error) {
@@ -92,10 +84,6 @@ class TourService {
             throw new Error('tournamentID must be more then 0')
         }
 
-        if (userID < 1) {
-            throw new Error('userID must be more then 0')
-        }
-
         try {
             await db.join(tourID, userID, username)
         } catch (error) {
@@ -107,10 +95,6 @@ class TourService {
     async leave(tourID: number, userID: number) {
         if (tourID < 1) {
             throw new Error('tournamentID must be more then 0')
-        }
-
-        if (userID < 1) {
-            throw new Error('userID must be more then 0')
         }
 
         try {
@@ -188,10 +172,6 @@ class TourService {
     }
 
     async updateName(userID: number, username: string) {
-        if (userID < 1) {
-            throw new Error('userID must be more then 0')
-        }
-
         const newName = username.trim()
         if (!newName) {
             throw new Error('username can not be empty')

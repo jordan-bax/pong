@@ -276,8 +276,6 @@ const start = async () => {
     } catch (err) {
         console.error(err)
         process.exit(1)
-    } finally {
-        await tour.close()
     }
 }
 start();

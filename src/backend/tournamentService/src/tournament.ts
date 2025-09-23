@@ -90,7 +90,6 @@ class TourService {
         }
     }
 
-
     async join(tourID: number, userID: number, username: string) {
         if (tourID < 1) {
             throw new Error('tournamentID must be more then 0')

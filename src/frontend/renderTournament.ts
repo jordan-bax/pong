@@ -1,5 +1,5 @@
 import { getLanguage } from "./index.js";
-import { getIdFromMe, getUsernameFromMeData } from "./routing.js"
+import { getIdFromMe } from "./routing.js"
 import { getContent } from "./settings.js";
 
 window.addEventListener('beforeunload', cleanupIntervals);
@@ -180,7 +180,6 @@ async function loadTournamentData(container: HTMLDivElement, userID: number) {
             table.appendChild(
                 await createRow(tournament,
                     isInTour,
-                    userID,
                     type.key,
                     tournament.username))
         }
@@ -310,7 +309,6 @@ async function createHeader(type: keyof ToursDict): Promise<HTMLTableRowElement>
 
 async function createRow(tournament: Tour,
     isInTour: boolean,
-    userID: number,
     type: keyof ToursDict,
     username: string): Promise<HTMLTableRowElement> {
 

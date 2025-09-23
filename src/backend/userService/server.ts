@@ -192,9 +192,7 @@ class server {
         this.fastify.get('/me', async (req: FastifyRequest, reply: FastifyReply) => {
             if (req.session.user) {
                 let loggedIn = true;
-                console.error(req.session.user.userId, this.guestId)
                 if (req.session.user.userId < this.guestId) {
-                    console.error("alleen voor gasten")
                     loggedIn = false;
                 }
 

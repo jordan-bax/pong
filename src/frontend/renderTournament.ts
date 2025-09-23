@@ -244,7 +244,6 @@ async function createTournamentForm(container: HTMLDivElement,
             }
             const userData = await res.json()
 
-            console.error(userData)
             const resp = await fetch("/api/tournament/create", {
                 method: "POST",
                 headers: {

@@ -309,19 +309,24 @@ async function getUserIdFromSession(req: any): Promise<number | null> {
 
     if (user.ok) {
         const data = await user.json();
-        console.log('User data:', data);
         userId = data.user.userId;
+
+        let loggindin = false
+        if (userId === null) {
+            loggindin = false
+        } else {
+            loggindin = userId < 0 ? false : true
+        }
 
         req.session.player = {
             username: data.user.username,
             id: data.user.userId,
             player: 1,
             gameid: 0,
-            loggedin: true
+            loggedin: loggindin
         };
 
         console.log('Set session.player:', req.session.player);
-
     } else {
         console.error('Failed to fetch user data:', user.statusText);
         userId = null;
@@ -358,7 +363,7 @@ fastify.post('/start', async (req: FastifyRequest, reply: FastifyReply) => {
         playid = await getUserIdFromSession(req);
         if (req.session.player) {
             playername = req.session.player.username;
-            online = true;
+            online = req.session.player.loggedin || false
         }
     } else {
         playid = req.session.player.id;

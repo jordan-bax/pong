@@ -196,7 +196,6 @@ class server {
                         credentials: 'include',
                     })
 
-                    console.log(result)
                     if (result.status === 200) {
                         const data = await result.json()
                         req.session.user = {

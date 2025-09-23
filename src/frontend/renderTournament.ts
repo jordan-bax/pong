@@ -233,8 +233,10 @@ async function createTournamentForm(container: HTMLDivElement,
     form.onsubmit = async function(e) {
         e.preventDefault()
         try {
-            const res = await fetch('http://user:3001/me',
-                { 'credentials': 'include' })
+            const res = await fetch('http://user:3001/me',{
+                credentials: 'include',
+                headers: { 'x-internal': 'true' }
+            })
             if (res.status !== 200) {
                 console.error("no correct data from me")
                 throw new Error("no correct data from me")

@@ -734,8 +734,10 @@ fastify.post('/join', async (req: FastifyRequest, reply: FastifyReply) => {
 
     if (invited[gameIndex].getState().player1.id === req.session.player.id) {
         invited[gameIndex].getState().player1.active = true;
+        req.session.player.player = 1;
     } else if (invited[gameIndex].getState().player2.id === req.session.player.id) {
         invited[gameIndex].getState().player2.active = true;
+        req.session.player.player = 2;
     }
 
     req.session.player.gameid = gameid;

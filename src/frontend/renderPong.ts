@@ -105,7 +105,7 @@ export async function startGame(gametype: string): Promise<scoreInterface> {
 
         document.body.appendChild(HoleScreen);
         lastFrame = HoleScreen;
-
+        keychecking();
         await new Promise(resolve => setTimeout(resolve, delay));
         if (player1.score >= 11 || player2.score >= 11 || !gameState.gameActive) {
             console.log('Game Over! Final Score:', player1.score, '-', player2.score);

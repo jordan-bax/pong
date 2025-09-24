@@ -63,7 +63,7 @@ export let player1Template: pcInterface = {
 	name: "Player 1",
 	x: 2,
 	y: 50,
-	speed: 10,
+	speed: 5,
 	height: 25,
 	width: 4,
 	score: 0
@@ -74,7 +74,7 @@ export let player2Template: pcInterface = {
 	name: "Player 2",
 	x: 198,
 	y: 50,
-	speed: 10,
+	speed: 5,
 	height: 25,
 	width: 4,
 	score: 0

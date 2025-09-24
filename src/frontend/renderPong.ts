@@ -257,14 +257,16 @@ function makeBackground(): HTMLDivElement {
 
 async function enableKeyListener() {
     history.pushState({}, "/gameMenu")
-    document.addEventListener('keydown', keyHandler);
+    document.addEventListener('keydown', keyHandlerdown);
+    document.addEventListener('keyup', keyHandlerup);
     window.addEventListener('beforeunload', leaveGame);
     window.addEventListener('popstate', popstateHandler);
     console.log('Key listener enabled and popstate handler added.');
 }
 
 function disableKeyListener() {
-    document.removeEventListener('keydown', keyHandler);
+    document.removeEventListener('keydown', keyHandlerdown);
+    document.removeEventListener('keyup', keyHandlerup);
     window.removeEventListener('beforeunload', leaveGame);
 
 }
@@ -330,6 +332,79 @@ async function keyHandler(event: KeyboardEvent) {
             break;
         case 'ArrowDown':
             await sendMove('down', 2);
+            break;
+    }
+}
+let keydownW = false, keydownS = false, keydownArrowUp = false, keydownArrowDown = false;
+
+async function keychecking() {
+
+    if (!keydownW && !keydownS && !keydownArrowUp && !keydownArrowDown) {
+        return;
+    }
+    else if (keydownW) {
+        await sendMove('up', 1);
+    }
+    else if (keydownS) {
+        await sendMove('down', 1);
+    }
+    else if (keydownArrowUp) {
+        await sendMove('up', 2);
+    }
+    else if (keydownArrowDown) {
+        await sendMove('down', 2);
+    }
+}
+
+async function keyHandlerup(event: KeyboardEvent) {
+    if (!event.key) {
+        return;
+    }
+
+    switch (event.key) {
+        case 'p':
+            await fetch('/api/game/pause', {
+                method: 'POST',
+                credentials: 'include',
+            });
+            break;
+        case 'w':
+            keydownW = false;
+            break;
+        case 's':
+            keydownS = false;
+            break;
+        case 'ArrowUp':
+            keydownArrowUp = false;
+            break;
+        case 'ArrowDown':
+            keydownArrowDown = false;
+            break;
+    }
+}
+async function keyHandlerdown(event: KeyboardEvent) {
+    if (!event.key) {
+        return;
+    }
+
+    switch (event.key) {
+        case 'p':
+            await fetch('/api/game/pause', {
+                method: 'POST',
+                credentials: 'include',
+            });
+            break;
+        case 'w':
+            keydownW = true;
+            break;
+        case 's':
+            keydownS = true;
+            break;
+        case 'ArrowUp':
+            keydownArrowUp = true;
+            break;
+        case 'ArrowDown':
+            keydownArrowDown = true;
             break;
     }
 }

@@ -322,23 +322,25 @@ class TourService {
             const player1 = players[index]
             subMatch.push(player1)
             players.splice(index, 1)
-            playerCount--
 
-            randInt = Math.floor(Math.random() * playerCount)
-            index = players.indexOf(players[randInt], 0)
-            const player2 = players[index]
-            subMatch.push(player2)
-            players.splice(index, 1)
-            playerCount--
+            if (playerCount === 1) {
+                subMatch.push(0)
+                playerCount--
+            } else {
+                playerCount--
 
-            if ((player1 > this.guestID && player1 < 0) &&
-                (player2 < this.guestID || player2 > 0)) {
-                subMatch[0] = player2
-                subMatch[1] = player1
-            }
+                randInt = Math.floor(Math.random() * playerCount)
+                index = players.indexOf(players[randInt], 0)
+                const player2 = players[index]
+                subMatch.push(player2)
+                players.splice(index, 1)
+                playerCount--
 
-            if (subMatch.length < 2) {
-                subMatch.push(subMatch[0])
+                if ((player1 > this.guestID && player1 < 0) &&
+                    (player2 < this.guestID || player2 > 0)) {
+                    subMatch[0] = player2
+                    subMatch[1] = player1
+                }
             }
 
             matches.push(subMatch)

@@ -679,7 +679,7 @@ async function rendderConformation(text: content): Promise<HTMLElement | null> {
     const overlayGoogleLogin = document.createElement('div');
     overlayGoogleLogin.id = 'google-auth';
     window.google.accounts.id.initialize({
-        client_id: '51710532102-br37sgrm5iodlnhsa2kahmcjr6lh8f8n.apps.googleusercontent.com',
+        client_id: 'UPDATE_WITH_YOUR_OWN_GOOGLE_CLIENT_KEY',
         callback: (googleResponse: any) => {
             handleGoogleCheck({
                 idToken: googleResponse.credential,

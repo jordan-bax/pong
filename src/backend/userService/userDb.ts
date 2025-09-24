@@ -185,7 +185,7 @@ class UserDatabase {
         if (newUsername === null) {
             newUsername = oldUsername;
         }
-        if (newPassword !== null && !isOld) {
+        if (newPassword !== null) {
             newPassword = await bcrypt.hash(newPassword, 10);
         }
         if (!(await this.isEmailUnique(oldEmail, user.id))) {

@@ -474,8 +474,8 @@ fastify.post('/move', async (req, reply) => {
         return;
     }
     if (game.getState().gamePause) {
-    	reply.status(400).send({ status: 'paused' });
-    	return;
+        reply.status(400).send({ status: 'paused' });
+        return;
     }
     if (game.getState().gametype === 'local') {
         player = (req.query as { player: 1 | 2 }).player;
@@ -835,6 +835,23 @@ fastify.post('/preparegame', { schema: { body: matchingBodySchema } }, async (re
 
     reply.status(201).send({ matchID: gameid, status: 'matched' });
 });
+
+fastify.post('/updatename', async (req: FastifyRequest, reply: FastifyReply) => {
+    const { userId, username } = req.body as {
+        userId: number,
+        username: string
+    }
+
+    try {
+        await dbfunc.updateName(username, userId)
+        reply.status(201).send({ 'message': 'OK' })
+    } catch (error) {
+        console.error('updatename error:', error)
+        reply.status(400).send({
+            error: error instanceof Error ? error.message : String(error)
+        })
+    }
+})
 
 async function prepareDatabase() {
     await dbfunc.initializeDatabase().catch(console.error);

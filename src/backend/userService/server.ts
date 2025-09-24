@@ -675,6 +675,17 @@ class server {
                     })
                 })
 
+                await fetch('http://game:3002/updatename', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body:JSON.stringify({
+                        "userId": user.id,
+                        "username": userData.newUsername
+                    })
+                })
+
                 reply.send({ success: true });
             } catch (err) {
                 req.log.error('error updating user');
@@ -761,6 +772,28 @@ class server {
                     userId: user.id,
                     loginMethod: 'google'
                 };
+
+                await fetch('http://tournament:3003/updatename', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "userID": user.id,
+                        "username": userData.newUsername
+                    })
+                })
+
+                await fetch('http://game:3002/updatename', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body:JSON.stringify({
+                        "userID": user.id,
+                        "username": userData.newUsername
+                    })
+                })
 
                 return reply.send({ success: true });
             } catch (err) {

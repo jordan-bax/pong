@@ -337,6 +337,10 @@ class TourService {
                 subMatch[1] = player1
             }
 
+            if (subMatch.length < 2) {
+                subMatch.push(subMatch[0])
+            }
+
             matches.push(subMatch)
         }
 
